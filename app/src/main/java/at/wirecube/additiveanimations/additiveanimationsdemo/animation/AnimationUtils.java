@@ -10,3 +10,4 @@ public class AnimationUtils {
         return from + (to - from) * clamp(0, 1, progress);
     }
 }
+

@@ -15,10 +15,10 @@ public class AdditiveAnimatorHolder {
     private boolean shouldRequestLayout = false;
     private View mAnimationTargetView;
     private ValueAnimator animator;
-    private AdditiveAnimatorUpdater updater;
-    private AdditiveAnimator.AccumulatedProperties mTempProperties;
+    private AdditiveAnimator updater;
+    private AdditiveAnimationApplier.AccumulatedProperties mTempProperties;
 
-    AdditiveAnimatorHolder(List<AdditivelyAnimatedPropertyDescription> properties, ValueAnimator animator, View animationTargetView, AdditiveAnimatorUpdater animationChangeApplier, AdditiveAnimator.AccumulatedProperties tempProperties) {
+    AdditiveAnimatorHolder(List<AdditivelyAnimatedPropertyDescription> properties, ValueAnimator animator, View animationTargetView, AdditiveAnimator animationChangeApplier, AdditiveAnimationApplier.AccumulatedProperties tempProperties) {
         for(AdditivelyAnimatedPropertyDescription description : properties) {
             diffs.put(description, description.getTargetValue() - description.getStartValue());
             lastValues.put(description, new Float(0));
@@ -31,7 +31,7 @@ public class AdditiveAnimatorHolder {
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                AdditiveAnimator.AccumulatedProperties params = mTempProperties;
+                AdditiveAnimationApplier.AccumulatedProperties params = mTempProperties;
                 for (AdditivelyAnimatedPropertyDescription tag : targets.keySet()) {
                     params.tempProperties.put(tag, params.tempProperties.get(tag) + getDelta(tag, animation.getAnimatedFraction()));
                 }

@@ -10,12 +10,13 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 
-import at.wirecube.additiveanimations.additiveanimationsdemo.animation.additive_animations.base.AdditiveAnimator;
+import at.wirecube.additiveanimations.additiveanimationsdemo.animation.additive_animations.base.AdditiveAnimatorSubclassDemo;
 
 public class TapToMoveDemoFragment extends Fragment {
 
     FrameLayout rootView;
     View animatedView;
+    float rotation = 0;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -26,7 +27,8 @@ public class TapToMoveDemoFragment extends Fragment {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if(event.getAction() == MotionEvent.ACTION_DOWN) {
-                    AdditiveAnimator.animate(animatedView).x(event.getX()).y(event.getY()).setDuration(1000).start();
+                    rotation += 30;
+                    new AdditiveAnimatorSubclassDemo(animatedView).x(event.getX()).y(event.getY()).rotation(rotation).setDuration(1000).start();
                     return true;
                 }
                 return true;
