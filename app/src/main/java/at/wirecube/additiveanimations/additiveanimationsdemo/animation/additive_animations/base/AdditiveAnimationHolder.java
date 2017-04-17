@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AdditiveAnimatorHolder {
+public class AdditiveAnimationHolder {
     private Map<AdditivelyAnimatedPropertyDescription, Float> diffs = new HashMap<>();
     private Map<AdditivelyAnimatedPropertyDescription, Float> lastValues = new HashMap<>();
     private Map<AdditivelyAnimatedPropertyDescription, Float> targets = new HashMap<>();
@@ -18,12 +18,10 @@ public class AdditiveAnimatorHolder {
     private AdditiveAnimator updater;
     private AdditiveAnimationApplier.AccumulatedProperties mTempProperties;
 
-    AdditiveAnimatorHolder(List<AdditivelyAnimatedPropertyDescription> properties, ValueAnimator animator, View animationTargetView, AdditiveAnimator animationChangeApplier, AdditiveAnimationApplier.AccumulatedProperties tempProperties) {
-        for(AdditivelyAnimatedPropertyDescription description : properties) {
-            diffs.put(description, description.getTargetValue() - description.getStartValue());
-            lastValues.put(description, new Float(0));
-            targets.put(description, description.getTargetValue());
-        }
+    AdditiveAnimationHolder(AdditivelyAnimatedPropertyDescription description, ValueAnimator animator, View animationTargetView, AdditiveAnimator animationChangeApplier, AdditiveAnimationApplier.AccumulatedProperties tempProperties) {
+        diffs.put(description, description.getTargetValue() - description.getStartValue());
+        lastValues.put(description, new Float(0));
+        targets.put(description, description.getTargetValue());
         this.animator = animator;
         this.mAnimationTargetView = animationTargetView;
         this.updater = animationChangeApplier;
@@ -40,6 +38,12 @@ public class AdditiveAnimatorHolder {
                 }
             }
         });
+    }
+
+    public void addAnimatedProperty(AdditivelyAnimatedPropertyDescription propertyDescription) {
+        diffs.put(propertyDescription, propertyDescription.getTargetValue() - propertyDescription.getStartValue());
+        lastValues.put(propertyDescription, new Float(0));
+        targets.put(propertyDescription, propertyDescription.getTargetValue());
     }
 
     public final float getDelta(AdditivelyAnimatedPropertyDescription tag, float progress) {

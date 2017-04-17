@@ -8,8 +8,8 @@ public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnima
         super(view);
     }
 
-    public AdditiveAnimatorSubclassDemo rotation(float targetRotation) {
-        mAnimator.addAnimation(createDescription(View.ROTATION, targetRotation));
-        return this;
-    }
+//    public AdditiveAnimatorSubclassDemo rotation(float targetRotation) {
+//        mAnimator.addAnimation(createDescription(View.ROTATION, targetRotation));
+//        return this;
+//    }
 }

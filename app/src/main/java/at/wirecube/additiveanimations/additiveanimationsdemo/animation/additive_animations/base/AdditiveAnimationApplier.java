@@ -5,12 +5,9 @@ import android.animation.ValueAnimator;
 import android.view.View;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -33,7 +30,6 @@ public class AdditiveAnimationApplier {
         return animator;
     }
 
-
     /**
      * Helper class for accumulating the changes made by all of the additive animators.
      */
@@ -44,10 +40,12 @@ public class AdditiveAnimationApplier {
     private AccumulatedProperties mAccumulatedLayoutParams = new AccumulatedProperties();
 
     private final View mAnimationTargetView;
-    private final List<AdditiveAnimatorHolder> additiveAnimatorHolders = new ArrayList<>();
+    private final List<AdditiveAnimationHolder> mAdditiveAnimationHolders = new ArrayList<>();
+    private final Map<String, Float> mLastTargetValues = new HashMap<>();
     private AdditiveAnimator mAnimationUpdater;
 
     private ValueAnimator mUnstartedAnimator;
+    private AdditiveAnimationHolder mUnstartedAnimationHolder;
 
     private AdditiveAnimationApplier(View animationTarget) {
         mAnimationTargetView = animationTarget;
@@ -58,56 +56,48 @@ public class AdditiveAnimationApplier {
         this.mAnimationUpdater = animationUpdater;
     }
 
-    public AdditiveAnimationApplier addAnimation(AdditivelyAnimatedPropertyDescription propertyDescription) {
-        addAnimations(Arrays.asList(propertyDescription));
-        return this;
+    public Float getLastTargetValue(String propertyName) {
+        return mLastTargetValues.get(propertyName);
     }
 
-    public AdditiveAnimationApplier addAnimations(List<AdditivelyAnimatedPropertyDescription> propertyDescriptions) {
-        // TODO: refactor start value computation
-        Map<AdditivelyAnimatedPropertyDescription, Float> startValues = new HashMap<>();
-        for(AdditivelyAnimatedPropertyDescription propertyDescription : propertyDescriptions) {
-            startValues.put(propertyDescription, propertyDescription.getStartValue());
+    public AdditiveAnimationApplier addAnimation(AdditivelyAnimatedPropertyDescription propertyDescription) {
+        if(mLastTargetValues.get(propertyDescription.getTag()) == null) {
+            mAccumulatedLayoutParams.tempProperties.put(propertyDescription, propertyDescription.getStartValue());
+        } else {
+            propertyDescription.setStartValue(mLastTargetValues.get(propertyDescription.getTag()));
         }
-
-        // collect correct start values:
-        // TODO: this is very inefficient and ugly
-        Set<AdditivelyAnimatedPropertyDescription> propertiesWithPreviousAnimation = new HashSet<>(propertyDescriptions);
-        for(AdditivelyAnimatedPropertyDescription property : propertyDescriptions) {
-            for(int i = additiveAnimatorHolders.size() - 1; i >= 0; i--) {
-                if(propertiesWithPreviousAnimation.contains(property) && additiveAnimatorHolders.get(i).getTargets().containsKey(property)) {
-                    property.setStartValue(additiveAnimatorHolders.get(i).getTargets().get(property));
-                    propertiesWithPreviousAnimation.remove(property);
-                }
-            }
-        }
-        for(AdditivelyAnimatedPropertyDescription p : propertiesWithPreviousAnimation) {
-            mAccumulatedLayoutParams.tempProperties.put(p, p.getStartValue());
-        }
+        mLastTargetValues.put(propertyDescription.getTag(), propertyDescription.getTargetValue());
 
         if(mUnstartedAnimator == null) {
             mUnstartedAnimator = ValueAnimator.ofFloat(0, 1);
         }
-        final AdditiveAnimatorHolder additiveAnimatorHolder = new AdditiveAnimatorHolder(propertyDescriptions, mUnstartedAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
-        if(!additiveAnimatorHolder.hasDiff()) {
+        if(mUnstartedAnimationHolder != null) {
+            mUnstartedAnimationHolder.addAnimatedProperty(propertyDescription);
             return this;
         }
+
+        mUnstartedAnimationHolder = new AdditiveAnimationHolder(propertyDescription, mUnstartedAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
+        final AdditiveAnimationHolder lastHolder = mUnstartedAnimationHolder;
+
+        for (AdditiveAnimationHolder animationHolder : mAdditiveAnimationHolders) {
+            animationHolder.setShouldRequestLayout(false);
+        }
+
         mUnstartedAnimator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 animation.removeAllListeners();
-                additiveAnimatorHolders.remove(additiveAnimatorHolder);
-                if (additiveAnimatorHolders.isEmpty()) {
-                    // TODO: error correction measures if necessary (add another animation to the last target state if there is a diff between the current state and the target)
+                mAdditiveAnimationHolders.remove(lastHolder);
+                if (mAdditiveAnimationHolders.isEmpty()) {
                     sAnimators.remove(mAnimationTargetView);
                 }
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
-                animation.removeAllListeners();
                 // This is only called when we cancel all animations, in which case we clear our animators anyway
                 // By removing the listeners, we ensure that our normal `onAnimationEnd` method isn't called.
+                animation.removeAllListeners();
             }
 
             @Override
@@ -119,13 +109,7 @@ public class AdditiveAnimationApplier {
             }
         });
 
-        additiveAnimatorHolder.setShouldRequestLayout(true);
-        additiveAnimatorHolders.add(additiveAnimatorHolder);
-
-        // TODO: use a single value animator from 0 to 1 and keep track of the progress (delta) in each additiveAnimatorHolder.
-        // Restart the value animator when a new animation is added.
-        // Then all animators can be updated together, thus reducing the performance overhead introduced by using different animators.
-        // This way, it's much simpler to go through each animator in succession and then request a layout pass at the right moment.
+        mUnstartedAnimationHolder.setShouldRequestLayout(true);
         return this;
     }
 
@@ -135,14 +119,16 @@ public class AdditiveAnimationApplier {
             mUnstartedAnimator.setInterpolator(mAnimationUpdater.getInterpolator());
             mUnstartedAnimator.start();
             mUnstartedAnimator = null;
+            mAdditiveAnimationHolders.add(mUnstartedAnimationHolder);
+            mUnstartedAnimationHolder = null;
         }
     }
 
     public void cancelAllAnimations() {
-        for(AdditiveAnimatorHolder additiveAnimatorHolder : additiveAnimatorHolders) {
-            additiveAnimatorHolder.cancel();
+        for(AdditiveAnimationHolder additiveAnimationHolder : mAdditiveAnimationHolders) {
+            additiveAnimationHolder.cancel();
         }
-        additiveAnimatorHolders.clear();
+        mAdditiveAnimationHolders.clear();
         sAnimators.remove(mAnimationTargetView);
     }
 
