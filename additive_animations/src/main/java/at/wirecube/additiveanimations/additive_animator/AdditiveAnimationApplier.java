@@ -2,6 +2,7 @@ package at.wirecube.additiveanimations.additive_animator;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
+import android.util.Property;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -58,6 +59,14 @@ public class AdditiveAnimationApplier {
 
     public Float getLastTargetValue(String propertyName) {
         return mLastTargetValues.get(propertyName);
+    }
+
+    public Float getActualPropertyValue(Property<View, Float> property) {
+        Float lastTarget = getLastTargetValue(property.getName());
+        if(lastTarget == null) {
+            lastTarget = property.get(mAnimationTargetView);
+        }
+        return lastTarget;
     }
 
     public AdditiveAnimationApplier addAnimation(AdditivelyAnimatedPropertyDescription propertyDescription) {
@@ -129,6 +138,7 @@ public class AdditiveAnimationApplier {
             additiveAnimationHolder.cancel();
         }
         mAdditiveAnimationHolders.clear();
+        mLastTargetValues.clear();
         sAnimators.remove(mAnimationTargetView);
     }
 
