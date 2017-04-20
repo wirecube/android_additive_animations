@@ -18,7 +18,7 @@
     <fragment
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:name="additive_animations.TapToMoveDemoFragment"
+        android:name="additive_animations.demo.TapToMoveDemoFragment"
         android:id="@+id/tap_to_move_fragment"
         tools:layout="@layout/content_additive_animations_showcase">
     </fragment>
