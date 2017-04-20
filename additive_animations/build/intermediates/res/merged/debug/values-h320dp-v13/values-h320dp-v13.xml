@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- From: file:/Users/davidganster/Projects/android_additive_animations/additive_animations/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.1/res/values-h320dp-v13/values-h320dp-v13.xml -->
-    <eat-comment/>
-    <bool name="abc_allow_stacked_button_bar">true</bool>
-</resources>
