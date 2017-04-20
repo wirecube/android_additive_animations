@@ -4,5 +4,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="niceOrange">#FFB902</color>
-    <color name='niceBlue'>#4AA5E3</color>
+    <color name="niceBlue">#4AA5E3</color>
+    <color name="niceGreen">#07D19E</color>
+    <color name="nicePink">#D13058</color>
 </resources>

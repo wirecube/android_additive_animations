@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'com.android.support:design:23.2.1'
     compile project(':additive_animations')
+    compile 'com.bartoszlipinski:viewpropertyobjectanimator:1.4.5'
 }

@@ -15,12 +15,31 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <fragment
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:name="additive_animations.demo.TapToMoveDemoFragment"
-        android:id="@+id/tap_to_move_fragment"
-        tools:layout="@layout/content_additive_animations_showcase">
-    </fragment>
+        android:layout_height="match_parent">
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_gravity="bottom|center">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/additive_animations_enabled_toggle_title"
+            android:textSize="16sp"
+            android:layout_marginRight="16dp"
+            android:layout_gravity="center_vertical"
+            android:gravity="center_vertical" />
+        <Switch
+            android:id="@+id/additive_animations_enabled_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:checked="true" />
+    </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>

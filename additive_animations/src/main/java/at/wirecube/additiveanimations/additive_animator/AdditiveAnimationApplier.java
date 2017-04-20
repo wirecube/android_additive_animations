@@ -45,8 +45,10 @@ public class AdditiveAnimationApplier {
     private final Map<String, Float> mLastTargetValues = new HashMap<>();
     private AdditiveAnimator mAnimationUpdater;
 
-    private ValueAnimator mUnstartedAnimator;
-    private AdditiveAnimationHolder mUnstartedAnimationHolder;
+    // This must be given by AdditiveAnimator, which is also responsible for starting the animation.
+    // This way, multiple AdditiveAnimators can share the same animator.
+    private ValueAnimator mNextValueAnimator;
+    private AdditiveAnimationHolder mNextAnimationHolder;
 
     private AdditiveAnimationApplier(View animationTarget) {
         mAnimationTargetView = animationTarget;
@@ -77,22 +79,19 @@ public class AdditiveAnimationApplier {
         }
         mLastTargetValues.put(propertyDescription.getTag(), propertyDescription.getTargetValue());
 
-        if(mUnstartedAnimator == null) {
-            mUnstartedAnimator = ValueAnimator.ofFloat(0, 1);
-        }
-        if(mUnstartedAnimationHolder != null) {
-            mUnstartedAnimationHolder.addAnimatedProperty(propertyDescription);
+        if(mNextAnimationHolder != null) {
+            mNextAnimationHolder.addAnimatedProperty(propertyDescription);
             return this;
         }
 
-        mUnstartedAnimationHolder = new AdditiveAnimationHolder(propertyDescription, mUnstartedAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
-        final AdditiveAnimationHolder lastHolder = mUnstartedAnimationHolder;
+        mNextAnimationHolder = new AdditiveAnimationHolder(propertyDescription, mNextValueAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
+        final AdditiveAnimationHolder lastHolder = mNextAnimationHolder;
 
         for (AdditiveAnimationHolder animationHolder : mAdditiveAnimationHolders) {
             animationHolder.setShouldRequestLayout(false);
         }
 
-        mUnstartedAnimator.addListener(new Animator.AnimatorListener() {
+        mNextValueAnimator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 animation.removeAllListeners();
@@ -118,18 +117,15 @@ public class AdditiveAnimationApplier {
             }
         });
 
-        mUnstartedAnimationHolder.setShouldRequestLayout(true);
+        mNextAnimationHolder.setShouldRequestLayout(true);
         return this;
     }
 
-    public void start() {
-        if(mUnstartedAnimator != null) {
-            mUnstartedAnimator.setDuration(mAnimationUpdater.getDuration());
-            mUnstartedAnimator.setInterpolator(mAnimationUpdater.getInterpolator());
-            mUnstartedAnimator.start();
-            mUnstartedAnimator = null;
-            mAdditiveAnimationHolders.add(mUnstartedAnimationHolder);
-            mUnstartedAnimationHolder = null;
+    public void onStart() {
+        if(mNextValueAnimator != null) {
+            mNextValueAnimator = null;
+            mAdditiveAnimationHolders.add(mNextAnimationHolder);
+            mNextAnimationHolder = null;
         }
     }
 
@@ -140,6 +136,10 @@ public class AdditiveAnimationApplier {
         mAdditiveAnimationHolders.clear();
         mLastTargetValues.clear();
         sAnimators.remove(mAnimationTargetView);
+    }
+
+    public void setNextValueAnimator(ValueAnimator animator) {
+        mNextValueAnimator = animator;
     }
 
 }

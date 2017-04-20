@@ -1,10 +1,6 @@
 package additive_animations.demo;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.MotionEvent;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -13,11 +9,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Switch;
 
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
 public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    public static boolean ADDITIVE_ANIMATIONS_ENABLED = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +35,15 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
+        // load default fragment = tap to move
+        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, new TapToMoveDemoFragment()).commit();
+        Switch additiveEnabledSwitch = (Switch) findViewById(R.id.additive_animations_enabled_switch);
+        additiveEnabledSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ADDITIVE_ANIMATIONS_ENABLED = ((Switch)v).isChecked();
+            }
+        });
     }
 
     @Override
@@ -77,7 +85,9 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_tap_to_move) {
-
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TapToMoveDemoFragment()).commit();
+        } else if(id == R.id.nav_multiple_views) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MultipleViewsAnimationDemoFragment()).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

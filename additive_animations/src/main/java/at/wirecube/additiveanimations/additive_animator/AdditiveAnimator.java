@@ -1,29 +1,69 @@
 package at.wirecube.additiveanimations.additive_animator;
 
 import android.animation.TimeInterpolator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.Property;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 
 public class AdditiveAnimator<T extends AdditiveAnimator> {
 
-    // TODO: support animating multiple views at once
-    protected View mView;
-    protected AdditiveAnimationApplier mAnimator;
-    protected TimeInterpolator mInterpolator = EaseInOutPathInterpolator.create();
-    protected int mDuration = 300;
+    protected List<View> mViews = new ArrayList<>();
+    private ValueAnimator mValueAnimator;
 
-    public AdditiveAnimator(View view) {
-        mView = view;
-        mAnimator = AdditiveAnimationApplier.from(view);
-        mAnimator.setAnimationUpdater(this);
+    public static AdditiveAnimator animate(View view) {
+        // This is just a convenience method when you need to animate a single view.
+        // All state except for the value animator is stored in AdditiveAnimationApplier.
+        return new AdditiveAnimator(view);
+    }
+
+    private AdditiveAnimator(View view) {
+        initValueAnimator();
+        setTarget(view);
+    }
+
+    public AdditiveAnimator() {
+        initValueAnimator();
+    }
+
+    private void initValueAnimator() {
+        mValueAnimator = ValueAnimator.ofFloat(0f, 1f);
+        mValueAnimator.setInterpolator(EaseInOutPathInterpolator.create());
+    }
+
+    /**
+     * Finds the last target value of the property with the given name, or returns `property.get()`
+     * if the property isn't animating at the moment.
+     */
+    public float getTargetPropertyValue(Property<View, Float> property) {
+        return AdditiveAnimationApplier.from(currentTarget()).getActualPropertyValue(property);
+    }
+
+    /**
+     * Finds the last target value of the property with the given name, if it was ever animated.
+     * This method can return null if the value hasn't been animated or the animation is already done.
+     * If you use custom properties in your subclass, you might want to override this method to return
+     * the actual model value.
+     */
+    public Float getTargetPropertyValue(String propertyName) {
+        return AdditiveAnimationApplier.from(currentTarget()).getLastTargetValue(propertyName);
+    }
+
+    public T setTarget(View v) {
+        mViews.add(v);
+        AdditiveAnimationApplier applier = AdditiveAnimationApplier.from(v);
+        applier.setAnimationUpdater(this);
+        applier.setNextValueAnimator(mValueAnimator);
+        return (T) this;
     }
 
     public final void applyChanges(Map<AdditivelyAnimatedPropertyDescription, Float> tempProperties, View targetView) {
@@ -45,24 +85,33 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         // Override to apply custom properties
     }
 
+    protected View currentTarget() {
+        return mViews.get(mViews.size() - 1);
+    }
+
     protected AdditivelyAnimatedPropertyDescription createDescription(Property<View, Float> property, float targetValue) {
-        return new AdditivelyAnimatedPropertyDescription(property, property.get(mView), targetValue);
+        return new AdditivelyAnimatedPropertyDescription(property, property.get(currentTarget()), targetValue);
     }
 
     protected final void animateProperty(Property<View, Float> property, float target) {
-        mAnimator.addAnimation(createDescription(property, target));
+        AdditiveAnimationApplier.from(currentTarget()).addAnimation(createDescription(property, target));
     }
 
     protected final void animatePropertyBy(Property<View, Float> property, float by) {
-        mAnimator.addAnimation(createDescription(property, mAnimator.getActualPropertyValue(property) + by));
+        AdditiveAnimationApplier.from(currentTarget()).addAnimation(createDescription(property, AdditiveAnimationApplier.from(currentTarget()).getActualPropertyValue(property) + by));
     }
 
     public void start() {
-        mAnimator.start();
+        mValueAnimator.start();
+        for(View v : mViews) {
+            AdditiveAnimationApplier.from(v).onStart();
+        }
     }
 
     public void cancelAllAnimations() {
-        mAnimator.cancelAllAnimations();
+        for(View v : mViews) {
+            AdditiveAnimationApplier.from(v).cancelAllAnimations();
+        }
     }
 
     public T scaleX(float scaleX) {
@@ -629,21 +678,21 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 //        return (T) this;
 //    }
 
-    public T setDuration(int duration) {
-        this.mDuration = duration;
+    public T setDuration(long duration) {
+        mValueAnimator.setDuration(duration);
         return (T)this;
     }
 
     public T setInterpolator(TimeInterpolator interpolator) {
-        mInterpolator = interpolator;
+        mValueAnimator.setInterpolator(interpolator);
         return (T)this;
     }
 
-    public int getDuration() {
-        return mDuration;
+    public long getDuration() {
+        return mValueAnimator.getDuration();
     }
 
     public TimeInterpolator getInterpolator() {
-        return mInterpolator;
+        return mValueAnimator.getInterpolator();
     }
 }
