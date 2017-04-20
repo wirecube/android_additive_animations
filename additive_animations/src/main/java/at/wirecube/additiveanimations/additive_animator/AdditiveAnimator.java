@@ -3,6 +3,7 @@ package at.wirecube.additiveanimations.additive_animator;
 import android.animation.TimeInterpolator;
 import android.annotation.SuppressLint;
 import android.os.Build;
+import android.support.v4.view.ViewCompat;
 import android.util.Property;
 import android.view.View;
 
@@ -26,18 +27,21 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public final void applyChanges(Map<AdditivelyAnimatedPropertyDescription, Float> tempProperties, View targetView) {
-        Map<AdditivelyAnimatedPropertyDescription, Float> unknownProperties = new HashMap<>();
+        Map<String, Float> unknownProperties = new HashMap<>();
         for(AdditivelyAnimatedPropertyDescription key : tempProperties.keySet()) {
             if(key.getProperty() != null) {
                 key.getProperty().set(targetView, tempProperties.get(key));
             } else {
-                unknownProperties.put(key, tempProperties.get(key));
+                unknownProperties.put(key.getTag(), tempProperties.get(key));
             }
         }
         applyCustomProperties(unknownProperties, targetView);
+        if(!ViewCompat.isInLayout(targetView)) {
+            targetView.requestLayout();
+        }
     }
 
-    protected void applyCustomProperties(Map<AdditivelyAnimatedPropertyDescription, Float> tempProperties, View targetView) {
+    protected void applyCustomProperties(Map<String, Float> tempProperties, View targetView) {
         // Override to apply custom properties
     }
 
@@ -50,11 +54,15 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected final void animatePropertyBy(Property<View, Float> property, float by) {
-        mAnimator.addAnimation(createDescription(property, mAnimator.getLastTargetValue(property.getName()) + by));
+        mAnimator.addAnimation(createDescription(property, mAnimator.getActualPropertyValue(property) + by));
     }
 
     public void start() {
         mAnimator.start();
+    }
+
+    public void cancelAllAnimations() {
+        mAnimator.cancelAllAnimations();
     }
 
     public T scaleX(float scaleX) {
