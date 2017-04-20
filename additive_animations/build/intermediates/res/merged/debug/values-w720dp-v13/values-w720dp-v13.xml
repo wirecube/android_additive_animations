@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/Users/davidganster/Projects/android_additive_animations/additive_animations/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.1/res/values-w720dp-v13/values-w720dp-v13.xml -->
+    <eat-comment/>
+    <bool name="abc_action_bar_expanded_action_views_exclusive">false</bool>
+</resources>

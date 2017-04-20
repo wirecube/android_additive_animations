@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/Users/davidganster/Projects/android_additive_animations/additive_animations/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.1/res/values-v22/values-v22.xml -->
+    <eat-comment/>
+    <style name="Base.Theme.AppCompat" parent="Base.V22.Theme.AppCompat"/>
+    <style name="Base.Theme.AppCompat.Light" parent="Base.V22.Theme.AppCompat.Light"/>
+    <style name="Base.V22.Theme.AppCompat" parent="Base.V21.Theme.AppCompat">
+        <item name="actionModeShareDrawable">?android:attr/actionModeShareDrawable</item>
+        <!-- We use the framework provided edit text background on 22+ -->
+        <item name="editTextBackground">?android:attr/editTextBackground</item>
+    </style>
+    <style name="Base.V22.Theme.AppCompat.Light" parent="Base.V21.Theme.AppCompat.Light">
+        <item name="actionModeShareDrawable">?android:attr/actionModeShareDrawable</item>
+        <!-- We use the framework provided edit text background on 22+ -->
+        <item name="editTextBackground">?android:attr/editTextBackground</item>
+    </style>
+</resources>
