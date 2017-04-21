@@ -40,6 +40,21 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         mValueAnimator.setInterpolator(EaseInOutPathInterpolator.create());
     }
 
+    private void initValueAnimatorIfNeeded() {
+        if(mValueAnimator == null) {
+            initValueAnimator();
+        }
+
+        if(currentAnimationApplier() != null) {
+            currentAnimationApplier().setAnimationUpdater(this);
+            currentAnimationApplier().setNextValueAnimator(mValueAnimator);
+        }
+    }
+
+    protected AdditiveAnimationApplier currentAnimationApplier() {
+        return AdditiveAnimationApplier.from(currentTarget());
+    }
+
 
     public static float getTargetPropertyValue(Property<View, Float> property, View v) {
         return AdditiveAnimationApplier.from(v).getActualPropertyValue(property);
@@ -54,7 +69,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * if the property isn't animating at the moment.
      */
     public float getTargetPropertyValue(Property<View, Float> property) {
-        return AdditiveAnimationApplier.from(currentTarget()).getActualPropertyValue(property);
+        return currentAnimationApplier() == null ? 0 : currentAnimationApplier().getActualPropertyValue(property);
     }
 
     /**
@@ -64,7 +79,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * the actual model value.
      */
     public Float getTargetPropertyValue(String propertyName) {
-        return AdditiveAnimationApplier.from(currentTarget()).getLastTargetValue(propertyName);
+        return currentAnimationApplier().getLastTargetValue(propertyName);
     }
 
     public T setTarget(View v) {
@@ -95,6 +110,9 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected View currentTarget() {
+        if(mViews.size() == 0) {
+            return null;
+        }
         return mViews.get(mViews.size() - 1);
     }
 
@@ -102,12 +120,19 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return new AdditivelyAnimatedPropertyDescription(property, property.get(currentTarget()), targetValue);
     }
 
+    protected final void animateProperty(AdditivelyAnimatedPropertyDescription property) {
+        initValueAnimatorIfNeeded();
+        currentAnimationApplier().addAnimation(property);
+    }
+
     protected final void animateProperty(Property<View, Float> property, float target) {
-        AdditiveAnimationApplier.from(currentTarget()).addAnimation(createDescription(property, target));
+        initValueAnimatorIfNeeded();
+        currentAnimationApplier().addAnimation(createDescription(property, target));
     }
 
     protected final void animatePropertyBy(Property<View, Float> property, float by) {
-        AdditiveAnimationApplier.from(currentTarget()).addAnimation(createDescription(property, AdditiveAnimationApplier.from(currentTarget()).getActualPropertyValue(property) + by));
+        initValueAnimatorIfNeeded();
+        currentAnimationApplier().addAnimation(createDescription(property, currentAnimationApplier().getActualPropertyValue(property) + by));
     }
 
     public void start() {
@@ -115,6 +140,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         for(View v : mViews) {
             AdditiveAnimationApplier.from(v).onStart();
         }
+        mValueAnimator = null;
     }
 
     public void cancelAllAnimations() {
@@ -688,20 +714,24 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 //    }
 
     public T setDuration(long duration) {
+        initValueAnimatorIfNeeded();
         mValueAnimator.setDuration(duration);
         return (T)this;
     }
 
     public T setInterpolator(TimeInterpolator interpolator) {
+        initValueAnimatorIfNeeded();
         mValueAnimator.setInterpolator(interpolator);
         return (T)this;
     }
 
     public long getDuration() {
+        initValueAnimatorIfNeeded();
         return mValueAnimator.getDuration();
     }
 
     public TimeInterpolator getInterpolator() {
+        initValueAnimatorIfNeeded();
         return mValueAnimator.getInterpolator();
     }
 }

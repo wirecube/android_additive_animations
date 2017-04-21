@@ -23,6 +23,9 @@ public class AdditiveAnimationApplier {
     private static final Map<View, AdditiveAnimationApplier> sAnimators = new HashMap<>();
 
     public static final AdditiveAnimationApplier from(View targetView) {
+        if(targetView == null) {
+            return null;
+        }
         AdditiveAnimationApplier animator = sAnimators.get(targetView);
         if (animator == null) {
             animator = new AdditiveAnimationApplier(targetView);
@@ -84,6 +87,9 @@ public class AdditiveAnimationApplier {
             return this;
         }
 
+        if(mNextValueAnimator == null) {
+            System.out.println("asdf");
+        }
         mNextAnimationHolder = new AdditiveAnimationHolder(propertyDescription, mNextValueAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
         final AdditiveAnimationHolder lastHolder = mNextAnimationHolder;
 
