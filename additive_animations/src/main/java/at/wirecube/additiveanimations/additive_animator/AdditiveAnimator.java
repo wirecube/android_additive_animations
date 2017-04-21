@@ -40,6 +40,15 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         mValueAnimator.setInterpolator(EaseInOutPathInterpolator.create());
     }
 
+
+    public static float getTargetPropertyValue(Property<View, Float> property, View v) {
+        return AdditiveAnimationApplier.from(v).getActualPropertyValue(property);
+    }
+
+    public static Float getTargetPropertyValue(String propertyName, View v) {
+        return AdditiveAnimationApplier.from(v).getLastTargetValue(propertyName);
+    }
+
     /**
      * Finds the last target value of the property with the given name, or returns `property.get()`
      * if the property isn't animating at the moment.

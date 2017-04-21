@@ -46,7 +46,7 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                     float x = event.getX();
                     float y = event.getY();
 
-                    if(event.getAction() == MotionEvent.ACTION_UP) {
+                    if(event.getAction() == MotionEvent.ACTION_UP && AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         int numRotations = Math.abs(rotation)/360;
                         int sign = rotation < 0 ? -1 : 1;
                         rotation = sign*360*numRotations; // snap to 360°
@@ -78,7 +78,6 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                         );
                         animatorSet.start();
                     }
-
                     return true;
                 }
                 return true;
