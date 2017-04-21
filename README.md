@@ -5,6 +5,8 @@ This library provides an easy way to additively animate a huge number of propert
 Some of the functionality was inspired by the excellent ViewPropertyObjectAnimator library: https://github.com/blipinsk/ViewPropertyObjectAnimator.
 
 Here is a sample of what additive animations can do to the user experience (note: there seem to be a few dropped frames in the gif which aren't present when running on a device):
+
+
 ![Additive animations demo](https://github.com/davidganster/android_additive_animations/blob/master/gif/additive_animations.gif?raw=true)
 
 
