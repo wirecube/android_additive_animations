@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
+import at.wirecube.additiveanimations.helper.MarginProperties;
 
 public class AdditiveAnimator<T extends AdditiveAnimator> {
 
@@ -293,104 +294,86 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return (T) this;
     }
 
-//    public T leftMargin(int leftMargin) {
-//        if (initMarginListener()) {
-//            mMarginListener.leftMargin(leftMargin);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T leftMarginBy(int leftMarginBy) {
-//        if (initMarginListener()) {
-//            mMarginListener.leftMarginBy(leftMarginBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T topMargin(int topMargin) {
-//        if (initMarginListener()) {
-//            mMarginListener.topMargin(topMargin);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T topMarginBy(int topMarginBy) {
-//        if (initMarginListener()) {
-//            mMarginListener.topMarginBy(topMarginBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T rightMargin(int rightMargin) {
-//        if (initMarginListener()) {
-//            mMarginListener.rightMargin(rightMargin);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T rightMarginBy(int rightMarginBy) {
-//        if (initMarginListener()) {
-//            mMarginListener.rightMarginBy(rightMarginBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T bottomMargin(int bottomMargin) {
-//        if (initMarginListener()) {
-//            mMarginListener.bottomMargin(bottomMargin);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T bottomMarginBy(int bottomMarginBy) {
-//        if (initMarginListener()) {
-//            mMarginListener.bottomMarginBy(bottomMarginBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T horizontalMargin(int horizontalMargin) {
-//        if (initMarginListener()) {
-//            mMarginListener.horizontalMargin(horizontalMargin);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T horizontalMarginBy(int horizontalMarginBy) {
-//        if (initMarginListener()) {
-//            mMarginListener.horizontalMarginBy(horizontalMarginBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T verticalMargin(int verticalMargin) {
-//        if (initMarginListener()) {
-//            mMarginListener.verticalMargin(verticalMargin);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T verticalMarginBy(int verticalMarginBy) {
-//        if (initMarginListener()) {
-//            mMarginListener.verticalMarginBy(verticalMarginBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T margin(int margin) {
-//        if (initMarginListener()) {
-//            mMarginListener.margin(margin);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T marginBy(int marginBy) {
-//        if (initMarginListener()) {
-//            mMarginListener.marginBy(marginBy);
-//        }
-//        return (T) this;
-//    }
-//
+    public T leftMargin(int leftMargin) {
+        animateProperty(MarginProperties.MARGIN_LEFT, leftMargin);
+        return (T) this;
+    }
+
+    public T leftMarginBy(int leftMarginBy) {
+        animatePropertyBy(MarginProperties.MARGIN_LEFT, leftMarginBy);
+        return (T) this;
+    }
+
+    public T topMargin(int topMargin) {
+        animateProperty(MarginProperties.MARGIN_TOP, topMargin);
+        return (T) this;
+    }
+
+    public T topMarginBy(int topMarginBy) {
+        animatePropertyBy(MarginProperties.MARGIN_TOP, topMarginBy);
+        return (T) this;
+    }
+
+    public T rightMargin(int rightMargin) {
+        animateProperty(MarginProperties.MARGIN_RIGHT, rightMargin);
+        return (T) this;
+    }
+
+    public T rightMarginBy(int rightMarginBy) {
+        animatePropertyBy(MarginProperties.MARGIN_RIGHT, rightMarginBy);
+        return (T) this;
+    }
+
+    public T bottomMargin(int bottomMargin) {
+        animateProperty(MarginProperties.MARGIN_BOTTOM, bottomMargin);
+        return (T) this;
+    }
+
+    public T bottomMarginBy(int bottomMarginBy) {
+        animatePropertyBy(MarginProperties.MARGIN_BOTTOM, bottomMarginBy);
+        return (T) this;
+    }
+
+    public T horizontalMargin(int horizontalMargin) {
+        leftMargin(horizontalMargin);
+        rightMargin(horizontalMargin);
+        return (T) this;
+    }
+
+    public T horizontalMarginBy(int horizontalMarginBy) {
+        leftMarginBy(horizontalMarginBy);
+        rightMarginBy(horizontalMarginBy);
+        return (T) this;
+    }
+
+    public T verticalMargin(int verticalMargin) {
+        topMargin(verticalMargin);
+        bottomMargin(verticalMargin);
+        return (T) this;
+    }
+
+    public T verticalMarginBy(int verticalMarginBy) {
+        topMarginBy(verticalMarginBy);
+        bottomMarginBy(verticalMarginBy);
+        return (T) this;
+    }
+
+    public T margin(int margin) {
+        leftMargin(margin);
+        rightMargin(margin);
+        topMargin(margin);
+        bottomMargin(margin);
+        return (T) this;
+    }
+
+    public T marginBy(int marginBy) {
+        leftMarginBy(marginBy);
+        rightMarginBy(marginBy);
+        topMarginBy(marginBy);
+        bottomMarginBy(marginBy);
+        return (T) this;
+    }
+
 //    public T width(int width) {
 //        if (initDimensionListener()) {
 //            mDimensionListener.width(width);

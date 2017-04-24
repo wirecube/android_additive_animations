@@ -78,7 +78,6 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                         );
                         animatorSet.start();
                     }
-                    return true;
                 }
                 return true;
             }

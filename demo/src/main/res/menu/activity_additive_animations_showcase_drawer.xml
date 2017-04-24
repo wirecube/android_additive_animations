@@ -4,8 +4,10 @@
     <group android:checkableBehavior="single">
         <item android:id="@+id/nav_tap_to_move" android:icon="@android:drawable/ic_menu_directions"
             android:title="Tap&amp;Drag to move" />
-        <item android:id="@+id/nav_multiple_views" android:icon="@android:drawable/ic_menu_directions"
+        <item android:id="@+id/nav_multiple_views" android:icon="@android:drawable/ic_menu_my_calendar"
             android:title="Multiple views" />
+        <item android:id="@+id/nav_margins" android:icon="@android:drawable/ic_menu_mapmode"
+            android:title="Margins" />
     </group>
 
     <!--<item android:title="Communicate">-->
