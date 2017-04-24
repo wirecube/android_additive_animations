@@ -23,9 +23,6 @@ import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
 public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     protected final List<View> mViews = new ArrayList<>();
-    protected final List<Animator.AnimatorPauseListener> mPauseListeners = new ArrayList<>();
-    protected final List<ValueAnimator.AnimatorUpdateListener> mUpdateListeners = new ArrayList<>();
-    protected final List<ValueAnimator.AnimatorListener> mListeners = new ArrayList<>();
 
     private ValueAnimator mValueAnimator;
 
