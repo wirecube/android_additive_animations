@@ -24,12 +24,6 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
     View pinkView;
     int rotation = 0;
 
-    private int distance(int alpha, int beta) {
-        int phi = Math.abs(beta - alpha) % 360;       // This is either the distance or 360 - distance
-        int distance = phi > 180 ? 360 - phi : phi;
-        return distance;
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -47,9 +41,10 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                     float y = event.getY();
 
                     if(event.getAction() == MotionEvent.ACTION_UP && AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
+                        // snap to 360°
                         int numRotations = Math.abs(rotation)/360;
                         int sign = rotation < 0 ? -1 : 1;
-                        rotation = sign*360*numRotations; // snap to 360°
+                        rotation = sign*360*numRotations;
                     } else if(x < rootView.getWidth()/2.0) {
                         rotation -= 10;
                     } else {

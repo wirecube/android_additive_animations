@@ -9,6 +9,8 @@ import at.wirecube.additiveanimations.helper.ArgbFloatEvaluator;
 
 public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnimatorSubclassDemo> {
 
+    private static final String BACKGROUND_COLOR_TAG = "BACKGROUND_COLOR_TAG";
+
     public AdditiveAnimatorSubclassDemo(View v) {
         super(v);
     }
@@ -19,14 +21,14 @@ public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnima
 
     @Override
     protected void applyCustomProperties(Map<String, Float> tempProperties, View targetView) {
-        if(tempProperties.get("background_color") != null) {
-            targetView.setBackgroundColor(tempProperties.get("background_color").intValue());
+        if(tempProperties.get(BACKGROUND_COLOR_TAG) != null) {
+            targetView.setBackgroundColor(tempProperties.get(BACKGROUND_COLOR_TAG).intValue());
         }
     }
 
     public AdditiveAnimatorSubclassDemo backgroundColor(int color) {
         int startVal = ((ColorDrawable)currentTarget().getBackground()).getColor();
-        AdditivelyAnimatedPropertyDescription desc = new AdditivelyAnimatedPropertyDescription("background_color", startVal, color);
+        AdditivelyAnimatedPropertyDescription desc = new AdditivelyAnimatedPropertyDescription(BACKGROUND_COLOR_TAG, startVal, color);
         desc.setCustomTypeEvaluator(new ArgbFloatEvaluator());
         animateProperty(desc);
         return this;
