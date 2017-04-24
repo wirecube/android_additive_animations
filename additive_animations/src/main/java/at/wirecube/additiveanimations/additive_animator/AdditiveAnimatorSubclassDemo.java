@@ -4,9 +4,17 @@ import android.view.View;
 
 public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnimatorSubclassDemo> {
 
+    public AdditiveAnimatorSubclassDemo(View v) {
+        super(v);
+    }
 
-//    public AdditiveAnimatorSubclassDemo rotation(float targetRotation) {
-//        mAnimator.addAnimation(createDescription(View.ROTATION, targetRotation));
-//        return this;
-//    }
+    public static AdditiveAnimatorSubclassDemo animate(View v) {
+        return new AdditiveAnimatorSubclassDemo(v);
+    }
+
+    public AdditiveAnimatorSubclassDemo xy(float x, float y) {
+        x(x);
+        y(y);
+        return this;
+    }
 }

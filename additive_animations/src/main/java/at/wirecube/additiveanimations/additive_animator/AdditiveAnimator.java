@@ -1,5 +1,6 @@
 package at.wirecube.additiveanimations.additive_animator;
 
+import android.animation.Animator;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
@@ -21,7 +22,11 @@ import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
 
 public class AdditiveAnimator<T extends AdditiveAnimator> {
 
-    protected List<View> mViews = new ArrayList<>();
+    protected final List<View> mViews = new ArrayList<>();
+    protected final List<Animator.AnimatorPauseListener> mPauseListeners = new ArrayList<>();
+    protected final List<ValueAnimator.AnimatorUpdateListener> mUpdateListeners = new ArrayList<>();
+    protected final List<ValueAnimator.AnimatorListener> mListeners = new ArrayList<>();
+
     private ValueAnimator mValueAnimator;
 
     public static AdditiveAnimator animate(View view) {
@@ -30,7 +35,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return new AdditiveAnimator(view);
     }
 
-    private AdditiveAnimator(View view) {
+    protected AdditiveAnimator(View view) {
         initValueAnimator();
         setTarget(view);
     }
@@ -57,6 +62,27 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     protected AdditiveAnimationApplier currentAnimationApplier() {
         return AdditiveAnimationApplier.from(currentTarget());
+    }
+
+    public T addUpdateListener(ValueAnimator.AnimatorUpdateListener listener) {
+        initValueAnimatorIfNeeded();
+        mValueAnimator.addUpdateListener(listener);
+        return (T) this;
+    }
+
+    @SuppressLint("NewApi")
+    public T addPauseListener(Animator.AnimatorPauseListener listener) {
+        initValueAnimatorIfNeeded();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            mValueAnimator.addPauseListener(listener);
+        }
+        return (T) this;
+    }
+
+    public T addListener(Animator.AnimatorListener listener) {
+        initValueAnimatorIfNeeded();
+        mValueAnimator.addListener(listener);
+        return (T) this;
     }
 
     public T setStartDelay(long startDelay) {

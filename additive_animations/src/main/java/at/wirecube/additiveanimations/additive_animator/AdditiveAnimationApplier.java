@@ -87,9 +87,6 @@ public class AdditiveAnimationApplier {
             return this;
         }
 
-        if(mNextValueAnimator == null) {
-            System.out.println("asdf");
-        }
         mNextAnimationHolder = new AdditiveAnimationHolder(propertyDescription, mNextValueAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
         final AdditiveAnimationHolder lastHolder = mNextAnimationHolder;
 
@@ -114,13 +111,8 @@ public class AdditiveAnimationApplier {
                 animation.removeAllListeners();
             }
 
-            @Override
-            public void onAnimationStart(Animator animation) {
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-            }
+            @Override public void onAnimationStart(Animator animation) {}
+            @Override public void onAnimationRepeat(Animator animation) {}
         });
 
         mNextAnimationHolder.setShouldRequestLayout(true);
