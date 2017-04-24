@@ -18,9 +18,7 @@ class AdditiveAnimationHolder {
     private AdditiveAnimationApplier.AccumulatedProperties mTempProperties;
 
     AdditiveAnimationHolder(AdditivelyAnimatedPropertyDescription description, ValueAnimator animator, View animationTargetView, AdditiveAnimator animationChangeApplier, AdditiveAnimationApplier.AccumulatedProperties tempProperties) {
-        diffs.put(description, description.getTargetValue() - description.getStartValue());
-        lastValues.put(description, new Float(0));
-        targets.put(description, description.getTargetValue());
+        addAnimatedProperty(description);
         this.animator = animator;
         this.mAnimationTargetView = animationTargetView;
         this.updater = animationChangeApplier;
@@ -48,7 +46,12 @@ class AdditiveAnimationHolder {
     final float getDelta(AdditivelyAnimatedPropertyDescription tag, float progress) {
         float diff = diffs.get(tag);
         float lastVal = lastValues.get(tag);
-        float newVal = diff * progress;
+        float newVal;
+        if(tag.getCustomTypeEvaluator() != null) {
+            newVal = tag.getCustomTypeEvaluator().evaluate(progress, tag.getStartValue(), tag.getTargetValue()) - tag.getStartValue();
+        } else {
+            newVal = diff * progress;
+        }
         float delta = newVal - lastVal;
         lastValues.put(tag, newVal);
         return delta;
@@ -56,17 +59,6 @@ class AdditiveAnimationHolder {
 
     final void cancel() {
         animator.cancel();
-    }
-
-    final Map<AdditivelyAnimatedPropertyDescription, Float> getTargets() { return targets; }
-
-    final boolean hasDiff() {
-        for(Float diff : diffs.values()) {
-            if(diff != 0) {
-                return true;
-            }
-        }
-        return false;
     }
 
     void setShouldRequestLayout(boolean shouldRequestLayout) {

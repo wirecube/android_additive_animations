@@ -1,9 +1,11 @@
 package at.wirecube.additiveanimations.additive_animator;
 
 import android.animation.Animator;
+import android.animation.ArgbEvaluator;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.Property;
@@ -153,7 +155,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
             AdditiveAnimationApplier.from(v).cancelAllAnimations();
         }
     }
-    
+
     public static float getTargetPropertyValue(Property<View, Float> property, View v) {
         return AdditiveAnimationApplier.from(v).getActualPropertyValue(property);
     }

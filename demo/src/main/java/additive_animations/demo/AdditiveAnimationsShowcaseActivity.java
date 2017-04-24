@@ -90,6 +90,8 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MultipleViewsAnimationDemoFragment()).commit();
         } else if(id == R.id.nav_margins) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MarginsDemoFragment()).commit();
+        } else if(id == R.id.nav_color) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TapToChangeColorDemoFragment()).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

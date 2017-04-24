@@ -1,5 +1,6 @@
 package at.wirecube.additiveanimations.additive_animator;
 
+import android.animation.TypeEvaluator;
 import android.util.Property;
 import android.view.View;
 
@@ -8,6 +9,7 @@ public class AdditivelyAnimatedPropertyDescription {
     private float mStartValue;
     private final float mTargetValue;
     private Property<View, Float> mProperty;
+    private TypeEvaluator<Float> mCustomTypeEvaluator;
 
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
@@ -46,6 +48,14 @@ public class AdditivelyAnimatedPropertyDescription {
 
     public void setStartValue(float startValue) {
         this.mStartValue = startValue;
+    }
+
+    public void setCustomTypeEvaluator(TypeEvaluator<Float> evaluator) {
+        mCustomTypeEvaluator = evaluator;
+    }
+
+    public TypeEvaluator<Float> getCustomTypeEvaluator() {
+        return mCustomTypeEvaluator;
     }
 
     public Property<View, Float> getProperty() { return mProperty; }
