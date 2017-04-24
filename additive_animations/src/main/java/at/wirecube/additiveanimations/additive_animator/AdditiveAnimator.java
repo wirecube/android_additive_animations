@@ -26,9 +26,13 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     private ValueAnimator mValueAnimator;
 
+    /**
+     * This is just a convenience method when you need to animate a single view.
+     * No state is kept in individual AdditiveAnimator instances, so you don't need to keep a reference to it.
+     * @param view The view to animate.
+     * @return A new instance of AdditiveAnimator with `target` set to `view`.
+     */
     public static AdditiveAnimator animate(View view) {
-        // This is just a convenience method when you need to animate a single view.
-        // All state except for the value animator is stored in AdditiveAnimationApplier.
         return new AdditiveAnimator(view);
     }
 
@@ -37,6 +41,10 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         setTarget(view);
     }
 
+    /**
+     * Creates a new AdditiveAnimator instance without a target view.
+     * You **must** call `setTarget(View v)` before calling one of the animation methods.
+     */
     public AdditiveAnimator() {
         initValueAnimator();
     }
@@ -59,6 +67,23 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     protected AdditiveAnimationApplier currentAnimationApplier() {
         return AdditiveAnimationApplier.from(currentTarget());
+    }
+
+    /**
+     * Sets the current animation target. You can change the animation target multiple times before calling
+     * {@link #start()}:<p/>
+     * <code>
+     *     new AdditiveAnimator().setTarget(view1).x(100).setTarget(view2).y(200).start()
+     * </code>
+     * @param v
+     * @return
+     */
+    public T setTarget(View v) {
+        mViews.add(v);
+        AdditiveAnimationApplier applier = AdditiveAnimationApplier.from(v);
+        applier.setAnimationUpdater(this);
+        applier.setNextValueAnimator(mValueAnimator);
+        return (T) this;
     }
 
     public T addUpdateListener(ValueAnimator.AnimatorUpdateListener listener) {
@@ -115,6 +140,20 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return mValueAnimator.getInterpolator();
     }
 
+    public void start() {
+        mValueAnimator.start();
+        for(View v : mViews) {
+            AdditiveAnimationApplier.from(v).onStart();
+        }
+        mValueAnimator = null;
+    }
+
+    public void cancelAllAnimations() {
+        for(View v : mViews) {
+            AdditiveAnimationApplier.from(v).cancelAllAnimations();
+        }
+    }
+    
     public static float getTargetPropertyValue(Property<View, Float> property, View v) {
         return AdditiveAnimationApplier.from(v).getActualPropertyValue(property);
     }
@@ -141,15 +180,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return currentAnimationApplier().getLastTargetValue(propertyName);
     }
 
-    public T setTarget(View v) {
-        mViews.add(v);
-        AdditiveAnimationApplier applier = AdditiveAnimationApplier.from(v);
-        applier.setAnimationUpdater(this);
-        applier.setNextValueAnimator(mValueAnimator);
-        return (T) this;
-    }
-
-    public final void applyChanges(Map<AdditivelyAnimatedPropertyDescription, Float> tempProperties, View targetView) {
+    final void applyChanges(Map<AdditivelyAnimatedPropertyDescription, Float> tempProperties, View targetView) {
         Map<String, Float> unknownProperties = new HashMap<>();
         for(AdditivelyAnimatedPropertyDescription key : tempProperties.keySet()) {
             if(key.getProperty() != null) {
@@ -192,20 +223,6 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     protected final void animatePropertyBy(Property<View, Float> property, float by) {
         initValueAnimatorIfNeeded();
         currentAnimationApplier().addAnimation(createDescription(property, currentAnimationApplier().getActualPropertyValue(property) + by));
-    }
-
-    public void start() {
-        mValueAnimator.start();
-        for(View v : mViews) {
-            AdditiveAnimationApplier.from(v).onStart();
-        }
-        mValueAnimator = null;
-    }
-
-    public void cancelAllAnimations() {
-        for(View v : mViews) {
-            AdditiveAnimationApplier.from(v).cancelAllAnimations();
-        }
     }
 
     public T scaleX(float scaleX) {

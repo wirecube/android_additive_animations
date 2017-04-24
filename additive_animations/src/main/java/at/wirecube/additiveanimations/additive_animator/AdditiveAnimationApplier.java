@@ -12,17 +12,14 @@ import java.util.Map;
 
 
 /**
- * A class that supports additive animations on all properties, provided you create a AdditiveAnimator.
+ * A class that supports additive animations on AdditivelyAnimatedPropertyDescription objects..
  * Additive animations are nicely explained here: http://ronnqvi.st/multiple-animations/
- * We have to use an additive animation when moving the user location view, because its position
- * is being updated all the time, before the previous animation is allowed to finish, resulting in
- * abrupt changes in velocity and direction.
  */
-public class AdditiveAnimationApplier {
+class AdditiveAnimationApplier {
 
     private static final Map<View, AdditiveAnimationApplier> sAnimators = new HashMap<>();
 
-    public static final AdditiveAnimationApplier from(View targetView) {
+    static final AdditiveAnimationApplier from(View targetView) {
         if(targetView == null) {
             return null;
         }
@@ -37,7 +34,7 @@ public class AdditiveAnimationApplier {
     /**
      * Helper class for accumulating the changes made by all of the additive animators.
      */
-    public static class AccumulatedProperties {
+    static class AccumulatedProperties {
         Map<AdditivelyAnimatedPropertyDescription, Float> tempProperties = new HashMap<>();
     }
 
@@ -58,15 +55,15 @@ public class AdditiveAnimationApplier {
         mAccumulatedLayoutParams = new AccumulatedProperties();
     }
 
-    public void setAnimationUpdater(AdditiveAnimator animationUpdater) {
+    void setAnimationUpdater(AdditiveAnimator animationUpdater) {
         this.mAnimationUpdater = animationUpdater;
     }
 
-    public Float getLastTargetValue(String propertyName) {
+    Float getLastTargetValue(String propertyName) {
         return mLastTargetValues.get(propertyName);
     }
 
-    public Float getActualPropertyValue(Property<View, Float> property) {
+    Float getActualPropertyValue(Property<View, Float> property) {
         Float lastTarget = getLastTargetValue(property.getName());
         if(lastTarget == null) {
             lastTarget = property.get(mAnimationTargetView);
@@ -74,7 +71,7 @@ public class AdditiveAnimationApplier {
         return lastTarget;
     }
 
-    public AdditiveAnimationApplier addAnimation(AdditivelyAnimatedPropertyDescription propertyDescription) {
+    AdditiveAnimationApplier addAnimation(AdditivelyAnimatedPropertyDescription propertyDescription) {
         if(mLastTargetValues.get(propertyDescription.getTag()) == null) {
             mAccumulatedLayoutParams.tempProperties.put(propertyDescription, propertyDescription.getStartValue());
         } else {
@@ -119,7 +116,7 @@ public class AdditiveAnimationApplier {
         return this;
     }
 
-    public void onStart() {
+    void onStart() {
         if(mNextValueAnimator != null) {
             mNextValueAnimator = null;
             mAdditiveAnimationHolders.add(mNextAnimationHolder);
@@ -127,7 +124,7 @@ public class AdditiveAnimationApplier {
         }
     }
 
-    public void cancelAllAnimations() {
+    void cancelAllAnimations() {
         for(AdditiveAnimationHolder additiveAnimationHolder : mAdditiveAnimationHolders) {
             additiveAnimationHolder.cancel();
         }
@@ -136,8 +133,7 @@ public class AdditiveAnimationApplier {
         sAnimators.remove(mAnimationTargetView);
     }
 
-    public void setNextValueAnimator(ValueAnimator animator) {
+    void setNextValueAnimator(ValueAnimator animator) {
         mNextValueAnimator = animator;
     }
-
 }

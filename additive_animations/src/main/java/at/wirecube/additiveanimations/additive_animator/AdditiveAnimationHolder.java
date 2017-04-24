@@ -6,7 +6,7 @@ import android.view.View;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AdditiveAnimationHolder {
+class AdditiveAnimationHolder {
     private Map<AdditivelyAnimatedPropertyDescription, Float> diffs = new HashMap<>();
     private Map<AdditivelyAnimatedPropertyDescription, Float> lastValues = new HashMap<>();
     private Map<AdditivelyAnimatedPropertyDescription, Float> targets = new HashMap<>();
@@ -39,13 +39,13 @@ public class AdditiveAnimationHolder {
         });
     }
 
-    public void addAnimatedProperty(AdditivelyAnimatedPropertyDescription propertyDescription) {
+    void addAnimatedProperty(AdditivelyAnimatedPropertyDescription propertyDescription) {
         diffs.put(propertyDescription, propertyDescription.getTargetValue() - propertyDescription.getStartValue());
         lastValues.put(propertyDescription, new Float(0));
         targets.put(propertyDescription, propertyDescription.getTargetValue());
     }
 
-    public final float getDelta(AdditivelyAnimatedPropertyDescription tag, float progress) {
+    final float getDelta(AdditivelyAnimatedPropertyDescription tag, float progress) {
         float diff = diffs.get(tag);
         float lastVal = lastValues.get(tag);
         float newVal = diff * progress;
@@ -54,13 +54,13 @@ public class AdditiveAnimationHolder {
         return delta;
     }
 
-    public final void cancel() {
+    final void cancel() {
         animator.cancel();
     }
 
-    public final Map<AdditivelyAnimatedPropertyDescription, Float> getTargets() { return targets; }
+    final Map<AdditivelyAnimatedPropertyDescription, Float> getTargets() { return targets; }
 
-    public final boolean hasDiff() {
+    final boolean hasDiff() {
         for(Float diff : diffs.values()) {
             if(diff != 0) {
                 return true;
@@ -69,7 +69,7 @@ public class AdditiveAnimationHolder {
         return false;
     }
 
-    public void setShouldRequestLayout(boolean shouldRequestLayout) {
+    void setShouldRequestLayout(boolean shouldRequestLayout) {
         this.shouldRequestLayout = shouldRequestLayout;
     }
 }

@@ -9,12 +9,23 @@ public class AdditivelyAnimatedPropertyDescription {
     private final float mTargetValue;
     private Property<View, Float> mProperty;
 
+    /**
+     * The preferred constructor to use when animating properties. If you use this constructor, you
+     * don't need to worry about the logic to apply the changes. This is taken care of by using the
+     * Setter provided by `property`.
+     */
     public AdditivelyAnimatedPropertyDescription(Property<View, Float> property, float startValue, float targetValue) {
         mProperty = property;
         mTargetValue = targetValue;
         mStartValue = startValue;
     }
 
+    /**
+     * Use this constructor for custom properties that have no simple getter or setter.
+     * @param tag Name of the animated property. Must be unique.
+     * @param startValue Start value of the animated property.
+     * @param targetValue Target value of the animated property.
+     */
     public AdditivelyAnimatedPropertyDescription(String tag, float startValue, float targetValue) {
         this.mTag = tag;
         this.mStartValue = startValue;
