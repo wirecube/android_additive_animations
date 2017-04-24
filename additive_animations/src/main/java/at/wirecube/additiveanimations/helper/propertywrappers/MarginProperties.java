@@ -1,4 +1,4 @@
-package at.wirecube.additiveanimations.helper;
+package at.wirecube.additiveanimations.helper.propertywrappers;
 
 import android.util.Property;
 import android.view.View;

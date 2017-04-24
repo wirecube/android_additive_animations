@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
-import at.wirecube.additiveanimations.helper.MarginProperties;
+import at.wirecube.additiveanimations.helper.propertywrappers.MarginProperties;
+import at.wirecube.additiveanimations.helper.propertywrappers.PaddingProperties;
+import at.wirecube.additiveanimations.helper.propertywrappers.ScrollProperties;
+import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
 
 public class AdditiveAnimator<T extends AdditiveAnimator> {
 
@@ -56,6 +59,38 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return AdditiveAnimationApplier.from(currentTarget());
     }
 
+    public T setStartDelay(long startDelay) {
+        initValueAnimatorIfNeeded();
+        mValueAnimator.setStartDelay(startDelay);
+        return (T) this;
+    }
+
+    public T setDuration(long duration) {
+        initValueAnimatorIfNeeded();
+        mValueAnimator.setDuration(duration);
+        return (T) this;
+    }
+
+    public T setInterpolator(TimeInterpolator interpolator) {
+        initValueAnimatorIfNeeded();
+        mValueAnimator.setInterpolator(interpolator);
+        return (T) this;
+    }
+
+    public long getStartDelay() {
+        initValueAnimatorIfNeeded();
+        return mValueAnimator.getStartDelay();
+    }
+
+    public long getDuration() {
+        initValueAnimatorIfNeeded();
+        return mValueAnimator.getDuration();
+    }
+
+    public TimeInterpolator getInterpolator() {
+        initValueAnimatorIfNeeded();
+        return mValueAnimator.getInterpolator();
+    }
 
     public static float getTargetPropertyValue(Property<View, Float> property, View v) {
         return AdditiveAnimationApplier.from(v).getActualPropertyValue(property);
@@ -374,174 +409,150 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return (T) this;
     }
 
-//    public T width(int width) {
-//        if (initDimensionListener()) {
-//            mDimensionListener.width(width);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T widthBy(int widthBy) {
-//        if (initDimensionListener()) {
-//            mDimensionListener.widthBy(widthBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T height(int height) {
-//        if (initDimensionListener()) {
-//            mDimensionListener.height(height);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T heightBy(int heightBy) {
-//        if (initDimensionListener()) {
-//            mDimensionListener.heightBy(heightBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T size(int size) {
-//        if (initDimensionListener()) {
-//            mDimensionListener.size(size);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T sizeBy(int sizeBy) {
-//        if (initDimensionListener()) {
-//            mDimensionListener.sizeBy(sizeBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T leftPadding(int leftPadding) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.leftPadding(leftPadding);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T leftPaddingBy(int leftPaddingBy) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.leftPaddingBy(leftPaddingBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T topPadding(int topPadding) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.topPadding(topPadding);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T topPaddingBy(int topPaddingBy) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.topPaddingBy(topPaddingBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T rightPadding(int rightPadding) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.rightPadding(rightPadding);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T rightPaddingBy(int rightPaddingBy) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.rightPaddingBy(rightPaddingBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T bottomPadding(int bottomPadding) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.bottomPadding(bottomPadding);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T bottomPaddingBy(int bottomPaddingBy) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.bottomPaddingBy(bottomPaddingBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T horizontalPadding(int horizontalPadding) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.horizontalPadding(horizontalPadding);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T horizontalPaddingBy(int horizontalPaddingBy) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.horizontalPaddingBy(horizontalPaddingBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T verticalPadding(int verticalPadding) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.verticalPadding(verticalPadding);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T verticalPaddingBy(int verticalPaddingBy) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.verticalPaddingBy(verticalPaddingBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T padding(int padding) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.padding(padding);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T paddingBy(int paddingBy) {
-//        if (initPaddingListener()) {
-//            mPaddingListener.paddingBy(paddingBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T scrollX(int scrollX) {
-//        if (initScrollListener()) {
-//            mScrollListener.scrollX(scrollX);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T scrollXBy(int scrollXBy) {
-//        if (initScrollListener()) {
-//            mScrollListener.scrollXBy(scrollXBy);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T scrollY(int scrollY) {
-//        if (initScrollListener()) {
-//            mScrollListener.scrollY(scrollY);
-//        }
-//        return (T) this;
-//    }
-//
-//    public T scrollYBy(int scrollYBy) {
-//        if (initScrollListener()) {
-//            mScrollListener.scrollYBy(scrollYBy);
-//        }
-//        return (T) this;
-//    }
-//
+    public T width(int width) {
+        animateProperty(SizeProperties.WIDTH, width);
+        return (T) this;
+    }
+
+    public T widthBy(int widthBy) {
+        animatePropertyBy(SizeProperties.WIDTH, widthBy);
+        return (T) this;
+    }
+
+    public T height(int height) {
+        animateProperty(SizeProperties.HEIGHT, height);
+        return (T) this;
+    }
+
+    public T heightBy(int heightBy) {
+        animatePropertyBy(SizeProperties.HEIGHT, heightBy);
+        return (T) this;
+    }
+
+    public T size(int size) {
+        animateProperty(SizeProperties.WIDTH, size);
+        animateProperty(SizeProperties.HEIGHT, size);
+        return (T) this;
+    }
+
+    public T sizeBy(int sizeBy) {
+        animatePropertyBy(SizeProperties.WIDTH, sizeBy);
+        animatePropertyBy(SizeProperties.HEIGHT, sizeBy);
+        return (T) this;
+    }
+
+    public T leftPadding(int leftPadding) {
+        animateProperty(PaddingProperties.PADDING_LEFT, leftPadding);
+        return (T) this;
+    }
+
+    public T leftPaddingBy(int leftPaddingBy) {
+        animatePropertyBy(PaddingProperties.PADDING_LEFT, leftPaddingBy);
+        return (T) this;
+    }
+
+    public T topPadding(int topPadding) {
+        animateProperty(PaddingProperties.PADDING_TOP, topPadding);
+        return (T) this;
+    }
+
+    public T topPaddingBy(int topPaddingBy) {
+        animatePropertyBy(PaddingProperties.PADDING_TOP, topPaddingBy);
+        return (T) this;
+    }
+
+    public T rightPadding(int rightPadding) {
+        animateProperty(PaddingProperties.PADDING_RIGHT, rightPadding);
+        return (T) this;
+    }
+
+    public T rightPaddingBy(int rightPaddingBy) {
+        animatePropertyBy(PaddingProperties.PADDING_RIGHT, rightPaddingBy);
+        return (T) this;
+    }
+
+    public T bottomPadding(int bottomPadding) {
+        animateProperty(PaddingProperties.PADDING_BOTTOM, bottomPadding);
+        return (T) this;
+    }
+
+    public T bottomPaddingBy(int bottomPaddingBy) {
+        animatePropertyBy(PaddingProperties.PADDING_BOTTOM, bottomPaddingBy);
+        return (T) this;
+    }
+
+    public T horizontalPadding(int horizontalPadding) {
+        animateProperty(PaddingProperties.PADDING_LEFT, horizontalPadding);
+        animateProperty(PaddingProperties.PADDING_RIGHT, horizontalPadding);
+        return (T) this;
+    }
+
+    public T horizontalPaddingBy(int horizontalPaddingBy) {
+        animatePropertyBy(PaddingProperties.PADDING_LEFT, horizontalPaddingBy);
+        animatePropertyBy(PaddingProperties.PADDING_RIGHT, horizontalPaddingBy);
+        return (T) this;
+    }
+
+    public T verticalPadding(int verticalPadding) {
+        animateProperty(PaddingProperties.PADDING_TOP, verticalPadding);
+        animateProperty(PaddingProperties.PADDING_BOTTOM, verticalPadding);
+        return (T) this;
+    }
+
+    public T verticalPaddingBy(int verticalPaddingBy) {
+        animatePropertyBy(PaddingProperties.PADDING_TOP, verticalPaddingBy);
+        animatePropertyBy(PaddingProperties.PADDING_BOTTOM, verticalPaddingBy);
+        return (T) this;
+    }
+
+    public T padding(int padding) {
+        animateProperty(PaddingProperties.PADDING_LEFT, padding);
+        animateProperty(PaddingProperties.PADDING_RIGHT, padding);
+        animateProperty(PaddingProperties.PADDING_BOTTOM, padding);
+        animateProperty(PaddingProperties.PADDING_TOP, padding);
+        return (T) this;
+    }
+
+    public T paddingBy(int paddingBy) {
+        animatePropertyBy(PaddingProperties.PADDING_LEFT, paddingBy);
+        animatePropertyBy(PaddingProperties.PADDING_RIGHT, paddingBy);
+        animatePropertyBy(PaddingProperties.PADDING_BOTTOM, paddingBy);
+        animatePropertyBy(PaddingProperties.PADDING_TOP, paddingBy);
+        return (T) this;
+    }
+
+    public T scrollX(int scrollX) {
+        animateProperty(ScrollProperties.SCROLL_X, scrollX);
+        return (T) this;
+    }
+
+    public T scrollXBy(int scrollXBy) {
+        animatePropertyBy(ScrollProperties.SCROLL_X, scrollXBy);
+        return (T) this;
+    }
+
+    public T scrollY(int scrollY) {
+        animateProperty(ScrollProperties.SCROLL_Y, scrollY);
+        return (T) this;
+    }
+
+    public T scrollYBy(int scrollYBy) {
+        animatePropertyBy(ScrollProperties.SCROLL_Y, scrollYBy);
+        return (T) this;
+    }
+
+    public T scroll(int x, int y) {
+        animateProperty(ScrollProperties.SCROLL_X, x);
+        animateProperty(ScrollProperties.SCROLL_Y, y);
+        return (T) this;
+    }
+
+    public T scrollBy(int xBy, int yBy) {
+        animatePropertyBy(ScrollProperties.SCROLL_X, xBy);
+        animatePropertyBy(ScrollProperties.SCROLL_Y, yBy);
+        return (T) this;
+    }
+
 //    public T widthPercent(float widthPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.widthPercent(widthPercent);
@@ -695,26 +706,4 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 //        }
 //        return (T) this;
 //    }
-
-    public T setDuration(long duration) {
-        initValueAnimatorIfNeeded();
-        mValueAnimator.setDuration(duration);
-        return (T)this;
-    }
-
-    public T setInterpolator(TimeInterpolator interpolator) {
-        initValueAnimatorIfNeeded();
-        mValueAnimator.setInterpolator(interpolator);
-        return (T)this;
-    }
-
-    public long getDuration() {
-        initValueAnimatorIfNeeded();
-        return mValueAnimator.getDuration();
-    }
-
-    public TimeInterpolator getInterpolator() {
-        initValueAnimatorIfNeeded();
-        return mValueAnimator.getInterpolator();
-    }
 }
