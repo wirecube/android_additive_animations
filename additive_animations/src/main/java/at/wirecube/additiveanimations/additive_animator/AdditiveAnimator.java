@@ -1,11 +1,9 @@
 package at.wirecube.additiveanimations.additive_animator;
 
 import android.animation.Animator;
-import android.animation.ArgbEvaluator;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.Property;
@@ -40,12 +38,12 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     protected AdditiveAnimator(View view) {
         initValueAnimator();
-        setTarget(view);
+        addTarget(view);
     }
 
     /**
      * Creates a new AdditiveAnimator instance without a target view.
-     * You **must** call `setTarget(View v)` before calling one of the animation methods.
+     * You **must** call `addTarget(View v)` before calling one of the animation methods.
      */
     public AdditiveAnimator() {
         initValueAnimator();
@@ -75,12 +73,12 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * Sets the current animation target. You can change the animation target multiple times before calling
      * {@link #start()}:<p/>
      * <code>
-     *     new AdditiveAnimator().setTarget(view1).x(100).setTarget(view2).y(200).start()
+     *     new AdditiveAnimator().addTarget(view1).x(100).addTarget(view2).y(200).start()
      * </code>
      * @param v
      * @return
      */
-    public T setTarget(View v) {
+    public T addTarget(View v) {
         mViews.add(v);
         AdditiveAnimationApplier applier = AdditiveAnimationApplier.from(v);
         applier.setAnimationUpdater(this);
