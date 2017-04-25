@@ -1,6 +1,7 @@
 package at.wirecube.additiveanimations.additive_animator;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
@@ -21,6 +22,10 @@ import at.wirecube.additiveanimations.helper.propertywrappers.ScrollProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
 
 public class AdditiveAnimator<T extends AdditiveAnimator> {
+
+    public abstract class AnimationEndListener {
+        public abstract void onAnimationEnd(boolean wasCancelled);
+    }
 
     protected final List<View> mViews = new ArrayList<>();
 
@@ -69,6 +74,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return AdditiveAnimationApplier.from(currentTarget());
     }
 
+    protected ValueAnimator getValueAnimator() {
+        initValueAnimatorIfNeeded();
+        return mValueAnimator;
+    }
+
     /**
      * Sets the current animation target. You can change the animation target multiple times before calling
      * {@link #start()}:<p/>
@@ -87,57 +97,71 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T addUpdateListener(ValueAnimator.AnimatorUpdateListener listener) {
-        initValueAnimatorIfNeeded();
-        mValueAnimator.addUpdateListener(listener);
+        getValueAnimator().addUpdateListener(listener);
         return (T) this;
     }
 
     @SuppressLint("NewApi")
     public T addPauseListener(Animator.AnimatorPauseListener listener) {
-        initValueAnimatorIfNeeded();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            mValueAnimator.addPauseListener(listener);
+            getValueAnimator().addPauseListener(listener);
         }
         return (T) this;
     }
 
     public T addListener(Animator.AnimatorListener listener) {
-        initValueAnimatorIfNeeded();
-        mValueAnimator.addListener(listener);
+        getValueAnimator().addListener(listener);
+        return (T) this;
+    }
+
+    public T withEndAction(final AnimationEndListener r) {
+        getValueAnimator().addListener(new AnimatorListenerAdapter() {
+            boolean wasCancelled = false;
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                r.onAnimationEnd(wasCancelled);
+            }
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                wasCancelled = true;
+            }
+        });
+        return (T) this;
+    }
+
+    public T withStartAction(final Runnable r) {
+        getValueAnimator().addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                r.run();
+            }
+        });
         return (T) this;
     }
 
     public T setStartDelay(long startDelay) {
-        initValueAnimatorIfNeeded();
-        mValueAnimator.setStartDelay(startDelay);
+        getValueAnimator().setStartDelay(startDelay);
         return (T) this;
     }
 
     public T setDuration(long duration) {
-        initValueAnimatorIfNeeded();
-        mValueAnimator.setDuration(duration);
+        getValueAnimator().setDuration(duration);
         return (T) this;
     }
 
     public T setInterpolator(TimeInterpolator interpolator) {
-        initValueAnimatorIfNeeded();
-        mValueAnimator.setInterpolator(interpolator);
+        getValueAnimator().setInterpolator(interpolator);
         return (T) this;
     }
 
-    public long getStartDelay() {
-        initValueAnimatorIfNeeded();
-        return mValueAnimator.getStartDelay();
+    public T setRepeatCount(int repeatCount) {
+        getValueAnimator().setRepeatCount(repeatCount);
+        return (T) this;
     }
 
-    public long getDuration() {
-        initValueAnimatorIfNeeded();
-        return mValueAnimator.getDuration();
-    }
-
-    public TimeInterpolator getInterpolator() {
-        initValueAnimatorIfNeeded();
-        return mValueAnimator.getInterpolator();
+    public T setRepeatMode(int repeatMode) {
+        getValueAnimator().setRepeatMode(repeatMode);
+        return (T) this;
     }
 
     public void start() {

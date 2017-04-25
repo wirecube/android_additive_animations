@@ -56,10 +56,10 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
 
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         new AdditiveAnimator().setDuration(1000)
-                                .setTarget(orangeView).x(x).y(y).rotation(rotation)
-                                .setTarget(blueView).x(width - x - blueView.getWidth()).y(height - y).rotation(-rotation)
-                                .setTarget(greenView).x(x).y(height - y).rotation(-rotation)
-                                .setTarget(pinkView).x(width - x - pinkView.getWidth()).y(y).rotation(rotation)
+                                .addTarget(orangeView).x(x).y(y).rotation(rotation)
+                                .addTarget(blueView).x(width - x - blueView.getWidth()).y(height - y).rotation(-rotation)
+                                .addTarget(greenView).x(x).y(height - y).rotation(-rotation)
+                                .addTarget(pinkView).x(width - x - pinkView.getWidth()).y(y).rotation(rotation)
                                 .start();
                     } else {
                         AnimatorSet animatorSet = new AnimatorSet();

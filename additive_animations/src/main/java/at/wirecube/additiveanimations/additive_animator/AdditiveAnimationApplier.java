@@ -1,6 +1,7 @@
 package at.wirecube.additiveanimations.additive_animator;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.util.Property;
 import android.view.View;
@@ -91,10 +92,9 @@ class AdditiveAnimationApplier {
             animationHolder.setShouldRequestLayout(false);
         }
 
-        mNextValueAnimator.addListener(new Animator.AnimatorListener() {
+        mNextValueAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                animation.removeAllListeners();
                 mAdditiveAnimationHolders.remove(lastHolder);
                 if (mAdditiveAnimationHolders.isEmpty()) {
                     sAnimators.remove(mAnimationTargetView);
@@ -104,12 +104,9 @@ class AdditiveAnimationApplier {
             @Override
             public void onAnimationCancel(Animator animation) {
                 // This is only called when we cancel all animations, in which case we clear our animators anyway
-                // By removing the listeners, we ensure that our normal `onAnimationEnd` method isn't called.
-                animation.removeAllListeners();
+                // By removing the listener, we ensure that our normal `onAnimationEnd` method isn't called.
+                animation.removeListener(this);
             }
-
-            @Override public void onAnimationStart(Animator animation) {}
-            @Override public void onAnimationRepeat(Animator animation) {}
         });
 
         mNextAnimationHolder.setShouldRequestLayout(true);
