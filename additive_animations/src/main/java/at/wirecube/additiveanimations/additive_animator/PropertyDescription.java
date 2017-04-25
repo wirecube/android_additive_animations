@@ -5,14 +5,17 @@ import android.graphics.Path;
 import android.util.Property;
 import android.view.View;
 
-import at.wirecube.additiveanimations.helper.PathEvaluatorRotation;
-import at.wirecube.additiveanimations.helper.PathEvaluatorX;
-import at.wirecube.additiveanimations.helper.PathEvaluatorY;
-
 public class PropertyDescription {
 
     enum PathMode {
-        X, Y, ROTATION
+        X, Y, ROTATION;
+        public static PathMode from(int mode) {
+            switch (mode) {
+                case 1: return Y;
+                case 2: return ROTATION;
+                case 0: default: return X;
+            }
+        }
     }
 
     private String mTag;
@@ -20,6 +23,7 @@ public class PropertyDescription {
     private float mTargetValue;
     private Property<View, Float> mProperty;
     private Path mPath;
+    private PathMode mPathMode;
     private TypeEvaluator mCustomTypeEvaluator;
 
     /**
@@ -45,36 +49,23 @@ public class PropertyDescription {
         this.mTargetValue = targetValue;
     }
 
-    public PropertyDescription(String tag, float startValue, Path path, PathMode pathMode) {
+    public PropertyDescription(String tag, float startValue, Path path, PathMode pathMode, PathEvaluator sharedEvaluator) {
         this.mTag = tag;
         this.mStartValue = startValue;
         this.mPath = path;
-        createCustomTypeEvaluator(pathMode);
-        this.mTargetValue = (float) mCustomTypeEvaluator.evaluate(1f, mStartValue, mPath);
+        this.mCustomTypeEvaluator = sharedEvaluator;
+        this.mPathMode = pathMode;
+        this.mTargetValue = (float) mCustomTypeEvaluator.evaluate(1f, mPathMode, mPath);
     }
 
-    public PropertyDescription(Property<View, Float> property, float startValue, Path path, PathMode pathMode) {
+    public PropertyDescription(Property<View, Float> property, float startValue, Path path, PathMode pathMode, PathEvaluator sharedEvaluator) {
         this.mProperty = property;
         this.mStartValue = startValue;
         this.mPath = path;
-        createCustomTypeEvaluator(pathMode);
-        this.mTargetValue = (float) mCustomTypeEvaluator.evaluate(1f, mStartValue, mPath);
+        this.mCustomTypeEvaluator = sharedEvaluator;
+        this.mPathMode = pathMode;
+        this.mTargetValue = (float) mCustomTypeEvaluator.evaluate(1f, mPathMode, mPath);
     }
-
-    private void createCustomTypeEvaluator(PathMode pathMode) {
-        switch (pathMode) {
-            case X:
-                setCustomTypeEvaluator(new PathEvaluatorX());
-                break;
-            case Y:
-                setCustomTypeEvaluator(new PathEvaluatorY());
-                break;
-            case ROTATION:
-                setCustomTypeEvaluator(new PathEvaluatorRotation());
-                break;
-        }
-    }
-
 
     public String getTag() {
         return mProperty != null ? mProperty.getName() : mTag;
@@ -104,6 +95,10 @@ public class PropertyDescription {
 
     public Path getPath() {
         return mPath;
+    }
+
+    public PathMode getPathMode() {
+        return mPathMode;
     }
 
     @Override

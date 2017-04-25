@@ -47,7 +47,7 @@ class AdditiveAnimationHolder {
         float newVal;
         if(tag.getCustomTypeEvaluator() != null) {
             if(tag.getPath() != null) {
-                newVal = (float) tag.getCustomTypeEvaluator().evaluate(progress, tag.getStartValue(), tag.getPath());
+                newVal = (float) tag.getCustomTypeEvaluator().evaluate(progress, tag.getPathMode(), tag.getPath());
             } else {
                 newVal = (float) tag.getCustomTypeEvaluator().evaluate(progress, tag.getStartValue(), tag.getTargetValue());
             }

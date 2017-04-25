@@ -236,8 +236,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return new PropertyDescription(property, property.get(currentTarget()), targetValue);
     }
 
-    protected PropertyDescription createDescription(Property<View, Float> property, Path path, PropertyDescription.PathMode mode) {
-        return new PropertyDescription(property, property.get(currentTarget()), path, mode);
+    protected PropertyDescription createDescription(Property<View, Float> property, Path path, PropertyDescription.PathMode mode, PathEvaluator sharedEvaluator) {
+        return new PropertyDescription(property, property.get(currentTarget()), path, mode, sharedEvaluator);
     }
 
     protected final void animateProperty(PropertyDescription property) {
@@ -245,9 +245,9 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         currentAnimationApplier().addAnimation(property);
     }
 
-    protected final void animateProperty(Property<View, Float> property, Path p, PropertyDescription.PathMode mode) {
+    protected final void animateProperty(Property<View, Float> property, Path p, PropertyDescription.PathMode mode, PathEvaluator sharedEvaluator) {
         initValueAnimatorIfNeeded();
-        currentAnimationApplier().addAnimation(createDescription(property, p, mode));
+        currentAnimationApplier().addAnimation(createDescription(property, p, mode, sharedEvaluator));
     }
 
     protected final void animateProperty(Property<View, Float> property, float target) {
@@ -415,15 +415,17 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T xyAlongPath(Path path) {
-        animateProperty(View.X, path, PropertyDescription.PathMode.X);
-        animateProperty(View.Y, path, PropertyDescription.PathMode.Y);
+        PathEvaluator sharedEvaluator = new PathEvaluator();
+        animateProperty(View.X, path, PropertyDescription.PathMode.X, sharedEvaluator);
+        animateProperty(View.Y, path, PropertyDescription.PathMode.Y, sharedEvaluator);
         return (T) this;
     }
 
     public T xyRotationAlongPath(Path path) {
-        animateProperty(View.X, path, PropertyDescription.PathMode.X);
-        animateProperty(View.Y, path, PropertyDescription.PathMode.Y);
-        animateProperty(View.ROTATION, path, PropertyDescription.PathMode.ROTATION);
+        PathEvaluator sharedEvaluator = new PathEvaluator();
+        animateProperty(View.X, path, PropertyDescription.PathMode.X, sharedEvaluator);
+        animateProperty(View.Y, path, PropertyDescription.PathMode.Y, sharedEvaluator);
+        animateProperty(View.ROTATION, path, PropertyDescription.PathMode.ROTATION, sharedEvaluator);
         return (T) this;
     }
 
