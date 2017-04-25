@@ -24,6 +24,7 @@ public class PropertyDescription {
     private Property<View, Float> mProperty;
     private Path mPath;
     private PathMode mPathMode;
+    private PathEvaluator mSharedPathEvaluator;
     private TypeEvaluator mCustomTypeEvaluator;
 
     /**
@@ -53,18 +54,18 @@ public class PropertyDescription {
         this.mTag = tag;
         this.mStartValue = startValue;
         this.mPath = path;
-        this.mCustomTypeEvaluator = sharedEvaluator;
+        this.mSharedPathEvaluator = sharedEvaluator;
         this.mPathMode = pathMode;
-        this.mTargetValue = (float) mCustomTypeEvaluator.evaluate(1f, mPathMode, mPath);
+        this.mTargetValue = evaluatePath(1f);
     }
 
     public PropertyDescription(Property<View, Float> property, float startValue, Path path, PathMode pathMode, PathEvaluator sharedEvaluator) {
         this.mProperty = property;
         this.mStartValue = startValue;
         this.mPath = path;
-        this.mCustomTypeEvaluator = sharedEvaluator;
+        this.mSharedPathEvaluator = sharedEvaluator;
         this.mPathMode = pathMode;
-        this.mTargetValue = (float) mCustomTypeEvaluator.evaluate(1f, mPathMode, mPath);
+        this.mTargetValue = evaluatePath(1f);
     }
 
     public String getTag() {
@@ -97,8 +98,8 @@ public class PropertyDescription {
         return mPath;
     }
 
-    public PathMode getPathMode() {
-        return mPathMode;
+    public float evaluatePath(float progress) {
+        return mSharedPathEvaluator.evaluate(progress, mPathMode, mPath);
     }
 
     @Override

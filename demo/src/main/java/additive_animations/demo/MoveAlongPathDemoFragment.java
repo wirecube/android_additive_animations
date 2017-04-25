@@ -23,7 +23,7 @@ public class MoveAlongPathDemoFragment extends Fragment {
     FrameLayout rootView;
     View animatedView;
 
-    int circleRadius = 100;  // TODO: dp to pixels
+    int circleRadius = 100; // TODO: dp to pixels
 
     @Nullable
     @Override
@@ -59,7 +59,7 @@ public class MoveAlongPathDemoFragment extends Fragment {
                             .setRepeatCount(ValueAnimator.INFINITE)
                             .start();
 
-                    // large circle which also updates rotation to better show where on the path we are
+                    // another circle which also updates rotation to better show where on the path we are
                     final Path path2 = new Path();
                     path2.addCircle(rootView.getWidth() / 2, rootView.getHeight() / 2, rootView.getWidth() / 4, Path.Direction.CW);
                     AdditiveAnimator.animate(animatedView).setDuration(3200).setInterpolator(new LinearInterpolator())
