@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.graphics.Path;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.Property;
@@ -28,6 +29,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected final List<View> mViews = new ArrayList<>();
+    private static long sDefaultAnimationDuration = 300;
 
     private ValueAnimator mValueAnimator;
 
@@ -54,9 +56,15 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         initValueAnimator();
     }
 
+    public static void setDefaultAnimationDuration(long defaultDuration) {
+        sDefaultAnimationDuration = defaultDuration;
+    }
+
+
     private void initValueAnimator() {
         mValueAnimator = ValueAnimator.ofFloat(0f, 1f);
         mValueAnimator.setInterpolator(EaseInOutPathInterpolator.create());
+        mValueAnimator.setDuration(sDefaultAnimationDuration);
     }
 
     private void initValueAnimatorIfNeeded() {
@@ -117,14 +125,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     public T withEndAction(final AnimationEndListener r) {
         getValueAnimator().addListener(new AnimatorListenerAdapter() {
             boolean wasCancelled = false;
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                r.onAnimationEnd(wasCancelled);
-            }
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                wasCancelled = true;
-            }
+            @Override public void onAnimationEnd(Animator animation) { r.onAnimationEnd(wasCancelled); }
+            @Override public void onAnimationCancel(Animator animation) { wasCancelled = true; }
         });
         return (T) this;
     }
@@ -204,9 +206,9 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return currentAnimationApplier().getLastTargetValue(propertyName);
     }
 
-    final void applyChanges(Map<AdditivelyAnimatedPropertyDescription, Float> tempProperties, View targetView) {
+    final void applyChanges(Map<PropertyDescription, Float> tempProperties, View targetView) {
         Map<String, Float> unknownProperties = new HashMap<>();
-        for(AdditivelyAnimatedPropertyDescription key : tempProperties.keySet()) {
+        for(PropertyDescription key : tempProperties.keySet()) {
             if(key.getProperty() != null) {
                 key.getProperty().set(targetView, tempProperties.get(key));
             } else {
@@ -230,13 +232,22 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return mViews.get(mViews.size() - 1);
     }
 
-    protected AdditivelyAnimatedPropertyDescription createDescription(Property<View, Float> property, float targetValue) {
-        return new AdditivelyAnimatedPropertyDescription(property, property.get(currentTarget()), targetValue);
+    protected PropertyDescription createDescription(Property<View, Float> property, float targetValue) {
+        return new PropertyDescription(property, property.get(currentTarget()), targetValue);
     }
 
-    protected final void animateProperty(AdditivelyAnimatedPropertyDescription property) {
+    protected PropertyDescription createDescription(Property<View, Float> property, Path path, PropertyDescription.PathMode mode) {
+        return new PropertyDescription(property, property.get(currentTarget()), path, mode);
+    }
+
+    protected final void animateProperty(PropertyDescription property) {
         initValueAnimatorIfNeeded();
         currentAnimationApplier().addAnimation(property);
+    }
+
+    protected final void animateProperty(Property<View, Float> property, Path p, PropertyDescription.PathMode mode) {
+        initValueAnimatorIfNeeded();
+        currentAnimationApplier().addAnimation(createDescription(property, p, mode));
     }
 
     protected final void animateProperty(Property<View, Float> property, float target) {
@@ -367,6 +378,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return (T) this;
     }
 
+    public T centerX(float centerX) {
+        animateProperty(View.X, centerX - currentTarget().getWidth() / 2);
+        return (T) this;
+    }
+
     public T y(float y) {
         animateProperty(View.Y, y);
         return (T) this;
@@ -374,6 +390,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     public T yBy(float yBy) {
         animatePropertyBy(View.Y, yBy);
+        return (T) this;
+    }
+
+    public T centerY(float centerY) {
+        animateProperty(View.Y, centerY - currentTarget().getHeight() / 2);
         return (T) this;
     }
 
@@ -390,6 +411,19 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             animatePropertyBy(View.Z, zBy);
         }
+        return (T) this;
+    }
+
+    public T xyAlongPath(Path path) {
+        animateProperty(View.X, path, PropertyDescription.PathMode.X);
+        animateProperty(View.Y, path, PropertyDescription.PathMode.Y);
+        return (T) this;
+    }
+
+    public T xyRotationAlongPath(Path path) {
+        animateProperty(View.X, path, PropertyDescription.PathMode.X);
+        animateProperty(View.Y, path, PropertyDescription.PathMode.Y);
+        animateProperty(View.ROTATION, path, PropertyDescription.PathMode.ROTATION);
         return (T) this;
     }
 

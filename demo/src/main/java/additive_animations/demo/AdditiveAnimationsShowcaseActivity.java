@@ -70,7 +70,6 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -81,7 +80,6 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
         int id = item.getItemId();
 
         if (id == R.id.nav_tap_to_move) {
@@ -92,6 +90,8 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MarginsDemoFragment()).commit();
         } else if(id == R.id.nav_color) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TapToChangeColorDemoFragment()).commit();
+        } else if(id == R.id.nav_path) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MoveAlongPathDemoFragment()).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

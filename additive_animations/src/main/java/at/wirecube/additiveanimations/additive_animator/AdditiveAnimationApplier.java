@@ -13,7 +13,7 @@ import java.util.Map;
 
 
 /**
- * A class that supports additive animations on AdditivelyAnimatedPropertyDescription objects..
+ * A class that supports additive animations on PropertyDescription objects..
  * Additive animations are nicely explained here: http://ronnqvi.st/multiple-animations/
  */
 class AdditiveAnimationApplier {
@@ -36,7 +36,7 @@ class AdditiveAnimationApplier {
      * Helper class for accumulating the changes made by all of the additive animators.
      */
     static class AccumulatedProperties {
-        Map<AdditivelyAnimatedPropertyDescription, Float> tempProperties = new HashMap<>();
+        Map<PropertyDescription, Float> tempProperties = new HashMap<>();
     }
 
     private AccumulatedProperties mAccumulatedLayoutParams = new AccumulatedProperties();
@@ -72,7 +72,7 @@ class AdditiveAnimationApplier {
         return lastTarget;
     }
 
-    AdditiveAnimationApplier addAnimation(AdditivelyAnimatedPropertyDescription propertyDescription) {
+    AdditiveAnimationApplier addAnimation(PropertyDescription propertyDescription) {
         if(mLastTargetValues.get(propertyDescription.getTag()) == null) {
             mAccumulatedLayoutParams.tempProperties.put(propertyDescription, propertyDescription.getStartValue());
         } else {
@@ -98,6 +98,9 @@ class AdditiveAnimationApplier {
                 mAdditiveAnimationHolders.remove(lastHolder);
                 if (mAdditiveAnimationHolders.isEmpty()) {
                     sAnimators.remove(mAnimationTargetView);
+                } else {
+                    // in case we finished before the previous animator, it must be allowed to continue updating the view:
+                    mAdditiveAnimationHolders.get(mAdditiveAnimationHolders.size() - 1).setShouldRequestLayout(true);
                 }
             }
 

@@ -19,7 +19,6 @@ import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 public class TapToMoveDemoFragment extends Fragment {
     FrameLayout rootView;
     View animatedView;
-    float rotation = 0;
 
     @Nullable
     @Override
@@ -31,15 +30,13 @@ public class TapToMoveDemoFragment extends Fragment {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if(event.getX() < getResources().getDisplayMetrics().widthPixels/2.0) {
-                        rotation -= 10;
-                    } else {
-                        rotation += 10;
-                    }
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(animatedView).x(event.getX()).y(event.getY()).rotation(rotation).setDuration(1000).start();
+                        AdditiveAnimator.animate(animatedView).setDuration(1000).centerX(event.getX()).centerY(event.getY()).start();
                     } else {
-                        ViewPropertyObjectAnimator.animate(animatedView).x(event.getX()).y(event.getY()).rotation(rotation).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000).start();
+                        ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
+                                .x(event.getX() - animatedView.getWidth() / 2)
+                                .y(event.getY() - animatedView.getHeight() / 2)
+                                .start();
                     }
                 }
                 return true;

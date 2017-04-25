@@ -10,6 +10,8 @@
             android:title="Margins" />
         <item android:id="@+id/nav_color" android:icon="@android:drawable/ic_menu_gallery"
             android:title="Subclass – Color" />
+        <item android:id="@+id/nav_path" android:icon="@android:drawable/ic_menu_crop"
+            android:title="Repeating along path" />
     </group>
 
     <!--<item android:title="Communicate">-->
