@@ -5,7 +5,7 @@ import android.view.View;
 
 import java.util.Map;
 
-import at.wirecube.additiveanimations.helper.ArgbFloatEvaluator;
+import at.wirecube.additiveanimations.helper.evaluators.ArgbFloatEvaluator;
 
 public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnimatorSubclassDemo> {
 

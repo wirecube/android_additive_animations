@@ -1,4 +1,4 @@
-package at.wirecube.additiveanimations.helper;
+package at.wirecube.additiveanimations.helper.evaluators;
 
 import android.animation.TypeEvaluator;
 

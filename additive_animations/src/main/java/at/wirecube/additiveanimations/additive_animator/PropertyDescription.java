@@ -1,10 +1,11 @@
 package at.wirecube.additiveanimations.additive_animator;
 
-import android.animation.FloatEvaluator;
 import android.animation.TypeEvaluator;
 import android.graphics.Path;
 import android.util.Property;
 import android.view.View;
+
+import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
 public class PropertyDescription {
 

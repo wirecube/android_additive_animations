@@ -1,4 +1,4 @@
-package at.wirecube.additiveanimations.additive_animator;
+package at.wirecube.additiveanimations.helper.evaluators;
 
 import android.graphics.Path;
 import android.graphics.PathMeasure;
@@ -36,7 +36,7 @@ public class PathEvaluator {
         return 0;
     }
 
-    float evaluate(float fraction, PathMode pathMode, Path path) {
+    public float evaluate(float fraction, PathMode pathMode, Path path) {
         if(fraction == lastEvaluatedFraction) {
             return getResult(pathMode);
         }

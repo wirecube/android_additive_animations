@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
+import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 import at.wirecube.additiveanimations.helper.propertywrappers.MarginProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.PaddingProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.ScrollProperties;
