@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 class AdditiveAnimationHolder {
-    private Map<PropertyDescription, Float> diffs = new HashMap<>();
     private Map<PropertyDescription, Float> lastValues = new HashMap<>();
 
     private boolean shouldRequestLayout = false;
@@ -26,7 +25,7 @@ class AdditiveAnimationHolder {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 AdditiveAnimationApplier.AccumulatedProperties params = mTempProperties;
-                for (PropertyDescription tag : diffs.keySet()) {
+                for (PropertyDescription tag : lastValues.keySet()) {
                     params.tempProperties.put(tag, params.tempProperties.get(tag) + getDelta(tag, animation.getAnimatedFraction()));
                 }
                 if (shouldRequestLayout) {
@@ -37,23 +36,12 @@ class AdditiveAnimationHolder {
     }
 
     void addAnimatedProperty(PropertyDescription propertyDescription) {
-        diffs.put(propertyDescription, propertyDescription.getTargetValue() - propertyDescription.getStartValue());
         lastValues.put(propertyDescription, propertyDescription.getStartValue());
     }
 
     final float getDelta(PropertyDescription tag, float progress) {
-        float diff = diffs.get(tag);
         float lastVal = lastValues.get(tag);
-        float newVal;
-        if(tag.getCustomTypeEvaluator() != null) {
-            if(tag.getPath() != null) {
-                newVal = tag.evaluatePath(progress);
-            } else {
-                newVal = (float) tag.getCustomTypeEvaluator().evaluate(progress, tag.getStartValue(), tag.getTargetValue());
-            }
-        } else {
-            newVal = tag.getStartValue() + diff * progress;
-        }
+        float newVal = tag.evaluateAt(progress);
         float delta = newVal - lastVal;
         lastValues.put(tag, newVal);
         return delta;

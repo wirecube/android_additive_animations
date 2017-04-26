@@ -1,5 +1,6 @@
 package at.wirecube.additiveanimations.additive_animator;
 
+import android.animation.FloatEvaluator;
 import android.animation.TypeEvaluator;
 import android.graphics.Path;
 import android.util.Property;
@@ -7,23 +8,12 @@ import android.view.View;
 
 public class PropertyDescription {
 
-    enum PathMode {
-        X, Y, ROTATION;
-        public static PathMode from(int mode) {
-            switch (mode) {
-                case 1: return Y;
-                case 2: return ROTATION;
-                case 0: default: return X;
-            }
-        }
-    }
-
     private String mTag;
     private float mStartValue;
     private float mTargetValue;
     private Property<View, Float> mProperty;
     private Path mPath;
-    private PathMode mPathMode;
+    private PathEvaluator.PathMode mPathMode;
     private PathEvaluator mSharedPathEvaluator;
     private TypeEvaluator mCustomTypeEvaluator;
 
@@ -50,22 +40,22 @@ public class PropertyDescription {
         this.mTargetValue = targetValue;
     }
 
-    public PropertyDescription(String tag, float startValue, Path path, PathMode pathMode, PathEvaluator sharedEvaluator) {
+    public PropertyDescription(String tag, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
         this.mTag = tag;
         this.mStartValue = startValue;
         this.mPath = path;
         this.mSharedPathEvaluator = sharedEvaluator;
         this.mPathMode = pathMode;
-        this.mTargetValue = evaluatePath(1f);
+        this.mTargetValue = evaluateAt(1f);
     }
 
-    public PropertyDescription(Property<View, Float> property, float startValue, Path path, PathMode pathMode, PathEvaluator sharedEvaluator) {
+    public PropertyDescription(Property<View, Float> property, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
         this.mProperty = property;
         this.mStartValue = startValue;
         this.mPath = path;
         this.mSharedPathEvaluator = sharedEvaluator;
         this.mPathMode = pathMode;
-        this.mTargetValue = evaluatePath(1f);
+        this.mTargetValue = evaluateAt(1f);
     }
 
     public String getTag() {
@@ -98,8 +88,16 @@ public class PropertyDescription {
         return mPath;
     }
 
-    public float evaluatePath(float progress) {
-        return mSharedPathEvaluator.evaluate(progress, mPathMode, mPath);
+    public float evaluateAt(float progress) {
+        if(mPath != null) {
+            return mSharedPathEvaluator.evaluate(progress, mPathMode, mPath);
+        } else {
+            if(mCustomTypeEvaluator != null) {
+                return (float) mCustomTypeEvaluator.evaluate(progress, mStartValue, mTargetValue);
+            } else {
+                return mStartValue + (mTargetValue - mStartValue) * progress;
+            }
+        }
     }
 
     @Override

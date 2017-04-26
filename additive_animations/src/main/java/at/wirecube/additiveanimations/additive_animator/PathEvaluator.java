@@ -6,15 +6,25 @@ import android.graphics.PathMeasure;
 
 /**
  * It is NOT safe to share objects of this type among different animators since it holds state.
- * It doesn't conform to TypeEvaluator because its usage is too obtuse to be generally useful.
  */
-class PathEvaluator {
+public class PathEvaluator {
+
+    public enum PathMode {
+        X, Y, ROTATION;
+        public static PathMode from(int mode) {
+            switch (mode) {
+                case 1: return Y;
+                case 2: return ROTATION;
+                case 0: default: return X;
+            }
+        }
+    }
 
     private float lastEvaluatedFraction = -1;
     private float[] lastPoint = new float[2];
     private float lastAngle = 0;
 
-    private float getResult(PropertyDescription.PathMode pathMode) {
+    private float getResult(PathMode pathMode) {
         switch (pathMode) {
             case X:
                 return lastPoint[0];
@@ -26,7 +36,7 @@ class PathEvaluator {
         return 0;
     }
 
-    float evaluate(float fraction, PropertyDescription.PathMode pathMode, Path path) {
+    float evaluate(float fraction, PathMode pathMode, Path path) {
         if(fraction == lastEvaluatedFraction) {
             return getResult(pathMode);
         }
