@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.graphics.Interpolator;
 import android.graphics.Path;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
@@ -31,6 +32,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     protected final List<View> mViews = new ArrayList<>();
     private static long sDefaultAnimationDuration = 300;
+    private static TimeInterpolator sDefaultInterpolator = EaseInOutPathInterpolator.create();
 
     private ValueAnimator mValueAnimator;
 
@@ -42,6 +44,10 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      */
     public static AdditiveAnimator animate(View view) {
         return new AdditiveAnimator(view);
+    }
+
+    public static void cancelAnimations(View view) {
+        AdditiveAnimationManager.from(view).cancelAllAnimations();
     }
 
     protected AdditiveAnimator(View view) {
@@ -57,13 +63,25 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         initValueAnimator();
     }
 
-    public static void setDefaultAnimationDuration(long defaultDuration) {
+    /**
+     * Globally sets the default animation duration to use for all AdditiveAnimator instances.
+     * You can override this by calling {@link #setDuration(long)} on a specific instance.
+     */
+    public static void setDefaultDuration(long defaultDuration) {
         sDefaultAnimationDuration = defaultDuration;
+    }
+
+    /**
+     * Globally sets the default interpolator to use for all AdditiveAnimator instances.
+     * You can override this by calling {@link #setInterpolator(TimeInterpolator)} on a specific instance.
+     */
+    public static void setsDefaultInterpolator(TimeInterpolator interpolator) {
+        sDefaultInterpolator = interpolator;
     }
 
     private void initValueAnimator() {
         mValueAnimator = ValueAnimator.ofFloat(0f, 1f);
-        mValueAnimator.setInterpolator(EaseInOutPathInterpolator.create());
+        mValueAnimator.setInterpolator(sDefaultInterpolator);
         mValueAnimator.setDuration(sDefaultAnimationDuration);
     }
 
@@ -78,8 +96,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         }
     }
 
-    protected AdditiveAnimationApplier currentAnimationApplier() {
-        return AdditiveAnimationApplier.from(currentTarget());
+    protected AdditiveAnimationManager currentAnimationApplier() {
+        return AdditiveAnimationManager.from(currentTarget());
     }
 
     protected ValueAnimator getValueAnimator() {
@@ -98,7 +116,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      */
     public T addTarget(View v) {
         mViews.add(v);
-        AdditiveAnimationApplier applier = AdditiveAnimationApplier.from(v);
+        AdditiveAnimationManager applier = AdditiveAnimationManager.from(v);
         applier.setAnimationUpdater(this);
         applier.setNextValueAnimator(mValueAnimator);
         return (T) this;
@@ -169,23 +187,23 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     public void start() {
         mValueAnimator.start();
         for(View v : mViews) {
-            AdditiveAnimationApplier.from(v).onStart();
+            AdditiveAnimationManager.from(v).onStart();
         }
         mValueAnimator = null;
     }
 
     public void cancelAllAnimations() {
         for(View v : mViews) {
-            AdditiveAnimationApplier.from(v).cancelAllAnimations();
+            AdditiveAnimationManager.from(v).cancelAllAnimations();
         }
     }
 
     public static float getTargetPropertyValue(Property<View, Float> property, View v) {
-        return AdditiveAnimationApplier.from(v).getActualPropertyValue(property);
+        return AdditiveAnimationManager.from(v).getActualPropertyValue(property);
     }
 
     public static Float getTargetPropertyValue(String propertyName, View v) {
-        return AdditiveAnimationApplier.from(v).getLastTargetValue(propertyName);
+        return AdditiveAnimationManager.from(v).getLastTargetValue(propertyName);
     }
 
     /**
