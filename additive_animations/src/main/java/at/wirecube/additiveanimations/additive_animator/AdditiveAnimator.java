@@ -25,7 +25,7 @@ import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
 
 public class AdditiveAnimator<T extends AdditiveAnimator> {
 
-    public abstract class AnimationEndListener {
+    public abstract static class AnimationEndListener {
         public abstract void onAnimationEnd(boolean wasCancelled);
     }
 
