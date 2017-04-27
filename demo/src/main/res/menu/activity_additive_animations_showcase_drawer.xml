@@ -12,6 +12,8 @@
             android:title="Subclass – Color" />
         <item android:id="@+id/nav_path" android:icon="@android:drawable/ic_menu_crop"
             android:title="Repeating along path" />
+        <item android:id="@+id/nav_chaining" android:icon="@android:drawable/ic_media_next"
+            android:title="Chaining animations" />
     </group>
 
     <!--<item android:title="Communicate">-->

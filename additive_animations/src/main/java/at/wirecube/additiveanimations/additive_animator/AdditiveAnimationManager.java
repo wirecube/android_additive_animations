@@ -51,7 +51,7 @@ class AdditiveAnimationManager {
     // This must be given by AdditiveAnimator, which is also responsible for starting the animation.
     // This way, multiple AdditiveAnimators can share the same animator.
     private ValueAnimator mNextValueAnimator;
-    private AdditiveAnimationApplier mNextAnimationHolder;
+    private AdditiveAnimationApplier mNextAnimationApplier;
 
     private AdditiveAnimationManager(View animationTarget) {
         mAnimationTargetView = animationTarget;
@@ -74,7 +74,7 @@ class AdditiveAnimationManager {
         return lastTarget;
     }
 
-    AdditiveAnimationManager addAnimation(PropertyDescription propertyDescription) {
+    void addAnimation(PropertyDescription propertyDescription) {
         if(mLastTargetValues.get(propertyDescription.getTag()) == null) {
             mAccumulatedLayoutParams.tempProperties.put(propertyDescription, propertyDescription.getStartValue());
         } else {
@@ -82,13 +82,13 @@ class AdditiveAnimationManager {
         }
         mLastTargetValues.put(propertyDescription.getTag(), propertyDescription.getTargetValue());
 
-        if(mNextAnimationHolder != null) {
-            mNextAnimationHolder.addAnimatedProperty(propertyDescription);
-            return this;
+        if(mNextAnimationApplier != null) {
+            mNextAnimationApplier.addAnimatedProperty(propertyDescription);
+            return;
         }
 
-        mNextAnimationHolder = new AdditiveAnimationApplier(propertyDescription, mNextValueAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
-        final AdditiveAnimationApplier lastHolder = mNextAnimationHolder;
+        mNextAnimationApplier = new AdditiveAnimationApplier(propertyDescription, mNextValueAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
+        final AdditiveAnimationApplier lastHolder = mNextAnimationApplier;
 
         mNextValueAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -107,15 +107,29 @@ class AdditiveAnimationManager {
                 animation.removeListener(this);
             }
         });
-
-        return this;
     }
 
-    void onStart() {
-        if(mNextValueAnimator != null) {
+    /**
+     * Returns the current animation applier object, resetting the builder state.
+     * @return
+     */
+    AdditiveAnimationApplier getAnimationApplier() {
+        AdditiveAnimationApplier applier = mNextAnimationApplier;
+        mNextAnimationApplier = null;
+        mNextValueAnimator = null;
+        return applier;
+    }
+
+    void startAnimationApplier(AdditiveAnimationApplier applier) {
+        mAdditiveAnimationAppliers.add(applier);
+    }
+
+    void onAnimationStart() {
+        if(mNextValueAnimator != null && mNextAnimationApplier != null) {
+            mAdditiveAnimationAppliers.add(mNextAnimationApplier);
             mNextValueAnimator = null;
-            mAdditiveAnimationAppliers.add(mNextAnimationHolder);
-            mNextAnimationHolder = null;
+            mNextAnimationApplier = null;
+            mAnimationUpdater = null;
         }
     }
 
