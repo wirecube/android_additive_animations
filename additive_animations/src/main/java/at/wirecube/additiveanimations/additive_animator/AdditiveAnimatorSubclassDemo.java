@@ -28,7 +28,7 @@ public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnima
 
     public AdditiveAnimatorSubclassDemo backgroundColor(int color) {
         int startVal = ((ColorDrawable)currentTarget().getBackground()).getColor();
-        PropertyDescription desc = new PropertyDescription(BACKGROUND_COLOR_TAG, startVal, color);
+        PropertyDescription desc = new PropertyDescription(currentTarget(), BACKGROUND_COLOR_TAG, startVal, color);
         desc.setCustomTypeEvaluator(new ArgbFloatEvaluator());
         animateProperty(desc);
         return this;

@@ -32,11 +32,11 @@ public class AnimationChainingDemoFragment extends Fragment {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         AdditiveAnimator.animate(animatedView).setDuration(1000)
                                 .centerX(event.getX()).rotationBy(45)
-                                .thenAfter(250)
+                                .thenAfter(250).setDuration(800)
                                 .centerY(event.getY()).rotationBy(45)
-                                .thenAfter(250)
+                                .thenAfter(250).setDuration(1200)
                                 .x(animatedView.getX()).rotationBy(45)
-                                .thenAfter(250)
+                                .thenAfter(250).setDuration(800)
                                 .y(animatedView.getY()).rotationBy(45)
                                 .start();
                     } else {

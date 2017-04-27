@@ -97,8 +97,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     private void initValueAnimatorIfNeeded() {
-        if(currentTarget() != null && mAnimationApplier == null) {
-            mAnimationApplier = new AdditiveAnimationApplier(currentTarget(), this);
+        if(mAnimationApplier == null) {
+            mAnimationApplier = new AdditiveAnimationApplier(this);
             getValueAnimator().setInterpolator(sDefaultInterpolator);
             getValueAnimator().setDuration(sDefaultAnimationDuration);
         }
@@ -326,11 +326,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected PropertyDescription createDescription(Property<View, Float> property, float targetValue) {
-        return new PropertyDescription(property, property.get(currentTarget()), targetValue);
+        return new PropertyDescription(currentTarget(), property, property.get(currentTarget()), targetValue);
     }
 
     protected PropertyDescription createDescription(Property<View, Float> property, Path path, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
-        return new PropertyDescription(property, property.get(currentTarget()), path, mode, sharedEvaluator);
+        return new PropertyDescription(currentTarget(), property, property.get(currentTarget()), path, mode, sharedEvaluator);
     }
 
     protected final void animateProperty(PropertyDescription property) {

@@ -12,11 +12,7 @@ class PropertyAccumulator {
     int updateCounter = 0;
 
     void add(PropertyDescription property, Float delta) {
-        Float temp = tempProperties.get(property);
-        if(temp == null) {
-            temp = property.getStartValue();
-        }
-        tempProperties.put(property, temp + delta);
+        tempProperties.put(property, tempProperties.get(property) + delta);
     }
 
     Map<PropertyDescription, Float> getAccumulatedProperties() {

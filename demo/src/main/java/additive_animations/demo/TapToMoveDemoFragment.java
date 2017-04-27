@@ -31,7 +31,7 @@ public class TapToMoveDemoFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(animatedView).setDuration(1000).x(event.getX()).y(event.getY()).start();
+                        AdditiveAnimator.animate(animatedView).setDuration(1000).centerX(event.getX()).centerY(event.getY()).start();
                     } else {
                         ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
                                 .x(event.getX() - animatedView.getWidth() / 2)
