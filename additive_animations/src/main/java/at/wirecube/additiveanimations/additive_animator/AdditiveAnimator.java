@@ -163,7 +163,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return (T) this;
     }
 
-    public T withEndAction(final AnimationEndListener r) {
+    public T addEndAction(final AnimationEndListener r) {
         getValueAnimator().addListener(new AnimatorListenerAdapter() {
             boolean wasCancelled = false;
 
@@ -180,7 +180,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return (T) this;
     }
 
-    public T withStartAction(final Runnable r) {
+    public T addStartAction(final Runnable r) {
         getValueAnimator().addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
