@@ -42,9 +42,7 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
 
                     if(event.getAction() == MotionEvent.ACTION_UP && AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         // snap to 360°
-                        int numRotations = Math.abs(rotation)/360;
-                        int sign = rotation < 0 ? -1 : 1;
-                        rotation = sign*360*numRotations;
+                        rotation = 0;
                     } else if(x < rootView.getWidth()/2.0) {
                         rotation -= 10;
                     } else {

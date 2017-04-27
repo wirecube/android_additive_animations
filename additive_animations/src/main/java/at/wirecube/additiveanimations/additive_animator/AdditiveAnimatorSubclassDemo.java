@@ -11,12 +11,16 @@ public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnima
 
     private static final String BACKGROUND_COLOR_TAG = "BACKGROUND_COLOR_TAG";
 
-    public AdditiveAnimatorSubclassDemo(View v) {
-        super(v);
-    }
 
     public static AdditiveAnimatorSubclassDemo animate(View v) {
-        return new AdditiveAnimatorSubclassDemo(v);
+        return new AdditiveAnimatorSubclassDemo().addTarget(v);
+    }
+
+    public AdditiveAnimatorSubclassDemo() { super(); }
+
+    @Override
+    protected AdditiveAnimatorSubclassDemo newInstance() {
+        return new AdditiveAnimatorSubclassDemo();
     }
 
     @Override
@@ -28,7 +32,7 @@ public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnima
 
     public AdditiveAnimatorSubclassDemo backgroundColor(int color) {
         int startVal = ((ColorDrawable)currentTarget().getBackground()).getColor();
-        PropertyDescription desc = new PropertyDescription(currentTarget(), BACKGROUND_COLOR_TAG, startVal, color);
+        AdditiveAnimation desc = new AdditiveAnimation(currentTarget(), BACKGROUND_COLOR_TAG, startVal, color);
         desc.setCustomTypeEvaluator(new ArgbFloatEvaluator());
         animateProperty(desc);
         return this;

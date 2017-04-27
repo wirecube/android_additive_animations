@@ -13,28 +13,31 @@ import java.util.Map;
 import java.util.Set;
 
 class AdditiveAnimationApplier {
-    private Map<PropertyDescription, Float> mLastValues = new HashMap<>();
+    private Map<AdditiveAnimation, Float> mPreviousValues = new HashMap<>();
     private ValueAnimator mAnimator = ValueAnimator.ofFloat(0f, 1f);
-    private final Set<View> mTargetViews = new HashSet<>();
+    private final Map<View, Set<String>> mAnimatedPropertiesPerView = new HashMap<>();
 
     AdditiveAnimationApplier(final AdditiveAnimator additiveAnimator) {
         mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
                 List<View> modifiedViews = new ArrayList<>();
-                for (PropertyDescription property : mLastValues.keySet()) {
-                    if(property.getView() != null) {
-                        PropertyAccumulator tempProperties = AdditiveAnimationManager.getAccumulatedProperties(property.getView());
-                        tempProperties.add(property, getDelta(property, animation.getAnimatedFraction()));
-                        modifiedViews.add(property.getView());
+                for (AdditiveAnimation animation : mPreviousValues.keySet()) {
+                    if (animation.getView() != null) {
+                        AnimationAccumulator tempProperties = AdditiveAnimationStateManager.getAccumulatedProperties(animation.getView());
+                        tempProperties.add(animation, getDelta(animation, valueAnimator.getAnimatedFraction()));
+                        modifiedViews.add(animation.getView());
                     }
                 }
-                for(View v : modifiedViews) {
-                    PropertyAccumulator tempProperties = AdditiveAnimationManager.getAccumulatedProperties(v);
-                    tempProperties.updateCounter += 1;
-                    if (tempProperties.updateCounter >= tempProperties.totalNumAnimationUpdaters) {
-                        additiveAnimator.applyChanges(tempProperties.getAccumulatedProperties(), v);
-                        tempProperties.updateCounter = 0;
+                for (View v : modifiedViews) {
+                    if (!mAnimatedPropertiesPerView.containsKey(v)) {
+                        continue;
+                    }
+                    AnimationAccumulator accumulator = AdditiveAnimationStateManager.getAccumulatedProperties(v);
+                    accumulator.updateCounter += 1;
+                    if (accumulator.updateCounter >= accumulator.totalNumAnimationUpdaters) {
+                        additiveAnimator.applyChanges(accumulator.getAccumulatedProperties(), v);
+                        accumulator.updateCounter = 0;
                     }
                 }
             }
@@ -50,37 +53,99 @@ class AdditiveAnimationApplier {
 
             @Override
             public void onAnimationEnd(Animator animation) {
+                // now we are actually done
                 if (!animationDidCancel) {
-                    for(View v : mTargetViews) {
-                        AdditiveAnimationManager.from(v).onAnimationApplierEnd(AdditiveAnimationApplier.this);
+                    for (View v : mAnimatedPropertiesPerView.keySet()) {
+                        AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationApplier.this);
                     }
                 }
             }
 
             @Override
             public void onAnimationStart(Animator animation) {
-                for(View v : mTargetViews) {
-                    AdditiveAnimationManager.from(v).onAnimationApplierStart(AdditiveAnimationApplier.this);
+                for (View v : mAnimatedPropertiesPerView.keySet()) {
+                    AdditiveAnimationStateManager.from(v).onAnimationApplierStart(AdditiveAnimationApplier.this);
                 }
             }
         });
     }
 
-    void addAnimatedProperty(PropertyDescription property) {
-        mLastValues.put(property, property.getStartValue());
-        mTargetViews.add(property.getView());
+    void addAnimation(AdditiveAnimation animation) {
+        mPreviousValues.put(animation, animation.getStartValue());
+        addTarget(animation.getView(), animation.getTag());
+    }
+
+    boolean removeAnimation(String animatedPropertyName, View v) {
+        return removeTarget(v, animatedPropertyName);
+    }
+
+    private void addTarget(View v, String animationTag) {
+        Set<String> animations = mAnimatedPropertiesPerView.get(v);
+        if(animations == null) {
+            animations = new HashSet<>();
+            mAnimatedPropertiesPerView.put(v, animations);
+        }
+        animations.add(animationTag);
+    }
+
+    private void removeTarget(View v) {
+        if(mAnimatedPropertiesPerView.get(v) == null) {
+            return;
+        }
+        for(String animatedValue : mAnimatedPropertiesPerView.get(v)) {
+            removeTarget(v, animatedValue);
+        }
+    }
+
+    /**
+     * Removes the animation with the given name from the given view.
+     * Returns true if this removed all animations from the view, false if there are still more animations running.
+     */
+    private boolean removeTarget(View v, String additiveAnimationName) {
+        AdditiveAnimation animationToRemove = null;
+        for(AdditiveAnimation anim : mPreviousValues.keySet()) {
+            if(anim.getView() == v && anim.getTag() == additiveAnimationName) {
+                animationToRemove = anim;
+                break;
+            }
+        }
+        if(animationToRemove != null) {
+            mPreviousValues.remove(animationToRemove);
+        }
+
+        Set<String> animations = mAnimatedPropertiesPerView.get(v);
+        if(animations == null) {
+            return true;
+        }
+        animations.remove(additiveAnimationName);
+        if(animations.isEmpty()) {
+            mAnimatedPropertiesPerView.remove(v);
+            return true;
+        }
+        return false;
     }
 
     ValueAnimator getAnimator() {
         return mAnimator;
     }
 
-    final float getDelta(PropertyDescription tag, float progress) {
-        float lastVal = mLastValues.get(tag);
-        float newVal = tag.evaluateAt(progress);
+    final float getDelta(AdditiveAnimation animation, float progress) {
+        float lastVal = mPreviousValues.get(animation);
+        float newVal = animation.evaluateAt(progress);
         float delta = newVal - lastVal;
-        mLastValues.put(tag, newVal);
+        mPreviousValues.put(animation, newVal);
         return delta;
+    }
+
+    /**
+     * Remove all properties belonging to `v`.
+     */
+    final void cancel(View v) {
+        if(mAnimatedPropertiesPerView.containsKey(v) && mAnimatedPropertiesPerView.size() == 1) {
+            cancel();
+        } else {
+            removeTarget(v);
+        }
     }
 
     final void cancel() {

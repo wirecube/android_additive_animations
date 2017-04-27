@@ -77,7 +77,6 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -94,6 +93,8 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MoveAlongPathDemoFragment()).commit();
         } else if(id == R.id.nav_chaining) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AnimationChainingDemoFragment()).commit();
+        } else if(id == R.id.nav_chaining_repeated) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new RepeatingChainedAnimationsDemoFragment()).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

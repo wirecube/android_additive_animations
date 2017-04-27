@@ -31,25 +31,17 @@ public class AnimationChainingDemoFragment extends Fragment {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         AdditiveAnimator.animate(animatedView).setDuration(1000)
-                                .centerX(event.getX()).rotationBy(45)
-                                .thenAfter(250).setDuration(800)
-                                .centerY(event.getY()).rotationBy(45)
-                                .thenAfter(250).setDuration(1200)
-                                .x(animatedView.getX()).rotationBy(45)
-                                .thenAfter(250).setDuration(800)
-                                .y(animatedView.getY()).rotationBy(45)
+                                .centerX(event.getX()).centerY(event.getY()).rotationBy(90)
+                                .thenDelayAfterEnd(100)
+                                .x(animatedView.getX()).y(animatedView.getY()).rotationBy(-90)
                                 .start();
                     } else {
                         ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
-                                .x(event.getX() - animatedView.getWidth() / 2)
-                                .withEndAction(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
-                                                .y(event.getY() - animatedView.getHeight() / 2)
-                                                .start();
-                                    }
-                                })
+                                .x(event.getX() - animatedView.getWidth() / 2).y(event.getY() - animatedView.getHeight() / 2).rotationBy(90)
+                                .start();
+                        ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
+                                .setStartDelay(1100)
+                                .x(animatedView.getX()).y(animatedView.getY()).rotationBy(-90)
                                 .start();
                     }
                 }

@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import at.wirecube.additiveanimations.helper.AnimationUtils;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 import at.wirecube.additiveanimations.helper.propertywrappers.MarginProperties;
@@ -23,6 +24,9 @@ import at.wirecube.additiveanimations.helper.propertywrappers.PaddingProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.ScrollProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
 
+/**
+ * Additive animations are nicely explained here: http://ronnqvi.st/multiple-animations/
+*/
 public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     public abstract static class AnimationEndListener {
@@ -30,11 +34,12 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected final List<View> mViews = new ArrayList<>();
+    private boolean mIsValid = true; // invalid after start
     private T mParent = null;
     private static long sDefaultAnimationDuration = 300;
     private static TimeInterpolator sDefaultInterpolator = EaseInOutPathInterpolator.create();
 
-    private AdditiveAnimationApplier mAnimationApplier;
+    protected AdditiveAnimationApplier mAnimationApplier;
 
     /**
      * This is just a convenience method when you need to animate a single view.
@@ -47,7 +52,15 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public static void cancelAnimations(View view) {
-        AdditiveAnimationManager.from(view).cancelAllAnimations();
+        AdditiveAnimationStateManager.from(view).cancelAllAnimations();
+    }
+
+    public static void cancelAnimation(View view, String animationTag) {
+        AdditiveAnimationStateManager.from(view).cancelAnimation(animationTag);
+    }
+
+    public static void cancelAnimation(View view, Property<View, Float> property) {
+        cancelAnimation(view, property.getName());
     }
 
     /**
@@ -66,6 +79,9 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         addTarget(other.currentTarget());
         setDuration(other.getValueAnimator().getDuration());
         setInterpolator(other.getValueAnimator().getInterpolator());
+        // we want the parent to repeat AFTER we are finished,
+        // so we'll restart it manually - so we turn off automatic repeats entirely.
+        // TODO: refactor this so it is always handled the same way
         mParent = other;
         return (T) this;
     }
@@ -97,6 +113,9 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     private void initValueAnimatorIfNeeded() {
+        if(!mIsValid) {
+            throw new RuntimeException("AdditiveAnimator instances cannot be reused.");
+        }
         if(mAnimationApplier == null) {
             mAnimationApplier = new AdditiveAnimationApplier(this);
             getValueAnimator().setInterpolator(sDefaultInterpolator);
@@ -104,8 +123,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         }
     }
 
-    protected AdditiveAnimationManager currentAnimationManager() {
-        return AdditiveAnimationManager.from(currentTarget());
+    protected AdditiveAnimationStateManager currentAnimationManager() {
+        return AdditiveAnimationStateManager.from(currentTarget());
     }
 
     protected ValueAnimator getValueAnimator() {
@@ -186,11 +205,14 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return (T) this;
     }
 
+    // TODO: docs for possible values (ValueAnimator.INFINITE)
+    // TODO: handle parent repeat
     public T setRepeatCount(int repeatCount) {
         getValueAnimator().setRepeatCount(repeatCount);
         return (T) this;
     }
 
+    // TODO: investigate possible problems when repeat modes of children/parents don't match
     public T setRepeatMode(int repeatMode) {
         getValueAnimator().setRepeatMode(repeatMode);
         return (T) this;
@@ -211,9 +233,15 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * Creates a new animator configured to start after <code>delay</code>, targeting the last view
      * that was configured with this animator.
      */
-    public T thenAfter(long delay) {
+    public T thenWithDelay(long delay) {
         T newAnimator = then();
         newAnimator.setStartDelay(getValueAnimator().getStartDelay() + delay);
+        return newAnimator;
+    }
+
+    public T thenDelayAfterEnd(long delayAfterEnd) {
+        T newAnimator = then();
+        newAnimator.setStartDelay(getTotalDuration() + delayAfterEnd);
         return newAnimator;
     }
 
@@ -227,7 +255,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if (getValueAnimator().getRepeatCount()== ValueAnimator.INFINITE) {
             return ValueAnimator.DURATION_INFINITE;
         } else {
-            return getValueAnimator().getStartDelay() + (getValueAnimator().getDuration()* (getValueAnimator().getRepeatCount() + 1));
+            return getValueAnimator().getStartDelay() + (getValueAnimator().getDuration() * (getValueAnimator().getRepeatCount() + 1));
         }
     }
 
@@ -235,50 +263,34 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if(mParent != null) {
             mParent.start();
         }
-
         getValueAnimator().start();
 
-//        if(getValueAnimator().getStartDelay() > 0) {
-//            // TODO: handle repeating animations for child/parent combinations?
-//            mValueAnimator.addListener(new AnimatorListenerAdapter() {
-//                @Override
-//                public void onAnimationStart(Animator animation) {
-//                    // wait for the animation to actually start before adding the current animations to the view
-//                    // (actual animation start depends on startDelay)
-//                    startAnimationInternal();
-//                }
-//            });
-//            mValueAnimator.start();
-//        } else {
-//            mValueAnimator.start();
-//            startAnimationInternal();
-//        }
-//        mValueAnimator = null;
+        // invalidate this animator to prevent incorrect usage:
+        mIsValid = false;
     }
-
-//    private void startAnimationInternal() {
-//        for (View v : mViews) {
-//            if (mCompletedAnimationApplier != null && mCompletedAnimationApplier.getView() == v) {
-//                AdditiveAnimationManager.from(v).startAnimationApplier(mCompletedAnimationApplier);
-//            } else {
-//                AdditiveAnimationManager.from(v).onAnimationStart();
-//            }
-//        }
-//        mCompletedAnimationApplier = null;
-//    }
 
     public void cancelAllAnimations() {
         for(View v : mViews) {
-            AdditiveAnimationManager.from(v).cancelAllAnimations();
+            AdditiveAnimationStateManager.from(v).cancelAllAnimations();
         }
     }
 
+    public void cancelAnimation(String propertyName) {
+        for(View v : mViews) {
+            cancelAnimation(v, propertyName);
+        }
+    }
+
+    public void cancelAnimation(Property<View, Float> property) {
+        cancelAnimation(property.getName());
+    }
+
     public static float getTargetPropertyValue(Property<View, Float> property, View v) {
-        return AdditiveAnimationManager.from(v).getActualPropertyValue(property);
+        return AdditiveAnimationStateManager.from(v).getActualPropertyValue(property);
     }
 
     public static Float getTargetPropertyValue(String propertyName, View v) {
-        return AdditiveAnimationManager.from(v).getLastTargetValue(propertyName);
+        return AdditiveAnimationStateManager.from(v).getLastTargetValue(propertyName);
     }
 
     /**
@@ -299,9 +311,9 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return currentAnimationManager().getLastTargetValue(propertyName);
     }
 
-    final void applyChanges(Map<PropertyDescription, Float> tempProperties, View targetView) {
+    final void applyChanges(Map<AdditiveAnimation, Float> tempProperties, View targetView) {
         Map<String, Float> unknownProperties = new HashMap<>();
-        for(PropertyDescription key : tempProperties.keySet()) {
+        for(AdditiveAnimation key : tempProperties.keySet()) {
             if(key.getProperty() != null) {
                 key.getProperty().set(targetView, tempProperties.get(key));
             } else {
@@ -325,15 +337,15 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return mViews.get(mViews.size() - 1);
     }
 
-    protected PropertyDescription createDescription(Property<View, Float> property, float targetValue) {
-        return new PropertyDescription(currentTarget(), property, property.get(currentTarget()), targetValue);
+    protected AdditiveAnimation createDescription(Property<View, Float> property, float targetValue) {
+        return new AdditiveAnimation(currentTarget(), property, property.get(currentTarget()), targetValue);
     }
 
-    protected PropertyDescription createDescription(Property<View, Float> property, Path path, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
-        return new PropertyDescription(currentTarget(), property, property.get(currentTarget()), path, mode, sharedEvaluator);
+    protected AdditiveAnimation createDescription(Property<View, Float> property, Path path, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
+        return new AdditiveAnimation(currentTarget(), property, property.get(currentTarget()), path, mode, sharedEvaluator);
     }
 
-    protected final void animateProperty(PropertyDescription property) {
+    protected final void animateProperty(AdditiveAnimation property) {
         initValueAnimatorIfNeeded();
         currentAnimationManager().addAnimation(mAnimationApplier, property);
     }
@@ -432,7 +444,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T rotation(float rotation) {
-        animateProperty(View.ROTATION, rotation);
+        float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION), rotation);
+        animatePropertyBy(View.ROTATION, shortestDistance);
         return (T) this;
     }
 
@@ -442,7 +455,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T rotationX(float rotationX) {
-        animateProperty(View.ROTATION_X, rotationX);
+        float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_X), rotationX);
+        animatePropertyBy(View.ROTATION_X, shortestDistance);
         return (T) this;
     }
 
@@ -452,7 +466,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T rotationY(float rotationY) {
-        animateProperty(View.ROTATION_Y, rotationY);
+        float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_Y), rotationY);
+        animatePropertyBy(View.ROTATION_Y, shortestDistance);
         return (T) this;
     }
 

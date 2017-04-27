@@ -32,9 +32,9 @@ public class TapToChangeColorDemoFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         final int colors[] = new int[] {
+                getResources().getColor(R.color.niceOrange),
                 getResources().getColor(R.color.niceBlue),
                 getResources().getColor(R.color.niceGreen),
-                getResources().getColor(R.color.niceOrange),
                 getResources().getColor(R.color.nicePink)
         };
         animatedView.setOnClickListener(new View.OnClickListener() {

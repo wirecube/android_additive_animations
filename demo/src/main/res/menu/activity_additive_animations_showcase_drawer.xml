@@ -14,6 +14,8 @@
             android:title="Repeating along path" />
         <item android:id="@+id/nav_chaining" android:icon="@android:drawable/ic_media_next"
             android:title="Chaining animations" />
+        <item android:id="@+id/nav_chaining_repeated" android:icon="@android:drawable/ic_menu_rotate"
+            android:title="Chaining repeated animations" />
     </group>
 
     <!--<item android:title="Communicate">-->
