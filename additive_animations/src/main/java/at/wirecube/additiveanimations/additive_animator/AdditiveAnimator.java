@@ -34,10 +34,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     private static long sDefaultAnimationDuration = 300;
     private static TimeInterpolator sDefaultInterpolator = EaseInOutPathInterpolator.create();
 
-    private ValueAnimator mValueAnimator;
-    // This will be set when a child animator is added, allowing the child to create its own AdditiveAnimationApplier
-    // without adding to the current animation.
-    private AdditiveAnimationApplier mCompletedAnimationApplier;
+    private AdditiveAnimationApplier mAnimationApplier;
 
     /**
      * This is just a convenience method when you need to animate a single view.
@@ -74,7 +71,6 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected AdditiveAnimator(View view) {
-        initValueAnimator();
         addTarget(view);
     }
 
@@ -82,9 +78,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * Creates a new AdditiveAnimator instance without a target view.
      * You **must** call `addTarget(View v)` before calling one of the animation methods.
      */
-    public AdditiveAnimator() {
-        initValueAnimator();
-    }
+    public AdditiveAnimator() {}
 
     /**
      * Globally sets the default animation duration to use for all AdditiveAnimator instances.
@@ -102,20 +96,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         sDefaultInterpolator = interpolator;
     }
 
-    private void initValueAnimator() {
-        mValueAnimator = ValueAnimator.ofFloat(0f, 1f);
-        mValueAnimator.setInterpolator(sDefaultInterpolator);
-        mValueAnimator.setDuration(sDefaultAnimationDuration);
-    }
-
     private void initValueAnimatorIfNeeded() {
-        if(mValueAnimator == null) {
-            initValueAnimator();
-        }
-
-        if(currentAnimationManager() != null) {
-            currentAnimationManager().setAnimationUpdater(this);
-            currentAnimationManager().setNextValueAnimator(mValueAnimator);
+        if(currentTarget() != null && mAnimationApplier == null) {
+            mAnimationApplier = new AdditiveAnimationApplier(currentTarget(), this);
+            getValueAnimator().setInterpolator(sDefaultInterpolator);
+            getValueAnimator().setDuration(sDefaultAnimationDuration);
         }
     }
 
@@ -125,7 +110,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     protected ValueAnimator getValueAnimator() {
         initValueAnimatorIfNeeded();
-        return mValueAnimator;
+        return mAnimationApplier.getAnimator();
     }
 
     /**
@@ -134,8 +119,6 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * <code>
      *     new AdditiveAnimator().addTarget(view1).x(100).addTarget(view2).y(200).start()
      * </code>
-     * @param v
-     * @return
      */
     public T addTarget(View v) {
         mViews.add(v);
@@ -218,7 +201,6 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * that was configured with this animator.
      */
     public T then() {
-        mCompletedAnimationApplier = currentAnimationManager().getAnimationApplier();
         T newInstance = newInstance();
         newInstance.setParent(this);
         newInstance.setStartDelay(getTotalDuration());
@@ -231,7 +213,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      */
     public T thenAfter(long delay) {
         T newAnimator = then();
-        newAnimator.setStartDelay(delay);
+        newAnimator.setStartDelay(getValueAnimator().getStartDelay() + delay);
         return newAnimator;
     }
 
@@ -245,7 +227,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if (getValueAnimator().getRepeatCount()== ValueAnimator.INFINITE) {
             return ValueAnimator.DURATION_INFINITE;
         } else {
-            return getValueAnimator().getStartDelay() + (getValueAnimator().getDuration()* (getValueAnimator().getRepeatCount()+ 1));
+            return getValueAnimator().getStartDelay() + (getValueAnimator().getDuration()* (getValueAnimator().getRepeatCount() + 1));
         }
     }
 
@@ -254,34 +236,36 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
             mParent.start();
         }
 
-        if(getValueAnimator().getStartDelay() > 0) {
-            // TODO: handle repeating animations for child/parent combinations?
-            mValueAnimator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    // wait for the animation to actually start before adding the current animations to the view
-                    // (actual animation start depends on startDelay)
-                    startAnimationInternal();
-                }
-            });
-            mValueAnimator.start();
-        } else {
-            mValueAnimator.start();
-            startAnimationInternal();
-        }
-        mValueAnimator = null;
+        getValueAnimator().start();
+
+//        if(getValueAnimator().getStartDelay() > 0) {
+//            // TODO: handle repeating animations for child/parent combinations?
+//            mValueAnimator.addListener(new AnimatorListenerAdapter() {
+//                @Override
+//                public void onAnimationStart(Animator animation) {
+//                    // wait for the animation to actually start before adding the current animations to the view
+//                    // (actual animation start depends on startDelay)
+//                    startAnimationInternal();
+//                }
+//            });
+//            mValueAnimator.start();
+//        } else {
+//            mValueAnimator.start();
+//            startAnimationInternal();
+//        }
+//        mValueAnimator = null;
     }
 
-    private void startAnimationInternal() {
-        for (View v : mViews) {
-            if (mCompletedAnimationApplier != null && mCompletedAnimationApplier.getView() == v) {
-                AdditiveAnimationManager.from(v).startAnimationApplier(mCompletedAnimationApplier);
-            } else {
-                AdditiveAnimationManager.from(v).onAnimationStart();
-            }
-        }
-        mCompletedAnimationApplier = null;
-    }
+//    private void startAnimationInternal() {
+//        for (View v : mViews) {
+//            if (mCompletedAnimationApplier != null && mCompletedAnimationApplier.getView() == v) {
+//                AdditiveAnimationManager.from(v).startAnimationApplier(mCompletedAnimationApplier);
+//            } else {
+//                AdditiveAnimationManager.from(v).onAnimationStart();
+//            }
+//        }
+//        mCompletedAnimationApplier = null;
+//    }
 
     public void cancelAllAnimations() {
         for(View v : mViews) {
@@ -351,22 +335,22 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     protected final void animateProperty(PropertyDescription property) {
         initValueAnimatorIfNeeded();
-        currentAnimationManager().addAnimation(property);
+        currentAnimationManager().addAnimation(mAnimationApplier, property);
     }
 
     protected final void animateProperty(Property<View, Float> property, Path p, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
         initValueAnimatorIfNeeded();
-        currentAnimationManager().addAnimation(createDescription(property, p, mode, sharedEvaluator));
+        currentAnimationManager().addAnimation(mAnimationApplier, createDescription(property, p, mode, sharedEvaluator));
     }
 
     protected final void animateProperty(Property<View, Float> property, float target) {
         initValueAnimatorIfNeeded();
-        currentAnimationManager().addAnimation(createDescription(property, target));
+        currentAnimationManager().addAnimation(mAnimationApplier, createDescription(property, target));
     }
 
     protected final void animatePropertyBy(Property<View, Float> property, float by) {
         initValueAnimatorIfNeeded();
-        currentAnimationManager().addAnimation(createDescription(property, currentAnimationManager().getActualPropertyValue(property) + by));
+        currentAnimationManager().addAnimation(mAnimationApplier, createDescription(property, currentAnimationManager().getActualPropertyValue(property) + by));
     }
 
     public T scaleX(float scaleX) {

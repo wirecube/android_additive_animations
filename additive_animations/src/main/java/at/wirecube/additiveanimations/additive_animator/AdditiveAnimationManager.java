@@ -1,15 +1,14 @@
 package at.wirecube.additiveanimations.additive_animator;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.util.Property;
 import android.view.View;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -32,34 +31,18 @@ class AdditiveAnimationManager {
         return animator;
     }
 
-    /**
-     * Helper class for accumulating the changes made by all of the additive animators.
-     */
-    static class AccumulatedProperties {
-        Map<PropertyDescription, Float> tempProperties = new HashMap<>();
-        int totalNumAnimationUpdaters = 0;
-        int updateCounter = 0;
+    static final PropertyAccumulator getAccumulatedProperties(View v) {
+        return from(v).mAccumulator;
     }
 
-    private AccumulatedProperties mAccumulatedLayoutParams = new AccumulatedProperties();
+    private final PropertyAccumulator mAccumulator = new PropertyAccumulator();
 
     private final View mAnimationTargetView;
-    private final List<AdditiveAnimationApplier> mAdditiveAnimationAppliers = new ArrayList<>();
+    private final Set<AdditiveAnimationApplier> mAdditiveAnimationAppliers = new HashSet<>();
     private final Map<String, Float> mLastTargetValues = new HashMap<>();
-    private AdditiveAnimator mAnimationUpdater;
-
-    // This must be given by AdditiveAnimator, which is also responsible for starting the animation.
-    // This way, multiple AdditiveAnimators can share the same AnimationManager (and vice versa).
-    private ValueAnimator mNextValueAnimator;
-    private AdditiveAnimationApplier mNextAnimationApplier;
 
     private AdditiveAnimationManager(View animationTarget) {
         mAnimationTargetView = animationTarget;
-        mAccumulatedLayoutParams = new AccumulatedProperties();
-    }
-
-    void setAnimationUpdater(AdditiveAnimator animationUpdater) {
-        this.mAnimationUpdater = animationUpdater;
     }
 
     Float getLastTargetValue(String propertyName) {
@@ -74,62 +57,29 @@ class AdditiveAnimationManager {
         return lastTarget;
     }
 
-    void addAnimation(PropertyDescription property) {
-        if(mLastTargetValues.get(property.getTag()) == null) {
-            mAccumulatedLayoutParams.tempProperties.put(property, property.getStartValue());
+    void addAnimation(AdditiveAnimationApplier animationApplier, PropertyDescription property) {
+        if(getLastTargetValue(property.getTag()) == null) {
+            mAccumulator.getAccumulatedProperties().put(property, property.getStartValue());
         } else {
             property.setStartValue(mLastTargetValues.get(property.getTag()));
         }
         mLastTargetValues.put(property.getTag(), property.getTargetValue());
+        animationApplier.addAnimatedProperty(property);
+        // immediately add to our list of pending animators
+        mAdditiveAnimationAppliers.add(animationApplier);
+    }
 
-        if(mNextAnimationApplier != null) {
-            mNextAnimationApplier.addAnimatedProperty(property);
-        } else {
-            mNextAnimationApplier = new AdditiveAnimationApplier(property, mNextValueAnimator, mAnimationTargetView, mAnimationUpdater, mAccumulatedLayoutParams);
-            final AdditiveAnimationApplier lastHolder = mNextAnimationApplier;
-
-            mNextValueAnimator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mAdditiveAnimationAppliers.remove(lastHolder);
-                    if (mAdditiveAnimationAppliers.isEmpty()) {
-                        sAnimators.remove(mAnimationTargetView);
-                    }
-                    mAccumulatedLayoutParams.totalNumAnimationUpdaters--;
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                    // This is only called when we cancel all animations, in which case we clear our animators anyway
-                    // By removing the listener, we ensure that our normal `onAnimationEnd` method isn't called.
-                    animation.removeListener(this);
-                }
-            });
+    void onAnimationApplierEnd(AdditiveAnimationApplier applier) {
+        mAdditiveAnimationAppliers.remove(applier);
+        if (mAdditiveAnimationAppliers.isEmpty()) {
+            sAnimators.remove(mAnimationTargetView);
         }
+        mAccumulator.totalNumAnimationUpdaters--;
     }
 
-    /**
-     * Returns the current animation applier object, resetting the builder state.
-     * @return
-     */
-    AdditiveAnimationApplier getAnimationApplier() {
-        AdditiveAnimationApplier applier = mNextAnimationApplier;
-        mNextAnimationApplier = null;
-        mNextValueAnimator = null;
-        return applier;
-    }
-
-    void startAnimationApplier(AdditiveAnimationApplier applier) {
-        mAdditiveAnimationAppliers.add(applier);
-    }
-
-    void onAnimationStart() {
-        if(mNextValueAnimator != null && mNextAnimationApplier != null) {
-            mAdditiveAnimationAppliers.add(mNextAnimationApplier);
-            mNextValueAnimator = null;
-            mNextAnimationApplier = null;
-            mAnimationUpdater = null;
-        }
+    void onAnimationApplierStart(AdditiveAnimationApplier applier) {
+        // only now are we expecting updates from this applier
+        mAccumulator.totalNumAnimationUpdaters++;
     }
 
     void cancelAllAnimations() {
@@ -139,9 +89,5 @@ class AdditiveAnimationManager {
         mAdditiveAnimationAppliers.clear();
         mLastTargetValues.clear();
         sAnimators.remove(mAnimationTargetView);
-    }
-
-    void setNextValueAnimator(ValueAnimator animator) {
-        mNextValueAnimator = animator;
     }
 }
