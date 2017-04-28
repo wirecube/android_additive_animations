@@ -62,9 +62,9 @@ class AdditiveAnimationStateManager {
             animation.setStartValue(getLastTargetValue(animation.getTag()));
         }
         mLastTargetValues.put(animation.getTag(), animation.getTargetValue());
-        animationApplier.addAnimation(animation);
         // immediately add to our list of pending animators
         mAdditiveAnimationAppliers.add(animationApplier);
+        animationApplier.addAnimation(animation);
     }
 
     void onAnimationApplierEnd(AdditiveAnimationApplier applier) {

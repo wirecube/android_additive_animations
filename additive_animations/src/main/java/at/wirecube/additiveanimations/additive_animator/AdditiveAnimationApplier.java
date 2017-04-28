@@ -6,6 +6,7 @@ import android.animation.ValueAnimator;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,11 +17,13 @@ class AdditiveAnimationApplier {
     private Map<AdditiveAnimation, Float> mPreviousValues = new HashMap<>();
     private ValueAnimator mAnimator = ValueAnimator.ofFloat(0f, 1f);
     private final Map<View, Set<String>> mAnimatedPropertiesPerView = new HashMap<>();
+    private boolean mHasInformedStateManagerAboutAnimationStart = false;
 
     AdditiveAnimationApplier(final AdditiveAnimator additiveAnimator) {
         mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                notifyStateManagerAboutAnimationStartIfNeeded();
                 List<View> modifiedViews = new ArrayList<>();
                 for (AdditiveAnimation animation : mPreviousValues.keySet()) {
                     if (animation.getView() != null) {
@@ -63,11 +66,18 @@ class AdditiveAnimationApplier {
 
             @Override
             public void onAnimationStart(Animator animation) {
-                for (View v : mAnimatedPropertiesPerView.keySet()) {
-                    AdditiveAnimationStateManager.from(v).onAnimationApplierStart(AdditiveAnimationApplier.this);
-                }
+                notifyStateManagerAboutAnimationStartIfNeeded();
             }
         });
+    }
+
+    private void notifyStateManagerAboutAnimationStartIfNeeded() {
+        if(!mHasInformedStateManagerAboutAnimationStart) {
+            for (View v : mAnimatedPropertiesPerView.keySet()) {
+                AdditiveAnimationStateManager.from(v).onAnimationApplierStart(AdditiveAnimationApplier.this);
+            }
+            mHasInformedStateManagerAboutAnimationStart = true;
+        }
     }
 
     void addAnimation(AdditiveAnimation animation) {
@@ -123,6 +133,16 @@ class AdditiveAnimationApplier {
             return true;
         }
         return false;
+    }
+
+    Collection<AdditiveAnimation> getAnimations(View v) {
+        List<AdditiveAnimation> animations = new ArrayList<>();
+        for(AdditiveAnimation animation : mPreviousValues.keySet()) {
+            if(animation.getView() == v) {
+                animations.add(animation);
+            }
+        }
+        return animations;
     }
 
     ValueAnimator getAnimator() {
