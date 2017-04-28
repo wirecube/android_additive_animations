@@ -63,6 +63,14 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         cancelAnimation(view, property.getName());
     }
 
+    private T self() {
+        try {
+            return (T) this;
+        } catch (ClassCastException e) {
+            throw new RuntimeException("Could not cast to subclass. Did you forget to implement `newInstance()`?");
+        }
+    }
+
     /**
      * Factory method for creation of subclass instances.
      * Override to use all of the advanced features with your custom subclass.
@@ -83,7 +91,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         // so we'll restart it manually - so we turn off automatic repeats entirely.
         // TODO: refactor this so it is always handled the same way
         mParent = other;
-        return (T) this;
+        return self();
     }
 
     protected AdditiveAnimator(View view) {
@@ -142,12 +150,12 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     public T addTarget(View v) {
         mViews.add(v);
         initValueAnimatorIfNeeded();
-        return (T) this;
+        return self();
     }
 
     public T addUpdateListener(ValueAnimator.AnimatorUpdateListener listener) {
         getValueAnimator().addUpdateListener(listener);
-        return (T) this;
+        return self();
     }
 
     @SuppressLint("NewApi")
@@ -155,12 +163,12 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             getValueAnimator().addPauseListener(listener);
         }
-        return (T) this;
+        return self();
     }
 
     public T addListener(Animator.AnimatorListener listener) {
         getValueAnimator().addListener(listener);
-        return (T) this;
+        return self();
     }
 
     public T addEndAction(final AnimationEndListener r) {
@@ -177,7 +185,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
                 wasCancelled = true;
             }
         });
-        return (T) this;
+        return self();
     }
 
     public T addStartAction(final Runnable r) {
@@ -187,35 +195,35 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
                 r.run();
             }
         });
-        return (T) this;
+        return self();
     }
 
     public T setStartDelay(long startDelay) {
         getValueAnimator().setStartDelay(startDelay);
-        return (T) this;
+        return self();
     }
 
     public T setDuration(long duration) {
         getValueAnimator().setDuration(duration);
-        return (T) this;
+        return self();
     }
 
     public T setInterpolator(TimeInterpolator interpolator) {
         getValueAnimator().setInterpolator(interpolator);
-        return (T) this;
+        return self();
     }
 
     // TODO: docs for possible values (ValueAnimator.INFINITE)
     // TODO: handle parent repeat
     public T setRepeatCount(int repeatCount) {
         getValueAnimator().setRepeatCount(repeatCount);
-        return (T) this;
+        return self();
     }
 
     // TODO: investigate possible problems when repeat modes of children/parents don't match
     public T setRepeatMode(int repeatMode) {
         getValueAnimator().setRepeatMode(repeatMode);
-        return (T) this;
+        return self();
     }
 
     /**
@@ -367,22 +375,22 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     public T scaleX(float scaleX) {
         animateProperty(View.SCALE_X, scaleX);
-        return (T) this;
+        return self();
     }
 
     public T scaleXBy(float scaleXBy) {
         animatePropertyBy(View.SCALE_X, scaleXBy);
-        return (T) this;
+        return self();
     }
 
     public T scaleY(float scaleY) {
         animateProperty(View.SCALE_Y, scaleY);
-        return (T) this;
+        return self();
     }
 
     public T scaleYBy(float scaleYBy) {
         animatePropertyBy(View.SCALE_Y, scaleYBy);
-        return (T) this;
+        return self();
     }
 
     public T scale(float scale) {
@@ -394,27 +402,27 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     public T scaleBy(float scalesBy) {
         scaleYBy(scalesBy);
         scaleXBy(scalesBy);
-        return (T) this;
+        return self();
     }
 
     public T translationX(float translationX) {
         animateProperty(View.TRANSLATION_X, translationX);
-        return (T) this;
+        return self();
     }
 
     public T translationXBy(float translationXBy) {
         animatePropertyBy(View.TRANSLATION_X, translationXBy);
-        return (T) this;
+        return self();
     }
 
     public T translationY(float translationY) {
         animateProperty(View.TRANSLATION_Y, translationY);
-        return (T) this;
+        return self();
     }
 
     public T translationYBy(float translationYBy) {
         animatePropertyBy(View.TRANSLATION_Y, translationYBy);
-        return (T) this;
+        return self();
     }
 
     @SuppressLint("NewApi")
@@ -422,7 +430,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             animateProperty(View.TRANSLATION_Z, translationZ);
         }
-        return (T) this;
+        return self();
     }
 
     @SuppressLint("NewApi")
@@ -430,80 +438,80 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             animatePropertyBy(View.TRANSLATION_Z, translationZBy);
         }
-        return (T) this;
+        return self();
     }
 
     public T alpha(float alpha) {
         animateProperty(View.ALPHA, alpha);
-        return (T) this;
+        return self();
     }
 
     public T alphaBy(float alphaBy) {
         animatePropertyBy(View.ALPHA, alphaBy);
-        return (T) this;
+        return self();
     }
 
     public T rotation(float rotation) {
         float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION), rotation);
         animatePropertyBy(View.ROTATION, shortestDistance);
-        return (T) this;
+        return self();
     }
 
     public T rotationBy(float rotationBy) {
         animatePropertyBy(View.ROTATION, rotationBy);
-        return (T) this;
+        return self();
     }
 
     public T rotationX(float rotationX) {
         float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_X), rotationX);
         animatePropertyBy(View.ROTATION_X, shortestDistance);
-        return (T) this;
+        return self();
     }
 
     public T rotationXBy(float rotationXBy) {
         animatePropertyBy(View.ROTATION_X, rotationXBy);
-        return (T) this;
+        return self();
     }
 
     public T rotationY(float rotationY) {
         float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_Y), rotationY);
         animatePropertyBy(View.ROTATION_Y, shortestDistance);
-        return (T) this;
+        return self();
     }
 
     public T rotationYBy(float rotationYBy) {
         animatePropertyBy(View.ROTATION_Y, rotationYBy);
-        return (T) this;
+        return self();
     }
 
     public T x(float x) {
         animateProperty(View.X, x);
-        return (T) this;
+        return self();
     }
 
     public T xBy(float xBy) {
         animatePropertyBy(View.X, xBy);
-        return (T) this;
+        return self();
     }
 
     public T centerX(float centerX) {
         animateProperty(View.X, centerX - currentTarget().getWidth() / 2);
-        return (T) this;
+        return self();
     }
 
     public T y(float y) {
         animateProperty(View.Y, y);
-        return (T) this;
+        return self();
     }
 
     public T yBy(float yBy) {
         animatePropertyBy(View.Y, yBy);
-        return (T) this;
+        return self();
     }
 
     public T centerY(float centerY) {
         animateProperty(View.Y, centerY - currentTarget().getHeight() / 2);
-        return (T) this;
+        return self();
     }
 
     @SuppressLint("NewApi")
@@ -511,7 +519,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             animateProperty(View.Z, z);
         }
-        return (T) this;
+        return self();
     }
 
     @SuppressLint("NewApi")
@@ -519,14 +527,14 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             animatePropertyBy(View.Z, zBy);
         }
-        return (T) this;
+        return self();
     }
 
     public T xyAlongPath(Path path) {
         PathEvaluator sharedEvaluator = new PathEvaluator();
         animateProperty(View.X, path, PathEvaluator.PathMode.X, sharedEvaluator);
         animateProperty(View.Y, path, PathEvaluator.PathMode.Y, sharedEvaluator);
-        return (T) this;
+        return self();
     }
 
     public T xyRotationAlongPath(Path path) {
@@ -534,71 +542,71 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         animateProperty(View.X, path, PathEvaluator.PathMode.X, sharedEvaluator);
         animateProperty(View.Y, path, PathEvaluator.PathMode.Y, sharedEvaluator);
         animateProperty(View.ROTATION, path, PathEvaluator.PathMode.ROTATION, sharedEvaluator);
-        return (T) this;
+        return self();
     }
 
     public T leftMargin(int leftMargin) {
         animateProperty(MarginProperties.MARGIN_LEFT, leftMargin);
-        return (T) this;
+        return self();
     }
 
     public T leftMarginBy(int leftMarginBy) {
         animatePropertyBy(MarginProperties.MARGIN_LEFT, leftMarginBy);
-        return (T) this;
+        return self();
     }
 
     public T topMargin(int topMargin) {
         animateProperty(MarginProperties.MARGIN_TOP, topMargin);
-        return (T) this;
+        return self();
     }
 
     public T topMarginBy(int topMarginBy) {
         animatePropertyBy(MarginProperties.MARGIN_TOP, topMarginBy);
-        return (T) this;
+        return self();
     }
 
     public T rightMargin(int rightMargin) {
         animateProperty(MarginProperties.MARGIN_RIGHT, rightMargin);
-        return (T) this;
+        return self();
     }
 
     public T rightMarginBy(int rightMarginBy) {
         animatePropertyBy(MarginProperties.MARGIN_RIGHT, rightMarginBy);
-        return (T) this;
+        return self();
     }
 
     public T bottomMargin(int bottomMargin) {
         animateProperty(MarginProperties.MARGIN_BOTTOM, bottomMargin);
-        return (T) this;
+        return self();
     }
 
     public T bottomMarginBy(int bottomMarginBy) {
         animatePropertyBy(MarginProperties.MARGIN_BOTTOM, bottomMarginBy);
-        return (T) this;
+        return self();
     }
 
     public T horizontalMargin(int horizontalMargin) {
         leftMargin(horizontalMargin);
         rightMargin(horizontalMargin);
-        return (T) this;
+        return self();
     }
 
     public T horizontalMarginBy(int horizontalMarginBy) {
         leftMarginBy(horizontalMarginBy);
         rightMarginBy(horizontalMarginBy);
-        return (T) this;
+        return self();
     }
 
     public T verticalMargin(int verticalMargin) {
         topMargin(verticalMargin);
         bottomMargin(verticalMargin);
-        return (T) this;
+        return self();
     }
 
     public T verticalMarginBy(int verticalMarginBy) {
         topMarginBy(verticalMarginBy);
         bottomMarginBy(verticalMarginBy);
-        return (T) this;
+        return self();
     }
 
     public T margin(int margin) {
@@ -606,7 +614,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         rightMargin(margin);
         topMargin(margin);
         bottomMargin(margin);
-        return (T) this;
+        return self();
     }
 
     public T marginBy(int marginBy) {
@@ -614,103 +622,103 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         rightMarginBy(marginBy);
         topMarginBy(marginBy);
         bottomMarginBy(marginBy);
-        return (T) this;
+        return self();
     }
 
     public T width(int width) {
         animateProperty(SizeProperties.WIDTH, width);
-        return (T) this;
+        return self();
     }
 
     public T widthBy(int widthBy) {
         animatePropertyBy(SizeProperties.WIDTH, widthBy);
-        return (T) this;
+        return self();
     }
 
     public T height(int height) {
         animateProperty(SizeProperties.HEIGHT, height);
-        return (T) this;
+        return self();
     }
 
     public T heightBy(int heightBy) {
         animatePropertyBy(SizeProperties.HEIGHT, heightBy);
-        return (T) this;
+        return self();
     }
 
     public T size(int size) {
         animateProperty(SizeProperties.WIDTH, size);
         animateProperty(SizeProperties.HEIGHT, size);
-        return (T) this;
+        return self();
     }
 
     public T sizeBy(int sizeBy) {
         animatePropertyBy(SizeProperties.WIDTH, sizeBy);
         animatePropertyBy(SizeProperties.HEIGHT, sizeBy);
-        return (T) this;
+        return self();
     }
 
     public T leftPadding(int leftPadding) {
         animateProperty(PaddingProperties.PADDING_LEFT, leftPadding);
-        return (T) this;
+        return self();
     }
 
     public T leftPaddingBy(int leftPaddingBy) {
         animatePropertyBy(PaddingProperties.PADDING_LEFT, leftPaddingBy);
-        return (T) this;
+        return self();
     }
 
     public T topPadding(int topPadding) {
         animateProperty(PaddingProperties.PADDING_TOP, topPadding);
-        return (T) this;
+        return self();
     }
 
     public T topPaddingBy(int topPaddingBy) {
         animatePropertyBy(PaddingProperties.PADDING_TOP, topPaddingBy);
-        return (T) this;
+        return self();
     }
 
     public T rightPadding(int rightPadding) {
         animateProperty(PaddingProperties.PADDING_RIGHT, rightPadding);
-        return (T) this;
+        return self();
     }
 
     public T rightPaddingBy(int rightPaddingBy) {
         animatePropertyBy(PaddingProperties.PADDING_RIGHT, rightPaddingBy);
-        return (T) this;
+        return self();
     }
 
     public T bottomPadding(int bottomPadding) {
         animateProperty(PaddingProperties.PADDING_BOTTOM, bottomPadding);
-        return (T) this;
+        return self();
     }
 
     public T bottomPaddingBy(int bottomPaddingBy) {
         animatePropertyBy(PaddingProperties.PADDING_BOTTOM, bottomPaddingBy);
-        return (T) this;
+        return self();
     }
 
     public T horizontalPadding(int horizontalPadding) {
         animateProperty(PaddingProperties.PADDING_LEFT, horizontalPadding);
         animateProperty(PaddingProperties.PADDING_RIGHT, horizontalPadding);
-        return (T) this;
+        return self();
     }
 
     public T horizontalPaddingBy(int horizontalPaddingBy) {
         animatePropertyBy(PaddingProperties.PADDING_LEFT, horizontalPaddingBy);
         animatePropertyBy(PaddingProperties.PADDING_RIGHT, horizontalPaddingBy);
-        return (T) this;
+        return self();
     }
 
     public T verticalPadding(int verticalPadding) {
         animateProperty(PaddingProperties.PADDING_TOP, verticalPadding);
         animateProperty(PaddingProperties.PADDING_BOTTOM, verticalPadding);
-        return (T) this;
+        return self();
     }
 
     public T verticalPaddingBy(int verticalPaddingBy) {
         animatePropertyBy(PaddingProperties.PADDING_TOP, verticalPaddingBy);
         animatePropertyBy(PaddingProperties.PADDING_BOTTOM, verticalPaddingBy);
-        return (T) this;
+        return self();
     }
 
     public T padding(int padding) {
@@ -718,7 +726,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         animateProperty(PaddingProperties.PADDING_RIGHT, padding);
         animateProperty(PaddingProperties.PADDING_BOTTOM, padding);
         animateProperty(PaddingProperties.PADDING_TOP, padding);
-        return (T) this;
+        return self();
     }
 
     public T paddingBy(int paddingBy) {
@@ -726,192 +734,192 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         animatePropertyBy(PaddingProperties.PADDING_RIGHT, paddingBy);
         animatePropertyBy(PaddingProperties.PADDING_BOTTOM, paddingBy);
         animatePropertyBy(PaddingProperties.PADDING_TOP, paddingBy);
-        return (T) this;
+        return self();
     }
 
     public T scrollX(int scrollX) {
         animateProperty(ScrollProperties.SCROLL_X, scrollX);
-        return (T) this;
+        return self();
     }
 
     public T scrollXBy(int scrollXBy) {
         animatePropertyBy(ScrollProperties.SCROLL_X, scrollXBy);
-        return (T) this;
+        return self();
     }
 
     public T scrollY(int scrollY) {
         animateProperty(ScrollProperties.SCROLL_Y, scrollY);
-        return (T) this;
+        return self();
     }
 
     public T scrollYBy(int scrollYBy) {
         animatePropertyBy(ScrollProperties.SCROLL_Y, scrollYBy);
-        return (T) this;
+        return self();
     }
 
     public T scroll(int x, int y) {
         animateProperty(ScrollProperties.SCROLL_X, x);
         animateProperty(ScrollProperties.SCROLL_Y, y);
-        return (T) this;
+        return self();
     }
 
     public T scrollBy(int xBy, int yBy) {
         animatePropertyBy(ScrollProperties.SCROLL_X, xBy);
         animatePropertyBy(ScrollProperties.SCROLL_Y, yBy);
-        return (T) this;
+        return self();
     }
 
 //    public T widthPercent(float widthPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.widthPercent(widthPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T widthPercentBy(float widthPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.widthPercentBy(widthPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T heightPercent(float heightPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.heightPercent(heightPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T heightPercentBy(float heightPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.heightPercentBy(heightPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T sizePercent(float sizePercent) {
 //        if (initPercentListener()){
 //            mPercentListener.sizePercent(sizePercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T sizePercentBy(float sizePercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.sizePercentBy(sizePercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T leftMarginPercent(float marginPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.leftMarginPercent(marginPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T leftMarginPercentBy(float marginPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.leftMarginPercentBy(marginPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T topMarginPercent(float marginPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.topMarginPercent(marginPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T topMarginPercentBy(float marginPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.topMarginPercentBy(marginPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T bottomMarginPercent(float marginPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.bottomMarginPercent(marginPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T bottomMarginPercentBy(float marginPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.bottomMarginPercentBy(marginPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T rightMarginPercent(float marginPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.rightMarginPercent(marginPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T rightMarginPercentBy(float marginPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.rightMarginPercentBy(marginPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T horizontalMarginPercent(float marginPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.horizontalMarginPercent(marginPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T horizontalMarginPercentBy(float marginPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.horizontalMarginPercentBy(marginPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T verticalMarginPercent(float marginPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.verticalMarginPercent(marginPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T verticalMarginPercentBy(float marginPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.verticalMarginPercentBy(marginPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T marginPercent(float marginPercent) {
 //        if (initPercentListener()){
 //            mPercentListener.marginPercent(marginPercent);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T marginPercentBy(float marginPercentBy) {
 //        if (initPercentListener()){
 //            mPercentListener.marginPercentBy(marginPercentBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T aspectRatio(float aspectRatio) {
 //        if (initPercentListener()){
 //            mPercentListener.aspectRatio(aspectRatio);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 //
 //    public T aspectRatioBy(float aspectRatioBy) {
 //        if (initPercentListener()){
 //            mPercentListener.aspectRatioBy(aspectRatioBy);
 //        }
-//        return (T) this;
+//        return self();
 //    }
 }
