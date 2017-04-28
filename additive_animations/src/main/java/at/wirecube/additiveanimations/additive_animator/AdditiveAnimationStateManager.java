@@ -36,7 +36,7 @@ class AdditiveAnimationStateManager {
 
     private final View mAnimationTargetView;
     // sorted: last = newest
-    private final List<AdditiveAnimationApplier> mAdditiveAnimationAppliers = new ArrayList<>();
+    final List<AdditiveAnimationApplier> mAdditiveAnimationAppliers = new ArrayList<>();
     private final Map<String, Float> mLastTargetValues = new HashMap<>();
 
     private AdditiveAnimationStateManager(View animationTarget) {
@@ -73,11 +73,18 @@ class AdditiveAnimationStateManager {
             sStateManagers.remove(mAnimationTargetView);
         }
         mAccumulator.totalNumAnimationUpdaters--;
+//        if(mAccumulator.updateCounter == mAdditiveAnimationAppliers.size()) {
+            applier.getAdditiveAnimator().applyChanges(mAccumulator.getAccumulatedProperties(), mAnimationTargetView);
+//            mAccumulator.updateCounter = 0;
+//        }
+//        if(mAccumulator.updateCounter > mAccumulator.totalNumAnimationUpdaters) {
+//            System.out.println("wat");
+//        }
     }
 
     void onAnimationApplierStart(AdditiveAnimationApplier applier) {
         // only now are we expecting updates from this applier
-        mAccumulator.totalNumAnimationUpdaters++;
+//        mAccumulator.totalNumAnimationUpdaters++;
     }
 
     void cancelAllAnimations() {
