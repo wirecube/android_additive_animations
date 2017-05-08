@@ -87,9 +87,6 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         addTarget(other.currentTarget());
         setDuration(other.getValueAnimator().getDuration());
         setInterpolator(other.getValueAnimator().getInterpolator());
-        // we want the parent to repeat AFTER we are finished,
-        // so we'll restart it manually - so we turn off automatic repeats entirely.
-        // TODO: refactor this so it is always handled the same way
         mParent = other;
         return self();
     }
@@ -271,6 +268,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if(mParent != null) {
             mParent.start();
         }
+
         getValueAnimator().start();
 
         // invalidate this animator to prevent incorrect usage:
@@ -319,13 +317,13 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return currentAnimationManager().getLastTargetValue(propertyName);
     }
 
-    final void applyChanges(Map<AdditiveAnimation, Float> tempProperties, View targetView) {
+    final void applyChanges(Map<AdditiveAnimation, Float> accumulatedProperties, View targetView) {
         Map<String, Float> unknownProperties = new HashMap<>();
-        for(AdditiveAnimation key : tempProperties.keySet()) {
-            if(key.getProperty() != null) {
-                key.getProperty().set(targetView, tempProperties.get(key));
+        for(AdditiveAnimation animation : accumulatedProperties.keySet()) {
+            if(animation.getProperty() != null) {
+                animation.getProperty().set(targetView, accumulatedProperties.get(animation));
             } else {
-                unknownProperties.put(key.getTag(), tempProperties.get(key));
+                unknownProperties.put(animation.getTag(), accumulatedProperties.get(animation));
             }
         }
         applyCustomProperties(unknownProperties, targetView);

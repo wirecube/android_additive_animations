@@ -30,6 +30,12 @@ public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnima
         }
     }
 
+    public AdditiveAnimatorSubclassDemo thenBounceBefore(int millis, long duration) {
+        return thenBeforeEnd(millis).scale(1.2f).setDuration(duration)
+               .thenBeforeEnd(100).scale(0.8f)
+               .thenBeforeEnd(100).scale(1f);
+    }
+
     public AdditiveAnimatorSubclassDemo backgroundColor(int color) {
         int startVal = ((ColorDrawable)currentTarget().getBackground()).getColor();
         AdditiveAnimation desc = new AdditiveAnimation(currentTarget(), BACKGROUND_COLOR_TAG, startVal, color);

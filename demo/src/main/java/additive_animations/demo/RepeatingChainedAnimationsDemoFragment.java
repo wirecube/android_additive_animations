@@ -34,12 +34,13 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
         };
         AdditiveAnimatorSubclassDemo.animate(animatedView).setDuration(1000)
                 .x(200).y(400).backgroundColor(colors[1]).rotation(0)
-                .then().x(800).backgroundColor(colors[2]).rotationBy(45)
-                .then().y(1600).backgroundColor(colors[3]).rotationBy(45)
-                .then().x(200).backgroundColor(colors[0]).rotationBy(45)
-                .thenBeforeEnd(400).scale(1.2f).setDuration(300)
-                .thenBeforeEnd(100).scale(0.8f)
-                .thenBeforeEnd(100).scale(1f)
+                .thenBounceBefore(800, 300)
+                .thenBeforeEnd(400).x(800).backgroundColor(colors[2]).rotationBy(45).setDuration(1000)
+                .thenBounceBefore(800, 300)
+                .thenBeforeEnd(400).y(1600).backgroundColor(colors[3]).rotationBy(45).setDuration(1000)
+                .thenBounceBefore(800, 300)
+                .thenBeforeEnd(400).x(200).backgroundColor(colors[0]).rotationBy(45).setDuration(1000)
+                .thenBounceBefore(800, 300)
                 .addEndAction(new AdditiveAnimator.AnimationEndListener() {
                     @Override
                     public void onAnimationEnd(boolean wasCancelled) {

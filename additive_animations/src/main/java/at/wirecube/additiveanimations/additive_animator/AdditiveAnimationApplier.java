@@ -40,7 +40,7 @@ class AdditiveAnimationApplier {
                     }
                     AnimationAccumulator accumulator = AdditiveAnimationStateManager.getAccumulatedProperties(v);
 //                    accumulator.updateCounter += 1;
-//                    if (accumulator.updateCounter == AdditiveAnimationStateManager.from(v).mAdditiveAnimationAppliers.size()) {
+//                    if (accumulator.updateCounter >= AdditiveAnimationStateManager.from(v).mAdditiveAnimationAppliers.size()) {
                     // TODO: figure out a way to make this smoother
                         mAdditiveAnimator.applyChanges(accumulator.getAccumulatedProperties(), v);
 //                        accumulator.updateCounter = 0;
@@ -79,14 +79,20 @@ class AdditiveAnimationApplier {
     private void notifyStateManagerAboutAnimationStartIfNeeded() {
         if(!mHasInformedStateManagerAboutAnimationStart) {
             for (View v : mAnimatedPropertiesPerView.keySet()) {
-                AdditiveAnimationStateManager.from(v).onAnimationApplierStart(AdditiveAnimationApplier.this);
+                AdditiveAnimationStateManager manager = AdditiveAnimationStateManager.from(v);
+                manager.onAnimationApplierStart(AdditiveAnimationApplier.this);
+                for(AdditiveAnimation animation : getAnimations(v)) {
+                    manager.prepareAnimationStart(animation);
+                    mPreviousValues.put(animation, animation.getStartValue());
+                }
             }
             mHasInformedStateManagerAboutAnimationStart = true;
         }
     }
 
     void addAnimation(AdditiveAnimation animation) {
-        mPreviousValues.put(animation, animation.getStartValue());
+        // the correct valu will be set when the animation actually starts instead of when we add the animation.
+        mPreviousValues.put(animation, 0f);
         addTarget(animation.getView(), animation.getTag());
     }
 

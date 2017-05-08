@@ -3,11 +3,13 @@ package additive_animations.demo;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewPropertyAnimator;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
 import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
@@ -33,7 +35,7 @@ public class TapToMoveDemoFragment extends Fragment {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         AdditiveAnimator.animate(animatedView).setDuration(1000).centerX(event.getX()).centerY(event.getY()).start();
                     } else {
-                        ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
+                        animatedView.animate().setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
                                 .x(event.getX() - animatedView.getWidth() / 2)
                                 .y(event.getY() - animatedView.getHeight() / 2)
                                 .start();

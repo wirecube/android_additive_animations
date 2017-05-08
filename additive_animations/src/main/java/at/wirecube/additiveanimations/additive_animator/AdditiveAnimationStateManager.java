@@ -55,13 +55,16 @@ class AdditiveAnimationStateManager {
         return lastTarget;
     }
 
-    void addAnimation(AdditiveAnimationApplier animationApplier, AdditiveAnimation animation) {
-        if(getLastTargetValue(animation.getTag()) == null) {
-            mAccumulator.getAccumulatedProperties().put(animation, animation.getStartValue());
+    private Float getActualAnimationStartValue(AdditiveAnimation animation) {
+        if(animation.getProperty() != null) {
+            return getActualPropertyValue(animation.getProperty());
         } else {
-            animation.setStartValue(getLastTargetValue(animation.getTag()));
+            // TODO: there should be a way for subclasses to implement the 'getting' of a custom value.
+            return null;
         }
-        mLastTargetValues.put(animation.getTag(), animation.getTargetValue());
+    }
+
+    void addAnimation(AdditiveAnimationApplier animationApplier, AdditiveAnimation animation) {
         // immediately add to our list of pending animators
         mAdditiveAnimationAppliers.add(animationApplier);
         animationApplier.addAnimation(animation);
@@ -74,7 +77,7 @@ class AdditiveAnimationStateManager {
         }
         mAccumulator.totalNumAnimationUpdaters--;
 //        if(mAccumulator.updateCounter == mAdditiveAnimationAppliers.size()) {
-            applier.getAdditiveAnimator().applyChanges(mAccumulator.getAccumulatedProperties(), mAnimationTargetView);
+//            applier.getAdditiveAnimator().applyChanges(mAccumulator.getAccumulatedProperties(), mAnimationTargetView);
 //            mAccumulator.updateCounter = 0;
 //        }
 //        if(mAccumulator.updateCounter > mAccumulator.totalNumAnimationUpdaters) {
@@ -84,7 +87,29 @@ class AdditiveAnimationStateManager {
 
     void onAnimationApplierStart(AdditiveAnimationApplier applier) {
         // only now are we expecting updates from this applier
-//        mAccumulator.totalNumAnimationUpdaters++;
+        mAccumulator.totalNumAnimationUpdaters++;
+    }
+
+    /**
+     * Updates {@link at.wirecube.additiveanimations.additive_animator.AdditiveAnimation#mStartValue}
+     * to the last value that was specified as a target. This is only relevant when chaining or reusing animations,
+     * since the state of the object might have changed since the animation was created.
+     * This will also update the accumulator if it doesn't already contain an entry for this animation,
+     * using the current property value (if a Property is available)
+     */
+    void prepareAnimationStart(AdditiveAnimation animation) {
+        if(getLastTargetValue(animation.getTag()) == null) {
+            // In case we don't currently have an animation on this property, let's make sure
+            // the start value matches the current model value:
+            Float currentModelValue = getActualAnimationStartValue(animation);
+            if(currentModelValue != null) {
+                animation.setStartValue(currentModelValue);
+            }
+            mAccumulator.getAccumulatedProperties().put(animation, animation.getStartValue());
+        } else {
+            animation.setStartValue(getLastTargetValue(animation.getTag()));
+        }
+        mLastTargetValues.put(animation.getTag(), animation.getTargetValue());
     }
 
     void cancelAllAnimations() {
