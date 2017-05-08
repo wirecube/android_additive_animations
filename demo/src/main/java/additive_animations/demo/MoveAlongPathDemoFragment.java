@@ -3,7 +3,6 @@ package additive_animations.demo;
 import android.animation.ValueAnimator;
 import android.graphics.Path;
 import android.os.Bundle;
-import android.renderscript.Sampler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -13,17 +12,14 @@ import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
-import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
-
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
-import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 
 public class MoveAlongPathDemoFragment extends Fragment {
     FrameLayout rootView;
     View animatedView;
 
-    int circleRadius = 100; // TODO: dp to pixels
+    int circleRadius = DpConverter.converDpToPx(50);
 
     @Nullable
     @Override

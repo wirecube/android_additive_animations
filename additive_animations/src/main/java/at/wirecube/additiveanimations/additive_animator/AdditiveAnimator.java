@@ -299,6 +299,10 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return AdditiveAnimationStateManager.from(v).getLastTargetValue(propertyName);
     }
 
+    protected static Float getQueuedPropertyValue(String propertyName, View v) {
+        return AdditiveAnimationStateManager.from(v).getQueuedPropertyValue(propertyName);
+    }
+
     /**
      * Finds the last target value of the property with the given name, or returns `property.get()`
      * if the property isn't animating at the moment.
@@ -315,6 +319,14 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      */
     public Float getTargetPropertyValue(String propertyName) {
         return currentAnimationManager().getLastTargetValue(propertyName);
+    }
+
+    /**
+     * Returns the last value that was queued for animation, but whose animation has not yet started.
+     * This method is for internal use only (keeping track of chained `animateBy` calls).
+     */
+    protected Float getQueuedPropertyValue(String propertyName) {
+        return currentAnimationManager().getQueuedPropertyValue(propertyName);
     }
 
     final void applyChanges(Map<AdditiveAnimation, Float> accumulatedProperties, View targetView) {
@@ -368,7 +380,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     protected final void animatePropertyBy(Property<View, Float> property, float by) {
         initValueAnimatorIfNeeded();
-        currentAnimationManager().addAnimation(mAnimationApplier, createDescription(property, currentAnimationManager().getActualPropertyValue(property) + by));
+        float currentTarget = getTargetPropertyValue(property);
+        if(currentAnimationManager().getQueuedPropertyValue(property.getName()) != null) {
+            currentTarget = currentAnimationManager().getQueuedPropertyValue(property.getName());
+        }
+        currentAnimationManager().addAnimation(mAnimationApplier, createDescription(property, currentTarget + by));
     }
 
     public T scaleX(float scaleX) {

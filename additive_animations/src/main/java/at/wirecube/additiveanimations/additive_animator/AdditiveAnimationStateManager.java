@@ -38,6 +38,7 @@ class AdditiveAnimationStateManager {
     // sorted: last = newest
     final List<AdditiveAnimationApplier> mAdditiveAnimationAppliers = new ArrayList<>();
     private final Map<String, Float> mLastTargetValues = new HashMap<>();
+    private final Map<String, Float> mQueuedTargetValues = new HashMap<>();
 
     private AdditiveAnimationStateManager(View animationTarget) {
         mAnimationTargetView = animationTarget;
@@ -55,6 +56,10 @@ class AdditiveAnimationStateManager {
         return lastTarget;
     }
 
+    Float getQueuedPropertyValue(String propertyName) {
+        return mQueuedTargetValues.get(propertyName);
+    }
+
     private Float getActualAnimationStartValue(AdditiveAnimation animation) {
         if(animation.getProperty() != null) {
             return getActualPropertyValue(animation.getProperty());
@@ -68,6 +73,7 @@ class AdditiveAnimationStateManager {
         // immediately add to our list of pending animators
         mAdditiveAnimationAppliers.add(animationApplier);
         animationApplier.addAnimation(animation);
+        mQueuedTargetValues.put(animation.getTag(), animation.getTargetValue());
     }
 
     void onAnimationApplierEnd(AdditiveAnimationApplier applier) {
@@ -109,6 +115,7 @@ class AdditiveAnimationStateManager {
         } else {
             animation.setStartValue(getLastTargetValue(animation.getTag()));
         }
+
         mLastTargetValues.put(animation.getTag(), animation.getTargetValue());
     }
 
@@ -118,6 +125,7 @@ class AdditiveAnimationStateManager {
         }
         mAdditiveAnimationAppliers.clear();
         mLastTargetValues.clear();
+        mQueuedTargetValues.clear();
         sStateManagers.remove(mAnimationTargetView);
     }
 
@@ -129,6 +137,7 @@ class AdditiveAnimationStateManager {
             }
         }
         mLastTargetValues.remove(propertyName);
+        mQueuedTargetValues.remove(propertyName);
         mAdditiveAnimationAppliers.removeAll(cancelledAppliers);
     }
 }

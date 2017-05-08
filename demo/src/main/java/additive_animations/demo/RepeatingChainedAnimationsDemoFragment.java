@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -15,11 +16,22 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
     ViewGroup rootView;
     View animatedView;
 
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = (ViewGroup) inflater.inflate(R.layout.fragment_tap_to_move_demo, container, false);
         animatedView = rootView.findViewById(R.id.animated_view);
+
+        rootView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                    AdditiveAnimator.cancelAnimation(animatedView, View.ROTATION);
+                }
+                return true;
+            }
+        });
 
         animate();
         return rootView;
@@ -33,13 +45,13 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
                 getResources().getColor(R.color.nicePink)
         };
         AdditiveAnimatorSubclassDemo.animate(animatedView).setDuration(1000)
-                .x(200).y(400).backgroundColor(colors[1]).rotation(0)
+                .x(px(50)).y(px(100)).backgroundColor(colors[1]).rotation(0)
                 .thenBounceBefore(800, 300)
-                .thenBeforeEnd(400).x(800).backgroundColor(colors[2]).rotationBy(45).setDuration(1000)
+                .thenBeforeEnd(400).x(px(250)).backgroundColor(colors[2]).rotationBy(45).setDuration(1000)
                 .thenBounceBefore(800, 300)
-                .thenBeforeEnd(400).y(1600).backgroundColor(colors[3]).rotationBy(45).setDuration(1000)
+                .thenBeforeEnd(400).y(px(500)).backgroundColor(colors[3]).rotationBy(45).setDuration(1000)
                 .thenBounceBefore(800, 300)
-                .thenBeforeEnd(400).x(200).backgroundColor(colors[0]).rotationBy(45).setDuration(1000)
+                .thenBeforeEnd(400).x(px(50)).backgroundColor(colors[0]).rotationBy(90).setDuration(1000)
                 .thenBounceBefore(800, 300)
                 .addEndAction(new AdditiveAnimator.AnimationEndListener() {
                     @Override
@@ -50,6 +62,10 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
                     }
                 })
                 .start();
+    }
+
+    private int px(int dp) {
+        return DpConverter.converDpToPx(dp);
     }
 
 }

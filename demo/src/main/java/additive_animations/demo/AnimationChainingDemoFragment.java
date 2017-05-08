@@ -31,17 +31,17 @@ public class AnimationChainingDemoFragment extends Fragment {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         AdditiveAnimator.animate(animatedView).setDuration(1000)
-                                .centerX(event.getX()).centerY(event.getY()).rotationBy(90)
+                                .centerX(event.getX()).centerY(event.getY())
                                 .thenDelayAfterEnd(100)
-                                .x(animatedView.getX()).y(animatedView.getY()).rotationBy(-90)
+                                .x(animatedView.getX()).y(animatedView.getY())
                                 .start();
                     } else {
                         ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
-                                .x(event.getX() - animatedView.getWidth() / 2).y(event.getY() - animatedView.getHeight() / 2).rotationBy(90)
+                                .x(event.getX() - animatedView.getWidth() / 2).y(event.getY() - animatedView.getHeight() / 2)
                                 .start();
                         ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
                                 .setStartDelay(1100)
-                                .x(animatedView.getX()).y(animatedView.getY()).rotationBy(-90)
+                                .x(animatedView.getX()).y(animatedView.getY())
                                 .start();
                     }
                 }
