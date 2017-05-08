@@ -1,4 +1,4 @@
-package additive_animations.demo;
+package additive_animations.fragments;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
@@ -10,7 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
+import additive_animations.AdditiveAnimationsShowcaseActivity;
 import additive_animations.subclass.AdditiveAnimatorSubclassDemo;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;

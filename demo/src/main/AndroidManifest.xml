@@ -3,14 +3,14 @@
     package="at.wirecube.additiveanimations.additiveanimationsdemo" >
 
     <application
-        android:name="additive_animations.demo.AAApplication"
+        android:name="additive_animations.AAApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="additive_animations.demo.AdditiveAnimationsShowcaseActivity"
+            android:name="additive_animations.AdditiveAnimationsShowcaseActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" >
             <intent-filter>

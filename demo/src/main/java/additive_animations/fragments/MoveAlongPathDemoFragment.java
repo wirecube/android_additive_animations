@@ -1,4 +1,4 @@
-package additive_animations.demo;
+package additive_animations.fragments;
 
 import android.animation.ValueAnimator;
 import android.graphics.Path;
@@ -12,6 +12,8 @@ import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
+import additive_animations.AdditiveAnimationsShowcaseActivity;
+import additive_animations.helper.DpConverter;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 

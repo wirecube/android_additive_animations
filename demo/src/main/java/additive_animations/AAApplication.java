@@ -1,4 +1,4 @@
-package additive_animations.demo;
+package additive_animations;
 
 import android.app.Application;
 import android.content.Context;

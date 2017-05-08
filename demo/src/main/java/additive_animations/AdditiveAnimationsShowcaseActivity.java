@@ -1,4 +1,4 @@
-package additive_animations.demo;
+package additive_animations;
 
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -12,6 +12,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Switch;
 
+import additive_animations.fragments.AnimationChainingDemoFragment;
+import additive_animations.fragments.MarginsDemoFragment;
+import additive_animations.fragments.MoveAlongPathDemoFragment;
+import additive_animations.fragments.MultipleViewsAnimationDemoFragment;
+import additive_animations.fragments.RepeatingChainedAnimationsDemoFragment;
+import additive_animations.fragments.TapToChangeColorDemoFragment;
+import additive_animations.fragments.TapToMoveDemoFragment;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
 public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity

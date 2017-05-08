@@ -1,7 +1,8 @@
-package additive_animations.demo;
+package additive_animations.helper;
 
-import android.app.Application;
 import android.util.TypedValue;
+
+import additive_animations.AAApplication;
 
 public class DpConverter {
 

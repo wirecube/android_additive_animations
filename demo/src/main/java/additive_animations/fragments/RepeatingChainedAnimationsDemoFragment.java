@@ -1,4 +1,4 @@
-package additive_animations.demo;
+package additive_animations.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import additive_animations.helper.DpConverter;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import additive_animations.subclass.AdditiveAnimatorSubclassDemo;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;

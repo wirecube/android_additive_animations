@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="additive_animations.demo.AdditiveAnimationsShowcaseActivity">
+    tools:context="additive_animations.AdditiveAnimationsShowcaseActivity">
 
     <View
         android:id="@+id/animated_view"

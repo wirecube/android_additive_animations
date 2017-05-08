@@ -1,8 +1,7 @@
-package additive_animations.demo;
+package additive_animations.fragments;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -15,9 +14,9 @@ import android.widget.FrameLayout;
 import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+import additive_animations.AdditiveAnimationsShowcaseActivity;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
