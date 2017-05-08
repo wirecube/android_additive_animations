@@ -91,7 +91,7 @@ class AdditiveAnimationApplier {
     }
 
     void addAnimation(AdditiveAnimation animation) {
-        // the correct valu will be set when the animation actually starts instead of when we add the animation.
+        // the correct value will be set when the animation actually starts instead of when we add the animation.
         mPreviousValues.put(animation, 0f);
         addTarget(animation.getView(), animation.getTag());
     }

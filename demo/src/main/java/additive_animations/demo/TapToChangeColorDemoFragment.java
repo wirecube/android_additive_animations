@@ -10,7 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import at.wirecube.additiveanimations.additive_animator.AdditiveAnimatorSubclassDemo;
+import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
+import additive_animations.subclass.AdditiveAnimatorSubclassDemo;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 
@@ -31,6 +32,9 @@ public class TapToChangeColorDemoFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+        AdditiveAnimatorSubclassDemo.animate(animatedView).startPulsing();
+
         final int colors[] = new int[] {
                 getResources().getColor(R.color.niceOrange),
                 getResources().getColor(R.color.niceBlue),
@@ -54,5 +58,11 @@ public class TapToChangeColorDemoFragment extends Fragment {
                 }
             }
         });
+    }
+
+    @Override
+    public void onDestroy() {
+        AdditiveAnimatorSubclassDemo.animate(animatedView).stopPulsing();
+        super.onDestroy();
     }
 }

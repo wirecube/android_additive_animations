@@ -6,6 +6,7 @@ import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Path;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.Property;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 import at.wirecube.additiveanimations.helper.AnimationUtils;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
+import at.wirecube.additiveanimations.helper.evaluators.ArgbFloatEvaluator;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 import at.wirecube.additiveanimations.helper.propertywrappers.MarginProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.PaddingProperties;
@@ -28,6 +30,8 @@ import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
  * Additive animations are nicely explained here: http://ronnqvi.st/multiple-animations/
 */
 public class AdditiveAnimator<T extends AdditiveAnimator> {
+
+    private static final String BACKGROUND_COLOR_ANIMATION_TAG = "AAA_BACKGROUND_COLOR";
 
     public abstract static class AnimationEndListener {
         public abstract void onAnimationEnd(boolean wasCancelled);
@@ -335,7 +339,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
             if(animation.getProperty() != null) {
                 animation.getProperty().set(targetView, accumulatedProperties.get(animation));
             } else {
-                unknownProperties.put(animation.getTag(), accumulatedProperties.get(animation));
+                if(animation.getTag().equals(BACKGROUND_COLOR_ANIMATION_TAG)) {
+                    targetView.setBackgroundColor(accumulatedProperties.get(animation).intValue());
+                } else {
+                    unknownProperties.put(animation.getTag(), accumulatedProperties.get(animation));
+                }
             }
         }
         applyCustomProperties(unknownProperties, targetView);
@@ -385,6 +393,18 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
             currentTarget = currentAnimationManager().getQueuedPropertyValue(property.getName());
         }
         currentAnimationManager().addAnimation(mAnimationApplier, createDescription(property, currentTarget + by));
+    }
+
+    public T backgroundColor(int color) {
+        try {
+            int startVal = ((ColorDrawable)currentTarget().getBackground()).getColor();
+            AdditiveAnimation desc = new AdditiveAnimation(currentTarget(), BACKGROUND_COLOR_ANIMATION_TAG, startVal, color);
+            desc.setCustomTypeEvaluator(new ArgbFloatEvaluator());
+            animateProperty(desc);
+        } catch (ClassCastException ex) {
+            ex.printStackTrace();
+        }
+        return self();
     }
 
     public T scaleX(float scaleX) {

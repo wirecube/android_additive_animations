@@ -48,7 +48,7 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
         rootView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN /*|| event.getAction() == MotionEvent.ACTION_MOVE  || event.getAction() == MotionEvent.ACTION_UP*/) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN /*|| event.getAction() == MotionEvent.ACTION_MOVE */ || event.getAction() == MotionEvent.ACTION_UP) {
                     float x = event.getX();
                     float y = event.getY();
 

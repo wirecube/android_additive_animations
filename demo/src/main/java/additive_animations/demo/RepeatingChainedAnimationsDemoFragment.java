@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
-import at.wirecube.additiveanimations.additive_animator.AdditiveAnimatorSubclassDemo;
+import additive_animations.subclass.AdditiveAnimatorSubclassDemo;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
 public class RepeatingChainedAnimationsDemoFragment extends Fragment {
@@ -46,13 +46,13 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
         };
         AdditiveAnimatorSubclassDemo.animate(animatedView).setDuration(1000)
                 .x(px(50)).y(px(100)).backgroundColor(colors[1]).rotation(0)
-                .thenBounceBefore(800, 300)
+                .thenBounceBeforeEnd(800, 300)
                 .thenBeforeEnd(400).x(px(250)).backgroundColor(colors[2]).rotationBy(45).setDuration(1000)
-                .thenBounceBefore(800, 300)
+                .thenBounceBeforeEnd(800, 300)
                 .thenBeforeEnd(400).y(px(500)).backgroundColor(colors[3]).rotationBy(45).setDuration(1000)
-                .thenBounceBefore(800, 300)
+                .thenBounceBeforeEnd(800, 300)
                 .thenBeforeEnd(400).x(px(50)).backgroundColor(colors[0]).rotationBy(90).setDuration(1000)
-                .thenBounceBefore(800, 300)
+                .thenBounceBeforeEnd(800, 300)
                 .addEndAction(new AdditiveAnimator.AnimationEndListener() {
                     @Override
                     public void onAnimationEnd(boolean wasCancelled) {
