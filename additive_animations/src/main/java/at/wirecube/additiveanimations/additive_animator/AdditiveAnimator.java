@@ -403,6 +403,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
             animateProperty(desc);
         } catch (ClassCastException ex) {
             ex.printStackTrace();
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
         }
         return self();
     }
