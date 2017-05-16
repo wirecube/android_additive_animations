@@ -54,7 +54,10 @@ class AdditiveAnimationStateManager {
         mQueuedTargetValues.put(animation.getTag(), animation.getTargetValue());
     }
 
-    void onAnimationApplierEnd(AdditiveAnimationApplier applier) {
+    void onAnimationApplierEnd(AdditiveAnimationApplier applier, boolean didCancel) {
+        if(didCancel) {
+            return;
+        }
         mAdditiveAnimationAppliers.remove(applier);
         if (mAdditiveAnimationAppliers.isEmpty()) {
             sStateManagers.remove(mAnimationTargetView);

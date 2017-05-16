@@ -61,7 +61,7 @@ class AdditiveAnimationApplier {
             public void onAnimationEnd(Animator animation) {
                 // now we are actually done
                 for (View v : mAnimatedPropertiesPerView.keySet()) {
-                    AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationApplier.this);
+                    AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationApplier.this, animationDidCancel);
                 }
             }
 
