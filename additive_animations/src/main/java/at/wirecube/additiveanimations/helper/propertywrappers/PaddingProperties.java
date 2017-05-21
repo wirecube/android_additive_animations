@@ -4,9 +4,11 @@ import android.util.Property;
 import android.view.View;
 import android.view.ViewGroup;
 
+import at.wirecube.additiveanimations.helper.FloatProperty;
+
 public class PaddingProperties {
 
-    public static Property<View, Float> PADDING_LEFT = new Property<View, Float>(Float.class, "PADDING_LEFT") {
+    public static Property<View, Float> PADDING_LEFT = new FloatProperty("PADDING_LEFT") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getPaddingLeft());
@@ -18,7 +20,7 @@ public class PaddingProperties {
         }
     };
 
-    public static Property<View, Float> PADDING_RIGHT = new Property<View, Float>(Float.class, "PADDING_RIGHT") {
+    public static Property<View, Float> PADDING_RIGHT = new FloatProperty("PADDING_RIGHT") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getPaddingRight());
@@ -30,7 +32,7 @@ public class PaddingProperties {
         }
     };
 
-    public static Property<View, Float> PADDING_TOP = new Property<View, Float>(Float.class, "PADDING_TOP") {
+    public static Property<View, Float> PADDING_TOP = new FloatProperty("PADDING_TOP") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getPaddingTop());
@@ -42,7 +44,7 @@ public class PaddingProperties {
         }
     };
 
-    public static Property<View, Float> PADDING_BOTTOM = new Property<View, Float>(Float.class, "PADDING_BOTTOM") {
+    public static Property<View, Float> PADDING_BOTTOM = new FloatProperty("PADDING_BOTTOM") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getPaddingBottom());

@@ -9,6 +9,10 @@ import java.lang.ref.WeakReference;
 
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
+/**
+ * This class is public for subclasses of AdditiveAnimator only, and should not be used outside of that.
+ *
+ */
 public class AdditiveAnimation {
 
     private String mTag;
@@ -41,29 +45,29 @@ public class AdditiveAnimation {
      */
     public AdditiveAnimation(View targetView, String tag, float startValue, float targetValue) {
         mTargetView = new WeakReference(targetView);
-        this.mTag = tag;
-        this.mStartValue = startValue;
-        this.mTargetValue = targetValue;
+        mTag = tag;
+        mStartValue = startValue;
+        mTargetValue = targetValue;
     }
 
     public AdditiveAnimation(View targetView, String tag, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
         mTargetView = new WeakReference(targetView);
-        this.mTag = tag;
-        this.mStartValue = startValue;
-        this.mPath = path;
-        this.mSharedPathEvaluator = sharedEvaluator;
-        this.mPathMode = pathMode;
-        this.mTargetValue = evaluateAt(1f);
+        mTag = tag;
+        mStartValue = startValue;
+        mPath = path;
+        mSharedPathEvaluator = sharedEvaluator;
+        mPathMode = pathMode;
+        mTargetValue = evaluateAt(1f);
     }
 
     public AdditiveAnimation(View targetView, Property<View, Float> property, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
         mTargetView = new WeakReference(targetView);
-        this.mProperty = property;
-        this.mStartValue = startValue;
-        this.mPath = path;
-        this.mSharedPathEvaluator = sharedEvaluator;
-        this.mPathMode = pathMode;
-        this.mTargetValue = evaluateAt(1f);
+        mProperty = property;
+        mStartValue = startValue;
+        mPath = path;
+        mSharedPathEvaluator = sharedEvaluator;
+        mPathMode = pathMode;
+        mTargetValue = evaluateAt(1f);
     }
 
     public String getTag() {

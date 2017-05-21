@@ -13,14 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-class AdditiveAnimationApplier {
+class AdditiveAnimationAccumulator {
     private Map<AdditiveAnimation, Float> mPreviousValues = new HashMap<>();
     private ValueAnimator mAnimator = ValueAnimator.ofFloat(0f, 1f);
     private final Map<View, Set<String>> mAnimatedPropertiesPerView = new HashMap<>();
     private boolean mHasInformedStateManagerAboutAnimationStart = false;
     private AdditiveAnimator mAdditiveAnimator;
 
-    AdditiveAnimationApplier(AdditiveAnimator additiveAnimator) {
+    AdditiveAnimationAccumulator(AdditiveAnimator additiveAnimator) {
         mAdditiveAnimator = additiveAnimator;
         mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
@@ -29,7 +29,7 @@ class AdditiveAnimationApplier {
                 List<View> modifiedViews = new ArrayList<>();
                 for (AdditiveAnimation animation : mPreviousValues.keySet()) {
                     if (animation.getView() != null) {
-                        AnimationAccumulator tempProperties = AdditiveAnimationStateManager.getAccumulatedProperties(animation.getView());
+                        AccumulatedAnimationValues tempProperties = AdditiveAnimationStateManager.getAccumulatedProperties(animation.getView());
                         tempProperties.add(animation, getDelta(animation, valueAnimator.getAnimatedFraction()));
                         modifiedViews.add(animation.getView());
                     }
@@ -38,10 +38,9 @@ class AdditiveAnimationApplier {
                     if (!mAnimatedPropertiesPerView.containsKey(v)) {
                         continue;
                     }
-                    AnimationAccumulator accumulator = AdditiveAnimationStateManager.getAccumulatedProperties(v);
+                    AccumulatedAnimationValues accumulator = AdditiveAnimationStateManager.getAccumulatedProperties(v);
 //                    accumulator.updateCounter += 1;
-//                    if (accumulator.updateCounter >= AdditiveAnimationStateManager.from(v).mAdditiveAnimationAppliers.size()) {
-                    // TODO: figure out a way to make this smoother
+//                    if (accumulator.updateCounter >= AdditiveAnimationStateManager.from(v).mAdditiveAnimationAccumulators.size()) {
                         mAdditiveAnimator.applyChanges(accumulator.getAccumulatedProperties(), v);
 //                        accumulator.updateCounter = 0;
 //                    }
@@ -61,7 +60,7 @@ class AdditiveAnimationApplier {
             public void onAnimationEnd(Animator animation) {
                 // now we are actually done
                 for (View v : mAnimatedPropertiesPerView.keySet()) {
-                    AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationApplier.this, animationDidCancel);
+                    AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, animationDidCancel);
                 }
             }
 
@@ -80,7 +79,7 @@ class AdditiveAnimationApplier {
         if(!mHasInformedStateManagerAboutAnimationStart) {
             for (View v : mAnimatedPropertiesPerView.keySet()) {
                 AdditiveAnimationStateManager manager = AdditiveAnimationStateManager.from(v);
-                manager.onAnimationApplierStart(AdditiveAnimationApplier.this);
+                manager.onAnimationApplierStart(AdditiveAnimationAccumulator.this);
                 for(AdditiveAnimation animation : getAnimations(v)) {
                     manager.prepareAnimationStart(animation);
                     mPreviousValues.put(animation, animation.getStartValue());

@@ -30,15 +30,15 @@ class AdditiveAnimationStateManager {
         return animator;
     }
 
-    static final AnimationAccumulator getAccumulatedProperties(View v) {
+    static final AccumulatedAnimationValues getAccumulatedProperties(View v) {
         return from(v).mAccumulator;
     }
 
-    private final AnimationAccumulator mAccumulator = new AnimationAccumulator();
+    private final AccumulatedAnimationValues mAccumulator = new AccumulatedAnimationValues();
 
     private final View mAnimationTargetView;
     // sorted: last = newest
-    final Set<AdditiveAnimationApplier> mAdditiveAnimationAppliers = new HashSet<>();
+    final Set<AdditiveAnimationAccumulator> mAdditiveAnimationAccumulators = new HashSet<>();
     private final Map<String, Integer> mNumAnimationsPerTag = new HashMap<>();
     private final Map<String, Float> mLastTargetValues = new HashMap<>();
     private final Map<String, Float> mQueuedTargetValues = new HashMap<>();
@@ -47,19 +47,19 @@ class AdditiveAnimationStateManager {
         mAnimationTargetView = animationTarget;
     }
 
-    void addAnimation(AdditiveAnimationApplier animationApplier, AdditiveAnimation animation) {
+    void addAnimation(AdditiveAnimationAccumulator animationApplier, AdditiveAnimation animation) {
         // immediately add to our list of pending animators
-        mAdditiveAnimationAppliers.add(animationApplier);
+        mAdditiveAnimationAccumulators.add(animationApplier);
         animationApplier.addAnimation(animation);
         mQueuedTargetValues.put(animation.getTag(), animation.getTargetValue());
     }
 
-    void onAnimationApplierEnd(AdditiveAnimationApplier applier, boolean didCancel) {
+    void onAnimationApplierEnd(AdditiveAnimationAccumulator applier, boolean didCancel) {
         if(didCancel) {
             return;
         }
-        mAdditiveAnimationAppliers.remove(applier);
-        if (mAdditiveAnimationAppliers.isEmpty()) {
+        mAdditiveAnimationAccumulators.remove(applier);
+        if (mAdditiveAnimationAccumulators.isEmpty()) {
             sStateManagers.remove(mAnimationTargetView);
         }
         mAccumulator.totalNumAnimationUpdaters--;
@@ -68,7 +68,7 @@ class AdditiveAnimationStateManager {
             decrementNumAnimations(animation.getTag());
         }
 
-//        if(mAccumulator.updateCounter == mAdditiveAnimationAppliers.size()) {
+//        if(mAccumulator.updateCounter == mAdditiveAnimationAccumulators.size()) {
 //            applier.getAdditiveAnimator().applyChanges(mAccumulator.getAccumulatedProperties(), mAnimationTargetView);
 //            mAccumulator.updateCounter = 0;
 //        }
@@ -77,7 +77,7 @@ class AdditiveAnimationStateManager {
 //        }
     }
 
-    void onAnimationApplierStart(AdditiveAnimationApplier applier) {
+    void onAnimationApplierStart(AdditiveAnimationAccumulator applier) {
         // only now are we expecting updates from this applier
         mAccumulator.totalNumAnimationUpdaters++;
     }
@@ -106,10 +106,10 @@ class AdditiveAnimationStateManager {
     }
 
     void cancelAllAnimations() {
-        for(AdditiveAnimationApplier additiveAnimationApplier : mAdditiveAnimationAppliers) {
-            additiveAnimationApplier.cancel(mAnimationTargetView);
+        for(AdditiveAnimationAccumulator additiveAnimationAccumulator : mAdditiveAnimationAccumulators) {
+            additiveAnimationAccumulator.cancel(mAnimationTargetView);
         }
-        mAdditiveAnimationAppliers.clear();
+        mAdditiveAnimationAccumulators.clear();
         mLastTargetValues.clear();
         mQueuedTargetValues.clear();
         mNumAnimationsPerTag.clear();
@@ -117,8 +117,8 @@ class AdditiveAnimationStateManager {
     }
 
     void cancelAnimation(String propertyName) {
-        List<AdditiveAnimationApplier> cancelledAppliers = new ArrayList<>();
-        for(AdditiveAnimationApplier applier : mAdditiveAnimationAppliers) {
+        List<AdditiveAnimationAccumulator> cancelledAppliers = new ArrayList<>();
+        for(AdditiveAnimationAccumulator applier : mAdditiveAnimationAccumulators) {
             if(applier.removeAnimation(propertyName, mAnimationTargetView)) {
                 cancelledAppliers.add(applier);
             }
@@ -126,7 +126,7 @@ class AdditiveAnimationStateManager {
         mLastTargetValues.remove(propertyName);
         mQueuedTargetValues.remove(propertyName);
         mNumAnimationsPerTag.remove(propertyName);
-        mAdditiveAnimationAppliers.removeAll(cancelledAppliers);
+        mAdditiveAnimationAccumulators.removeAll(cancelledAppliers);
     }
 
     Float getLastTargetValue(String propertyName) {

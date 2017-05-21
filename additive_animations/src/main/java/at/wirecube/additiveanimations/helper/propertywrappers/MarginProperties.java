@@ -4,9 +4,11 @@ import android.util.Property;
 import android.view.View;
 import android.view.ViewGroup;
 
+import at.wirecube.additiveanimations.helper.FloatProperty;
+
 public class MarginProperties {
 
-    public static Property<View, Float> MARGIN_LEFT = new Property<View, Float>(Float.class, "MARGIN_LEFT") {
+    public static Property<View, Float> MARGIN_LEFT = new FloatProperty( "MARGIN_LEFT") {
         @Override
         public Float get(View object) {
             return Float.valueOf(((ViewGroup.MarginLayoutParams)object.getLayoutParams()).leftMargin);
@@ -18,7 +20,7 @@ public class MarginProperties {
         }
     };
 
-    public static Property<View, Float> MARGIN_RIGHT = new Property<View, Float>(Float.class, "MARGIN_RIGHT") {
+    public static Property<View, Float> MARGIN_RIGHT = new FloatProperty("MARGIN_RIGHT") {
         @Override
         public Float get(View object) {
             return Float.valueOf(((ViewGroup.MarginLayoutParams)object.getLayoutParams()).rightMargin);
@@ -30,7 +32,7 @@ public class MarginProperties {
         }
     };
 
-    public static Property<View, Float> MARGIN_TOP = new Property<View, Float>(Float.class, "MARGIN_TOP") {
+    public static Property<View, Float> MARGIN_TOP = new FloatProperty("MARGIN_TOP") {
         @Override
         public Float get(View object) {
             return Float.valueOf(((ViewGroup.MarginLayoutParams)object.getLayoutParams()).topMargin);
@@ -42,7 +44,7 @@ public class MarginProperties {
         }
     };
 
-    public static Property<View, Float> MARGIN_BOTTOM = new Property<View, Float>(Float.class, "MARGIN_BOTTOM") {
+    public static Property<View, Float> MARGIN_BOTTOM = new FloatProperty("MARGIN_BOTTOM") {
         @Override
         public Float get(View object) {
             return Float.valueOf(((ViewGroup.MarginLayoutParams)object.getLayoutParams()).bottomMargin);

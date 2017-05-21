@@ -6,10 +6,10 @@ import java.util.Map;
 /**
  * Helper class for accumulating the changes made by all of the additive animators.
  */
-class AnimationAccumulator {
+class AccumulatedAnimationValues {
     private Map<AdditiveAnimation, Float> tempProperties = new HashMap<>();
     int totalNumAnimationUpdaters = 0;
-    int updateCounter = 0;
+//    int updateCounter = 0;
 
     void add(AdditiveAnimation property, Float delta) {
         tempProperties.put(property, tempProperties.get(property) + delta);

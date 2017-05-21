@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Switch;
 
 import additive_animations.fragments.AnimationChainingDemoFragment;
+import additive_animations.fragments.CustomAnimationsWithoutSubclassDemoFragment;
 import additive_animations.fragments.MarginsDemoFragment;
 import additive_animations.fragments.MoveAlongPathDemoFragment;
 import additive_animations.fragments.MultipleViewsAnimationDemoFragment;
@@ -102,6 +103,8 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AnimationChainingDemoFragment()).commit();
         } else if(id == R.id.nav_chaining_repeated) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new RepeatingChainedAnimationsDemoFragment()).commit();
+        } else if(id == R.id.nav_change_text_color) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CustomAnimationsWithoutSubclassDemoFragment()).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

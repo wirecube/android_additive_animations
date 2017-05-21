@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="additive_animations.AdditiveAnimationsShowcaseActivity">
+
+    <TextView
+        android:id="@+id/animated_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="24sp"
+        android:text="This is colored text"
+        android:textAlignment="center"
+        android:textColor="@color/niceOrange"
+        android:gravity="center_vertical">
+    </TextView>
+
+    <Button
+        android:id="@+id/change_color_button"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:text="Change text color"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="50dp"/>
+
+</FrameLayout>
