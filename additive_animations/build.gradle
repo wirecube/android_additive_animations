@@ -13,7 +13,7 @@ ext {
     siteUrl = 'https://github.com/davidganster/android_additive_animations'
     gitUrl = 'https://github.com/davidganster/android_additive_animations.git'
 
-    libraryVersion = '1.0'
+    libraryVersion = '1.1.1'
 
     developerId = 'davidganster'
     developerName = 'David Ganster'

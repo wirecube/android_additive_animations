@@ -380,8 +380,14 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected final void animate(Property<View, Float> property, float target) {
+        animate(property, target, null);
+    }
+
+    protected final void animate(Property<View, Float> property, float target, TypeEvaluator evaluator) {
         initValueAnimatorIfNeeded();
-        animate(createAnimation(property, target));
+        AdditiveAnimation animation = createAnimation(property, target);
+        animation.setCustomTypeEvaluator(evaluator);
+        animate(animation);
     }
 
     protected final void animatePropertyBy(Property<View, Float> property, float by) {
@@ -406,7 +412,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T backgroundColor(int color) {
-        animate(ColorProperties.BACKGROUND_COLOR, color);
+        animate(ColorProperties.BACKGROUND_COLOR, color, new ArgbFloatEvaluator());
         return self();
     }
 
