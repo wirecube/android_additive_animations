@@ -5,13 +5,10 @@ import android.graphics.Path;
 import android.util.Property;
 import android.view.View;
 
-import java.lang.ref.WeakReference;
-
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
 /**
  * This class is public for subclasses of AdditiveAnimator only, and should not be used outside of that.
- *
  */
 public class AdditiveAnimation {
 
@@ -24,7 +21,7 @@ public class AdditiveAnimation {
     private PathEvaluator mSharedPathEvaluator;
     private TypeEvaluator mCustomTypeEvaluator;
     private View mTargetView;
-    private int mTagHash;
+    private int mHashCode;
 
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
@@ -76,7 +73,8 @@ public class AdditiveAnimation {
 
     private void setTag(String tag) {
         mTag = tag;
-        mTagHash = mTag.hashCode();
+        // TODO: find a good hash code that doesn't collide often
+        mHashCode = mTag.hashCode() * ((2 << 17) - 1) + mTargetView.hashCode();
     }
 
     public String getTag() {
@@ -127,7 +125,7 @@ public class AdditiveAnimation {
 
     @Override
     public int hashCode() {
-        return mTagHash;
+        return mHashCode;
     }
 
     @Override
@@ -136,6 +134,6 @@ public class AdditiveAnimation {
             return false;
         }
         AdditiveAnimation other = (AdditiveAnimation) o;
-        return other.mTagHash == mTagHash && other.mTargetView == mTargetView;
+        return other.mTag.hashCode() == mTag.hashCode() && other.mTargetView == mTargetView;
     }
 }

@@ -11,7 +11,7 @@ class AccumulatedAnimationValues {
     int totalNumAnimationUpdaters = 0;
 //    int updateCounter = 0;
 
-    void add(AdditiveAnimation property, Float delta) {
+    void addDelta(AdditiveAnimation property, Float delta) {
         tempProperties.put(property, tempProperties.get(property) + delta);
     }
 
