@@ -23,7 +23,8 @@ public class AdditiveAnimation {
     private PathEvaluator.PathMode mPathMode;
     private PathEvaluator mSharedPathEvaluator;
     private TypeEvaluator mCustomTypeEvaluator;
-    private WeakReference<View> mTargetView;
+    private View mTargetView;
+    private int mTagHash;
 
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
@@ -31,10 +32,11 @@ public class AdditiveAnimation {
      * Setter provided by `property`.
      */
     public AdditiveAnimation(View targetView, Property<View, Float> property, float startValue, float targetValue) {
-        mTargetView = new WeakReference(targetView);
+        mTargetView = targetView;
         mProperty = property;
         mTargetValue = targetValue;
         mStartValue = startValue;
+        setTag(property.getName());
     }
 
     /**
@@ -44,34 +46,41 @@ public class AdditiveAnimation {
      * @param targetValue Target value of the animated property.
      */
     public AdditiveAnimation(View targetView, String tag, float startValue, float targetValue) {
-        mTargetView = new WeakReference(targetView);
-        mTag = tag;
+        mTargetView = targetView;
         mStartValue = startValue;
         mTargetValue = targetValue;
+        setTag(tag);
     }
 
     public AdditiveAnimation(View targetView, String tag, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
-        mTargetView = new WeakReference(targetView);
-        mTag = tag;
+        mTargetView = targetView;
         mStartValue = startValue;
         mPath = path;
         mSharedPathEvaluator = sharedEvaluator;
         mPathMode = pathMode;
         mTargetValue = evaluateAt(1f);
+        setTag(tag);
     }
 
     public AdditiveAnimation(View targetView, Property<View, Float> property, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
-        mTargetView = new WeakReference(targetView);
+        mTargetView = targetView;
         mProperty = property;
         mStartValue = startValue;
         mPath = path;
         mSharedPathEvaluator = sharedEvaluator;
         mPathMode = pathMode;
         mTargetValue = evaluateAt(1f);
+
+        setTag(property.getName());
+    }
+
+    private void setTag(String tag) {
+        mTag = tag;
+        mTagHash = mTag.hashCode();
     }
 
     public String getTag() {
-        return mProperty != null ? mProperty.getName() : mTag;
+        return mTag;
     }
 
     public float getStartValue() {
@@ -95,7 +104,7 @@ public class AdditiveAnimation {
     }
 
     public View getView() {
-        return mTargetView.get();
+        return mTargetView;
     }
 
     public Property<View, Float> getProperty() { return mProperty; }
@@ -118,11 +127,7 @@ public class AdditiveAnimation {
 
     @Override
     public int hashCode() {
-        if(mTag != null) {
-            return mTag.hashCode();
-        } else {
-            return mProperty.getName().hashCode();
-        }
+        return mTagHash;
     }
 
     @Override
@@ -131,12 +136,6 @@ public class AdditiveAnimation {
             return false;
         }
         AdditiveAnimation other = (AdditiveAnimation) o;
-        if(other.mTag != null && mTag != null) {
-            return other.mTag.equals(mTag) && other.getView() == getView();
-        } else if(other.mProperty != null && mProperty != null) {
-            return other.mProperty.getName().equals(mProperty.getName()) && other.getView() == getView();
-        } else {
-            return false;
-        }
+        return other.mTagHash == mTagHash && other.mTargetView == mTargetView;
     }
 }
