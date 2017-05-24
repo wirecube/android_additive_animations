@@ -692,7 +692,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return self();
     }
 
-    public T toRightMarginAlongPath(Path path) {
+    public T topRightMarginAlongPath(Path path) {
         animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_TOP, null, path);
         return self();
     }
