@@ -37,7 +37,7 @@ class AdditiveAnimationStateManager {
     private final AccumulatedAnimationValues mAccumulator = new AccumulatedAnimationValues();
 
     private final View mAnimationTargetView;
-    // sorted: last = newest
+
     final Set<AdditiveAnimationAccumulator> mAdditiveAnimationAccumulators = new HashSet<>();
     private final Map<String, Integer> mNumAnimationsPerTag = new HashMap<>();
     private final Map<String, Float> mLastTargetValues = new HashMap<>();

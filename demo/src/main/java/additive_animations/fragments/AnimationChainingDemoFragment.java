@@ -12,6 +12,7 @@ import android.widget.FrameLayout;
 import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
 
 import additive_animations.AdditiveAnimationsShowcaseActivity;
+import additive_animations.helper.DpConverter;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
@@ -32,9 +33,8 @@ public class AnimationChainingDemoFragment extends Fragment {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         AdditiveAnimator.animate(animatedView).setDuration(1000)
-                                .centerX(event.getX()).centerY(event.getY())
-                                .thenDelayAfterEnd(100)
-                                .x(animatedView.getX()).y(animatedView.getY())
+                                .centerX(event.getX()).centerY(event.getY()) //.scale(1.2f).backgroundColor(getResources().getColor(R.color.niceBlue))
+                                .then().centerX(event.getX() - DpConverter.converDpToPx(150)).centerY(event.getY() - DpConverter.converDpToPx(150) )//.scale(1.0f).backgroundColor(getResources().getColor(R.color.niceOrange))
                                 .start();
                     } else {
                         ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)

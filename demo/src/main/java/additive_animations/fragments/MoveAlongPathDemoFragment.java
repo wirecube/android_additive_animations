@@ -3,6 +3,7 @@ package additive_animations.fragments;
 import android.animation.ValueAnimator;
 import android.graphics.Path;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -21,12 +22,12 @@ public class MoveAlongPathDemoFragment extends Fragment {
     FrameLayout rootView;
     View animatedView;
 
-    int circleRadius = DpConverter.converDpToPx(50);
+    int circleRadius = DpConverter.converDpToPx(40);
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = (FrameLayout) inflater.inflate(R.layout.fragment_tap_to_move_demo, container, false);
+        rootView = (FrameLayout) inflater.inflate(R.layout.fragment_move_along_path_demo, container, false);
         animatedView = rootView.findViewById(R.id.animated_view);
 
         rootView.setOnTouchListener(new View.OnTouchListener() {
@@ -59,7 +60,7 @@ public class MoveAlongPathDemoFragment extends Fragment {
 
                     // another circle which also updates rotation to better show where on the path we are
                     final Path path2 = new Path();
-                    path2.addCircle(rootView.getWidth() / 2, rootView.getHeight() / 2, rootView.getWidth() / 4, Path.Direction.CW);
+                    path2.addCircle(rootView.getWidth() / 2, rootView.getHeight() / 2, rootView.getWidth() / 3, Path.Direction.CW);
                     AdditiveAnimator.animate(animatedView).setDuration(3200).setInterpolator(new LinearInterpolator())
                             .xyRotationAlongPath(path2)
                             .setRepeatCount(ValueAnimator.INFINITE)
