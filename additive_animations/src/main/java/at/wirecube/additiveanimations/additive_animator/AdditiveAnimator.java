@@ -399,6 +399,20 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         animate(createAnimation(property, currentTarget + by));
     }
 
+
+    protected final void animatePropertiesAlongPath(Property<View, Float> xProperty, Property<View, Float> yProperty, Property<View, Float> rotationProperty, Path path) {
+        PathEvaluator sharedEvaluator = new PathEvaluator();
+        if(xProperty != null) {
+            animate(xProperty, path, PathEvaluator.PathMode.X, sharedEvaluator);
+        }
+        if(yProperty != null) {
+            animate(yProperty, path, PathEvaluator.PathMode.Y, sharedEvaluator);
+        }
+        if(rotationProperty != null) {
+            animate(rotationProperty, path, PathEvaluator.PathMode.ROTATION, sharedEvaluator);
+        }
+    }
+
     public T animateProperty(float target, TypeEvaluator evaluator, FloatProperty property) {
         AdditiveAnimation animation = createAnimation(property, target);
         animation.setCustomTypeEvaluator(evaluator);
@@ -574,17 +588,22 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T xyAlongPath(Path path) {
-        PathEvaluator sharedEvaluator = new PathEvaluator();
-        animate(View.X, path, PathEvaluator.PathMode.X, sharedEvaluator);
-        animate(View.Y, path, PathEvaluator.PathMode.Y, sharedEvaluator);
+        animatePropertiesAlongPath(View.TRANSLATION_X, View.TRANSLATION_Y, null, path);
+        return self();
+    }
+
+    public T translationXYAlongPath(Path path) {
+        animatePropertiesAlongPath(View.TRANSLATION_X, View.TRANSLATION_Y, null, path);
         return self();
     }
 
     public T xyRotationAlongPath(Path path) {
-        PathEvaluator sharedEvaluator = new PathEvaluator();
-        animate(View.X, path, PathEvaluator.PathMode.X, sharedEvaluator);
-        animate(View.Y, path, PathEvaluator.PathMode.Y, sharedEvaluator);
-        animate(View.ROTATION, path, PathEvaluator.PathMode.ROTATION, sharedEvaluator);
+        animatePropertiesAlongPath(View.X, View.Y, View.ROTATION, path);
+        return self();
+    }
+
+    public T translationXYRotationAlongPath(Path path) {
+        animatePropertiesAlongPath(View.TRANSLATION_X, View.TRANSLATION_Y, View.ROTATION, path);
         return self();
     }
 
@@ -665,6 +684,26 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         rightMarginBy(marginBy);
         topMarginBy(marginBy);
         bottomMarginBy(marginBy);
+        return self();
+    }
+
+    public T topLeftMarginAlongPath(Path path) {
+        animatePropertiesAlongPath(MarginProperties.MARGIN_LEFT, MarginProperties.MARGIN_TOP, null, path);
+        return self();
+    }
+
+    public T toRightMarginAlongPath(Path path) {
+        animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_TOP, null, path);
+        return self();
+    }
+
+    public T bottomRightMarginAlongPath(Path path) {
+        animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_BOTTOM, null, path);
+        return self();
+    }
+
+    public T bottomLeftMarginAlongPath(Path path) {
+        animatePropertiesAlongPath(MarginProperties.MARGIN_LEFT, MarginProperties.MARGIN_BOTTOM, null, path);
         return self();
     }
 
