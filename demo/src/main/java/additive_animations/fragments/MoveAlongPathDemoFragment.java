@@ -35,7 +35,7 @@ public class MoveAlongPathDemoFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(animatedView).setDuration(1000)
+                        AdditiveAnimator.animate(animatedView)
                                 .x(event.getX())
                                 .y(event.getY())
                                 .start();
@@ -53,7 +53,7 @@ public class MoveAlongPathDemoFragment extends Fragment {
                     // small circle
                     final Path path1 = new Path();
                     path1.addCircle(rootView.getWidth() / 2, rootView.getHeight() / 2, circleRadius, Path.Direction.CW);
-                    AdditiveAnimator.animate(animatedView).setDuration(1000).setInterpolator(new LinearInterpolator())
+                    AdditiveAnimator.animate(animatedView).setInterpolator(new LinearInterpolator())
                             .xyAlongPath(path1)
                             .setRepeatCount(ValueAnimator.INFINITE)
                             .start();

@@ -28,8 +28,11 @@ import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.Property;
 import android.view.View;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +65,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     private static TimeInterpolator sDefaultInterpolator = EaseInOutPathInterpolator.create();
 
     protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to.
+    protected TimeInterpolator mCurrentCustomInterpolator = null;
 
     /**
      * This is just a convenience method when you need to animate a single view.
@@ -109,6 +113,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         addTarget(other.currentTarget());
         setDuration(other.getValueAnimator().getDuration());
         setInterpolator(other.getValueAnimator().getInterpolator());
+        mCurrentCustomInterpolator = other.mCurrentCustomInterpolator;
         mParent = other;
         return self();
     }
@@ -228,7 +233,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T setInterpolator(TimeInterpolator interpolator) {
-        getValueAnimator().setInterpolator(interpolator);
+        if(mCurrentCustomInterpolator != null) {
+            switchInterpolator(interpolator);
+        } else {
+            getValueAnimator().setInterpolator(interpolator);
+        }
         return self();
     }
 
@@ -242,6 +251,27 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     // TODO: investigate possible problems when repeat modes of children/parents don't match
     public T setRepeatMode(int repeatMode) {
         getValueAnimator().setRepeatMode(repeatMode);
+        return self();
+    }
+
+    /**
+     * Switches to the given interpolator only for all following animations.
+     * This is different from `setInterpolator` in that it doesn't apply to animations that were created
+     * before calling this method.
+     * Calling `setInterpolator` after calling this method at least once will behave the same as calling `switchInterpolator`
+     * to prevent accidentally overriding the effects of `switchInterpolator`.
+     */
+    public T switchInterpolator(TimeInterpolator newInterpolator) {
+        initValueAnimatorIfNeeded();
+        // set custom interpolator for all animations so far
+        Collection<AdditiveAnimation> animations = mAnimationAccumulator.getAnimations();
+        for(AdditiveAnimation animation : animations) {
+            animation.setCustomInterpolator(getValueAnimator().getInterpolator());
+        }
+
+        mCurrentCustomInterpolator = newInterpolator;
+        // now we want to animate linearly, all animations are going to map to the current value themselves
+        getValueAnimator().setInterpolator(new LinearInterpolator());
         return self();
     }
 
@@ -377,12 +407,16 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return mViews.get(mViews.size() - 1);
     }
 
-    protected AdditiveAnimation createAnimation(Property<View, Float> property, float targetValue) {
-        return new AdditiveAnimation(currentTarget(), property, property.get(currentTarget()), targetValue);
+    protected final AdditiveAnimation createAnimation(Property<View, Float> property, float targetValue) {
+        AdditiveAnimation animation = new AdditiveAnimation(currentTarget(), property, property.get(currentTarget()), targetValue);
+        animation.setCustomInterpolator(mCurrentCustomInterpolator);
+        return animation;
     }
 
-    protected AdditiveAnimation createAnimation(Property<View, Float> property, Path path, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
-        return new AdditiveAnimation(currentTarget(), property, property.get(currentTarget()), path, mode, sharedEvaluator);
+    protected final AdditiveAnimation createAnimation(Property<View, Float> property, Path path, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
+        AdditiveAnimation animation = new AdditiveAnimation(currentTarget(), property, property.get(currentTarget()), path, mode, sharedEvaluator);
+        animation.setCustomInterpolator(mCurrentCustomInterpolator);
+        return animation;
     }
 
     protected final void animate(AdditiveAnimation animation) {

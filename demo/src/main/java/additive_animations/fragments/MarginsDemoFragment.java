@@ -29,7 +29,7 @@ public class MarginsDemoFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(animatedView).setDuration(1000).leftMargin((int) event.getX()).topMargin((int) event.getY()).start();
+                        AdditiveAnimator.animate(animatedView).leftMargin((int) event.getX()).topMargin((int) event.getY()).start();
                     } else {
                         ViewPropertyObjectAnimator.animate(animatedView).leftMargin((int) event.getX()).topMargin((int) event.getY()).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000).start();
                     }

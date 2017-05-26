@@ -34,7 +34,7 @@ public class CustomAnimationsWithoutSubclassDemoFragment extends Fragment {
             };
             @Override
             public void onClick(View v) {
-                AdditiveAnimator.animate(animatedView).setDuration(1000)
+                AdditiveAnimator.animate(animatedView)
                         .animateProperty(colors[currentColor++ % 4], new ArgbFloatEvaluator(), new FloatProperty("TextColorAnimationTag") {
                             @Override public Float get(View object) { return Float.valueOf(animatedView.getCurrentTextColor()); }
                             @Override public void set(View object, Float value) { animatedView.setTextColor(value.intValue()); }

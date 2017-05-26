@@ -16,6 +16,7 @@
 
 package at.wirecube.additiveanimations.additive_animator;
 
+import android.animation.TimeInterpolator;
 import android.animation.TypeEvaluator;
 import android.graphics.Path;
 import android.util.Property;
@@ -38,6 +39,7 @@ public class AdditiveAnimation {
     private TypeEvaluator mCustomTypeEvaluator;
     private View mTargetView;
     private int mHashCode;
+    private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
 
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
@@ -127,7 +129,14 @@ public class AdditiveAnimation {
         return mPath;
     }
 
+    public void setCustomInterpolator(TimeInterpolator customInterpolator) {
+        mCustomInterpolator = customInterpolator;
+    }
+
     public float evaluateAt(float progress) {
+        if(mCustomInterpolator != null) {
+            progress = mCustomInterpolator.getInterpolation(progress);
+        }
         if(mPath != null) {
             return mSharedPathEvaluator.evaluate(progress, mPathMode, mPath);
         } else {

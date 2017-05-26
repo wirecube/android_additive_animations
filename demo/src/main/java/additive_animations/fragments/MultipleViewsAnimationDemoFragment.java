@@ -66,7 +66,7 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                     float height = rootView.getHeight();
 
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator animator = new AdditiveAnimator().setDuration(1000)
+                        AdditiveAnimator animator = new AdditiveAnimator()
                                 .addTarget(orangeView).x(x).y(y).rotation(rotation)
                                 .addTarget(blueView).x(width - x - blueView.getWidth()).y(height - y).rotation(-rotation)
                                 .addTarget(greenView).x(x).y(height - y).rotation(-rotation)

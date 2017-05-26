@@ -190,6 +190,14 @@ class AdditiveAnimationAccumulator {
         return mAnimator;
     }
 
+    Collection<AdditiveAnimation> getAnimations() {
+        List<AdditiveAnimation> allAnimations = new ArrayList<>();
+        for(Set<AdditiveAnimation> animations : mAnimationsPerView.values()) {
+            allAnimations.addAll(animations);
+        }
+        return allAnimations;
+    }
+
     final float getDelta(AdditiveAnimation animation, float progress) {
         float lastVal = mPreviousValues.get(animation);
         float newVal = animation.evaluateAt(progress);

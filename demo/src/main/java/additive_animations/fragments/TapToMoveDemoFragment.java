@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.BounceInterpolator;
 import android.widget.FrameLayout;
 
 import additive_animations.AdditiveAnimationsShowcaseActivity;
@@ -29,7 +30,13 @@ public class TapToMoveDemoFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(animatedView).setDuration(1000).centerX(event.getX()).centerY(event.getY()).start();
+
+                        AdditiveAnimator.animate(animatedView)
+                                .centerX(event.getX())
+                                .switchInterpolator(new BounceInterpolator())
+                                .centerY(event.getY())
+                                .start();
+
                     } else {
                         animatedView.animate().setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
                                 .x(event.getX() - animatedView.getWidth() / 2)

@@ -33,7 +33,7 @@ public class TapToChangeColorDemoFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        AdditiveAnimatorSubclassDemo.animate(animatedView).startPulsing();
+//        AdditiveAnimatorSubclassDemo.animate(animatedView).startPulsing();
 
         final int colors[] = new int[] {
                 getResources().getColor(R.color.niceOrange),
@@ -45,7 +45,7 @@ public class TapToChangeColorDemoFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                    AdditiveAnimatorSubclassDemo.animate(v).backgroundColor(colors[++index % 4]).setDuration(1000).start();
+                    AdditiveAnimatorSubclassDemo.animate(v).backgroundColor(colors[++index % 4]).start();
                 } else {
                     final ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(animatedView,
                             "backgroundColor",
@@ -62,7 +62,7 @@ public class TapToChangeColorDemoFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        AdditiveAnimatorSubclassDemo.animate(animatedView).stopPulsing();
+//        AdditiveAnimatorSubclassDemo.animate(animatedView).stopPulsing();
         super.onDestroy();
     }
 }

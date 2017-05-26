@@ -37,7 +37,7 @@ public class AnimationChainingDemoFragment extends Fragment {
                     int offset =  DpConverter.converDpToPx(150);
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
 
-                        AdditiveAnimator.animate(animatedView).setDuration(1000)
+                        AdditiveAnimator.animate(animatedView)
                                 .centerX(event.getX()).centerY(event.getY())
                                 .then() // execute the following animations after the previous ones have finished
                                 .centerX(event.getX() - offset).centerY(event.getY() - offset)

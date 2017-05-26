@@ -45,7 +45,7 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
                 getResources().getColor(R.color.niceGreen),
                 getResources().getColor(R.color.nicePink)
         };
-        AdditiveAnimatorSubclassDemo.animate(animatedView).setDuration(1000)
+        AdditiveAnimatorSubclassDemo.animate(animatedView)
                 .x(px(50)).y(px(100)).backgroundColor(colors[1]).rotation(0)
                 .thenBounceBeforeEnd(800, 300)
                 .thenBeforeEnd(400).x(px(250)).backgroundColor(colors[2]).rotationBy(45).setDuration(1000)

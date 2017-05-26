@@ -20,6 +20,7 @@ import additive_animations.fragments.MultipleViewsAnimationDemoFragment;
 import additive_animations.fragments.RepeatingChainedAnimationsDemoFragment;
 import additive_animations.fragments.TapToChangeColorDemoFragment;
 import additive_animations.fragments.TapToMoveDemoFragment;
+import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
 public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
@@ -52,6 +53,9 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
                 ADDITIVE_ANIMATIONS_ENABLED = ((Switch)v).isChecked();
             }
         });
+
+        // set the default duration for all animations:
+        AdditiveAnimator.setDefaultDuration(1000);
     }
 
     @Override
