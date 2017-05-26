@@ -604,7 +604,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T xyAlongPath(Path path) {
-        animatePropertiesAlongPath(View.TRANSLATION_X, View.TRANSLATION_Y, null, path);
+        animatePropertiesAlongPath(View.X, View.Y, null, path);
         return self();
     }
 

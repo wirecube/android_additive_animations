@@ -22,7 +22,7 @@ public class MoveAlongPathDemoFragment extends Fragment {
     FrameLayout rootView;
     View animatedView;
 
-    int circleRadius = DpConverter.converDpToPx(40);
+    int circleRadius = DpConverter.converDpToPx(50);
 
     @Nullable
     @Override

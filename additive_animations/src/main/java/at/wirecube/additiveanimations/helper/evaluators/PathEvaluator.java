@@ -21,6 +21,9 @@ import android.graphics.PathMeasure;
 
 
 /**
+ * A custom evaluator only to be used by {@link at.wirecube.additiveanimations.additive_animator.AdditiveAnimation}.
+ * Use this class if you subclass {@link at.wirecube.additiveanimations.additive_animator.AdditiveAnimator} and want to
+ * implement animating custom properties along paths.
  * It is NOT safe to share objects of this type among different animators since it holds state.
  */
 public class PathEvaluator {
@@ -31,7 +34,7 @@ public class PathEvaluator {
             switch (mode) {
                 case 1: return Y;
                 case 2: return ROTATION;
-                case 0: default: return X;
+                default: return X;
             }
         }
     }

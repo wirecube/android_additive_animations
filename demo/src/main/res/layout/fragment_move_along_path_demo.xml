@@ -15,7 +15,7 @@
         android:layout_height="50dp"
         android:layout_marginLeft="50dp"
         android:layout_marginTop="50dp"
-        android:background="@drawable/round_25dp_radius">
+        android:background="@color/niceOrange">
     </View>
 
 </FrameLayout>

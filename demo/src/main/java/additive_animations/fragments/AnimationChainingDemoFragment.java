@@ -1,5 +1,8 @@
 package additive_animations.fragments;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -31,19 +34,30 @@ public class AnimationChainingDemoFragment extends Fragment {
             @Override
             public boolean onTouch(View v, final MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
+                    int offset =  DpConverter.converDpToPx(150);
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
+
                         AdditiveAnimator.animate(animatedView).setDuration(1000)
-                                .centerX(event.getX()).centerY(event.getY()) //.scale(1.2f).backgroundColor(getResources().getColor(R.color.niceBlue))
-                                .then().centerX(event.getX() - DpConverter.converDpToPx(150)).centerY(event.getY() - DpConverter.converDpToPx(150) )//.scale(1.0f).backgroundColor(getResources().getColor(R.color.niceOrange))
+                                .centerX(event.getX()).centerY(event.getY())
+                                .then() // execute the following animations after the previous ones have finished
+                                .centerX(event.getX() - offset).centerY(event.getY() - offset)
                                 .start();
+
                     } else {
-                        ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
-                                .x(event.getX() - animatedView.getWidth() / 2).y(event.getY() - animatedView.getHeight() / 2)
-                                .start();
-                        ViewPropertyObjectAnimator.animate(animatedView).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000)
-                                .setStartDelay(1100)
-                                .x(animatedView.getX()).y(animatedView.getY())
-                                .start();
+
+                        PropertyValuesHolder pvhX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, event.getX() - animatedView.getWidth() / 2);
+                        PropertyValuesHolder pvhY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, event.getY() - animatedView.getHeight() / 2);
+                        ObjectAnimator animator1  = ObjectAnimator.ofPropertyValuesHolder(animatedView, pvhX, pvhY);
+
+                        PropertyValuesHolder pvhX2 = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, (event.getX() - animatedView.getWidth() / 2) - offset);
+                        PropertyValuesHolder pvhY2 = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, (event.getY() - animatedView.getHeight() / 2) - offset);
+                        ObjectAnimator animator2   = ObjectAnimator.ofPropertyValuesHolder(animatedView, pvhX2, pvhY2);
+
+                        AnimatorSet animators = new AnimatorSet();
+                        animators.playSequentially(animator1, animator2);
+                        animators.setDuration(2000);
+                        animators.setInterpolator(EaseInOutPathInterpolator.create());
+                        animators.start();
                     }
                 }
                 return true;
