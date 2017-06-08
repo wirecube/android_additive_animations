@@ -2,6 +2,7 @@ package additive_animations.fragments;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 
 import additive_animations.AdditiveAnimationsShowcaseActivity;
 import additive_animations.subclass.AdditiveAnimatorSubclassDemo;
+import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 

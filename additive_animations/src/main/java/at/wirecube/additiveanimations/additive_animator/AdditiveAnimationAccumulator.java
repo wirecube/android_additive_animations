@@ -124,7 +124,9 @@ class AdditiveAnimationAccumulator {
         if(mAnimatedPropertiesPerView.get(v) == null) {
             return;
         }
-        for(String animatedValue : mAnimatedPropertiesPerView.get(v)) {
+        // avoid ConcurrentModificationException
+        Collection<String> animatedValues = new ArrayList<>(mAnimatedPropertiesPerView.get(v));
+        for(String animatedValue : animatedValues) {
             removeTarget(v, animatedValue);
         }
     }
