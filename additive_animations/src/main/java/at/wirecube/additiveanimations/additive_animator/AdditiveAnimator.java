@@ -43,6 +43,7 @@ import at.wirecube.additiveanimations.helper.FloatProperty;
 import at.wirecube.additiveanimations.helper.evaluators.ArgbFloatEvaluator;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 import at.wirecube.additiveanimations.helper.propertywrappers.ColorProperties;
+import at.wirecube.additiveanimations.helper.propertywrappers.ElevationProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.MarginProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.PaddingProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.ScrollProperties;
@@ -75,6 +76,17 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      */
     public static AdditiveAnimator animate(View view) {
         return new AdditiveAnimator(view);
+    }
+
+    /**
+     * This is just a convenience method when you need to animate a single view.
+     * No state is kept in individual AdditiveAnimator instances, so you don't need to keep a reference to it.
+     * @param view The view to animate.
+     * @param duration The animation duration.
+     * @return A new instance of AdditiveAnimator with the animation target set to `view` and the animationDuration set to `duration`.
+     */
+    public static AdditiveAnimator animate(View view, long duration) {
+        return new AdditiveAnimator(view).setDuration(duration);
     }
 
     public static void cancelAnimations(View view) {
@@ -110,7 +122,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * Override if you have custom properties that need to be copied.
      */
     protected T setParent(T other) {
-        addTarget(other.currentTarget());
+        target(other.currentTarget());
         setDuration(other.getValueAnimator().getDuration());
         setInterpolator(other.getValueAnimator().getInterpolator());
         mCurrentCustomInterpolator = other.mCurrentCustomInterpolator;
@@ -119,14 +131,22 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected AdditiveAnimator(View view) {
-        addTarget(view);
+        target(view);
     }
 
     /**
      * Creates a new AdditiveAnimator instance without a target view.
-     * You **must** call `addTarget(View v)` before calling one of the animation methods.
+     * You **must** call `target(View v)` before calling one of the animation methods.
      */
     public AdditiveAnimator() {}
+
+    /**
+     * Creates a new AdditiveAnimator instance with the specified animation duration for more convenience.
+     * You **must** call `target(View v)` before calling one of the animation methods.
+     */
+    public AdditiveAnimator(long duration) {
+        setDuration(duration);
+    }
 
     /**
      * Globally sets the default animation duration to use for all AdditiveAnimator instances.
@@ -165,13 +185,22 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     /**
+     * Old API for {@link #target(View)}, which should be used instead.
+     * @deprecated Use {@link #target(View)} instead.
+     */
+    @Deprecated
+    public T addTarget(View v) {
+        return target(v);
+    }
+
+    /**
      * Sets the current animation target. You can change the animation target multiple times before calling
      * {@link #start()}:<p/>
      * <code>
-     *     new AdditiveAnimator().addTarget(view1).x(100).addTarget(view2).y(200).start()
+     *     new AdditiveAnimator().target(view1).x(100).target(view2).y(200).start()
      * </code>
      */
-    public T addTarget(View v) {
+    public T target(View v) {
         mViews.add(v);
         initValueAnimatorIfNeeded();
         return self();
@@ -321,9 +350,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
             mParent.start();
         }
 
+        // TODO: don't start a ValueAnimator if getTotalDuration() == 0
         getValueAnimator().start();
 
         // invalidate this animator to prevent incorrect usage:
+        // TODO: get rid of this flag. Animators should simply not become invalid.
         mIsValid = false;
     }
 
@@ -419,38 +450,38 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return animation;
     }
 
-    protected final void animate(AdditiveAnimation animation) {
+    protected final T animate(AdditiveAnimation animation) {
         initValueAnimatorIfNeeded();
         currentAnimationManager().addAnimation(mAnimationAccumulator, animation);
+        return self();
     }
 
-    protected final void animate(Property<View, Float> property, Path p, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
+    protected final T animate(Property<View, Float> property, Path p, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
         initValueAnimatorIfNeeded();
-        animate(createAnimation(property, p, mode, sharedEvaluator));
+        return animate(createAnimation(property, p, mode, sharedEvaluator));
     }
 
-    protected final void animate(Property<View, Float> property, float target) {
-        animate(property, target, null);
+    protected final T animate(Property<View, Float> property, float target) {
+        return animate(property, target, null);
     }
 
-    protected final void animate(Property<View, Float> property, float target, TypeEvaluator evaluator) {
+    protected final T animate(Property<View, Float> property, float target, TypeEvaluator evaluator) {
         initValueAnimatorIfNeeded();
         AdditiveAnimation animation = createAnimation(property, target);
         animation.setCustomTypeEvaluator(evaluator);
-        animate(animation);
+        return animate(animation);
     }
 
-    protected final void animatePropertyBy(Property<View, Float> property, float by) {
+    protected final T animatePropertyBy(Property<View, Float> property, float by) {
         initValueAnimatorIfNeeded();
         float currentTarget = getTargetPropertyValue(property);
         if(currentAnimationManager().getQueuedPropertyValue(property.getName()) != null) {
             currentTarget = currentAnimationManager().getQueuedPropertyValue(property.getName());
         }
-        animate(createAnimation(property, currentTarget + by));
+        return animate(createAnimation(property, currentTarget + by));
     }
 
-
-    protected final void animatePropertiesAlongPath(Property<View, Float> xProperty, Property<View, Float> yProperty, Property<View, Float> rotationProperty, Path path) {
+    protected final T animatePropertiesAlongPath(Property<View, Float> xProperty, Property<View, Float> yProperty, Property<View, Float> rotationProperty, Path path) {
         PathEvaluator sharedEvaluator = new PathEvaluator();
         if(xProperty != null) {
             animate(xProperty, path, PathEvaluator.PathMode.X, sharedEvaluator);
@@ -461,43 +492,37 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         if(rotationProperty != null) {
             animate(rotationProperty, path, PathEvaluator.PathMode.ROTATION, sharedEvaluator);
         }
+        return self();
     }
 
     public T animateProperty(float target, TypeEvaluator evaluator, FloatProperty property) {
         AdditiveAnimation animation = createAnimation(property, target);
         animation.setCustomTypeEvaluator(evaluator);
-        animate(animation);
-        return self();
+        return animate(animation);
     }
 
     public T animateProperty(float target, FloatProperty customProperty) {
-        animate(customProperty, target);
-        return self();
+        return animate(customProperty, target);
     }
 
     public T backgroundColor(int color) {
-        animate(ColorProperties.BACKGROUND_COLOR, color, new ArgbFloatEvaluator());
-        return self();
+        return animate(ColorProperties.BACKGROUND_COLOR, color, new ArgbFloatEvaluator());
     }
 
     public T scaleX(float scaleX) {
-        animate(View.SCALE_X, scaleX);
-        return self();
+        return animate(View.SCALE_X, scaleX);
     }
 
     public T scaleXBy(float scaleXBy) {
-        animatePropertyBy(View.SCALE_X, scaleXBy);
-        return self();
+        return animatePropertyBy(View.SCALE_X, scaleXBy);
     }
 
     public T scaleY(float scaleY) {
-        animate(View.SCALE_Y, scaleY);
-        return self();
+        return animate(View.SCALE_Y, scaleY);
     }
 
     public T scaleYBy(float scaleYBy) {
-        animatePropertyBy(View.SCALE_Y, scaleYBy);
-        return self();
+        return animatePropertyBy(View.SCALE_Y, scaleYBy);
     }
 
     public T scale(float scale) {
@@ -513,23 +538,19 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T translationX(float translationX) {
-        animate(View.TRANSLATION_X, translationX);
-        return self();
+        return animate(View.TRANSLATION_X, translationX);
     }
 
     public T translationXBy(float translationXBy) {
-        animatePropertyBy(View.TRANSLATION_X, translationXBy);
-        return self();
+        return animatePropertyBy(View.TRANSLATION_X, translationXBy);
     }
 
     public T translationY(float translationY) {
-        animate(View.TRANSLATION_Y, translationY);
-        return self();
+        return animate(View.TRANSLATION_Y, translationY);
     }
 
     public T translationYBy(float translationYBy) {
-        animatePropertyBy(View.TRANSLATION_Y, translationYBy);
-        return self();
+        return animatePropertyBy(View.TRANSLATION_Y, translationYBy);
     }
 
     @SuppressLint("NewApi")
@@ -549,76 +570,62 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T alpha(float alpha) {
-        animate(View.ALPHA, alpha);
-        return self();
+        return animate(View.ALPHA, alpha);
     }
 
     public T alphaBy(float alphaBy) {
-        animatePropertyBy(View.ALPHA, alphaBy);
-        return self();
+        return animatePropertyBy(View.ALPHA, alphaBy);
     }
 
     public T rotation(float rotation) {
         float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION), rotation);
-        animatePropertyBy(View.ROTATION, shortestDistance);
-        return self();
+        return animatePropertyBy(View.ROTATION, shortestDistance);
     }
 
     public T rotationBy(float rotationBy) {
-        animatePropertyBy(View.ROTATION, rotationBy);
-        return self();
+        return animatePropertyBy(View.ROTATION, rotationBy);
     }
 
     public T rotationX(float rotationX) {
         float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_X), rotationX);
-        animatePropertyBy(View.ROTATION_X, shortestDistance);
-        return self();
+        return animatePropertyBy(View.ROTATION_X, shortestDistance);
     }
 
     public T rotationXBy(float rotationXBy) {
-        animatePropertyBy(View.ROTATION_X, rotationXBy);
-        return self();
+        return animatePropertyBy(View.ROTATION_X, rotationXBy);
     }
 
     public T rotationY(float rotationY) {
         float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_Y), rotationY);
-        animatePropertyBy(View.ROTATION_Y, shortestDistance);
-        return self();
+        return animatePropertyBy(View.ROTATION_Y, shortestDistance);
     }
 
     public T rotationYBy(float rotationYBy) {
-        animatePropertyBy(View.ROTATION_Y, rotationYBy);
-        return self();
+        return animatePropertyBy(View.ROTATION_Y, rotationYBy);
     }
 
     public T x(float x) {
-        animate(View.X, x);
-        return self();
+        return animate(View.X, x);
     }
 
     public T xBy(float xBy) {
-        animatePropertyBy(View.X, xBy);
-        return self();
+        return animatePropertyBy(View.X, xBy);
     }
 
     public T centerX(float centerX) {
-        animate(View.X, centerX - currentTarget().getWidth() / 2);
-        return self();
+        return animate(View.X, centerX - currentTarget().getWidth() / 2);
     }
 
     public T y(float y) {
-        animate(View.Y, y);
-        return self();
+        return animate(View.Y, y);
     }
 
     public T yBy(float yBy) {
-        animatePropertyBy(View.Y, yBy);
-        return self();
+        return animatePropertyBy(View.Y, yBy);
     }
 
     public T centerY(float centerY) {
-        animate(View.Y, centerY - currentTarget().getHeight() / 2);
-        return self();
+        return animate(View.Y, centerY - currentTarget().getHeight() / 2);
     }
 
     @SuppressLint("NewApi")
@@ -638,63 +645,51 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T xyAlongPath(Path path) {
-        animatePropertiesAlongPath(View.X, View.Y, null, path);
-        return self();
+        return animatePropertiesAlongPath(View.X, View.Y, null, path);
     }
 
     public T translationXYAlongPath(Path path) {
-        animatePropertiesAlongPath(View.TRANSLATION_X, View.TRANSLATION_Y, null, path);
-        return self();
+        return animatePropertiesAlongPath(View.TRANSLATION_X, View.TRANSLATION_Y, null, path);
     }
 
     public T xyRotationAlongPath(Path path) {
-        animatePropertiesAlongPath(View.X, View.Y, View.ROTATION, path);
-        return self();
+        return animatePropertiesAlongPath(View.X, View.Y, View.ROTATION, path);
     }
 
     public T translationXYRotationAlongPath(Path path) {
-        animatePropertiesAlongPath(View.TRANSLATION_X, View.TRANSLATION_Y, View.ROTATION, path);
-        return self();
+        return animatePropertiesAlongPath(View.TRANSLATION_X, View.TRANSLATION_Y, View.ROTATION, path);
     }
 
     public T leftMargin(int leftMargin) {
-        animate(MarginProperties.MARGIN_LEFT, leftMargin);
-        return self();
+        return animate(MarginProperties.MARGIN_LEFT, leftMargin);
     }
 
     public T leftMarginBy(int leftMarginBy) {
-        animatePropertyBy(MarginProperties.MARGIN_LEFT, leftMarginBy);
-        return self();
+        return animatePropertyBy(MarginProperties.MARGIN_LEFT, leftMarginBy);
     }
 
     public T topMargin(int topMargin) {
-        animate(MarginProperties.MARGIN_TOP, topMargin);
-        return self();
+        return animate(MarginProperties.MARGIN_TOP, topMargin);
     }
 
     public T topMarginBy(int topMarginBy) {
-        animatePropertyBy(MarginProperties.MARGIN_TOP, topMarginBy);
-        return self();
+        return animatePropertyBy(MarginProperties.MARGIN_TOP, topMarginBy);
     }
 
     public T rightMargin(int rightMargin) {
-        animate(MarginProperties.MARGIN_RIGHT, rightMargin);
-        return self();
+        return animate(MarginProperties.MARGIN_RIGHT, rightMargin);
     }
 
     public T rightMarginBy(int rightMarginBy) {
-        animatePropertyBy(MarginProperties.MARGIN_RIGHT, rightMarginBy);
-        return self();
+        return animatePropertyBy(MarginProperties.MARGIN_RIGHT, rightMarginBy);
     }
 
     public T bottomMargin(int bottomMargin) {
-        animate(MarginProperties.MARGIN_BOTTOM, bottomMargin);
-        return self();
+        return animate(MarginProperties.MARGIN_BOTTOM, bottomMargin);
     }
 
     public T bottomMarginBy(int bottomMarginBy) {
-        animatePropertyBy(MarginProperties.MARGIN_BOTTOM, bottomMarginBy);
-        return self();
+        return animatePropertyBy(MarginProperties.MARGIN_BOTTOM, bottomMarginBy);
     }
 
     public T horizontalMargin(int horizontalMargin) {
@@ -738,43 +733,35 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T topLeftMarginAlongPath(Path path) {
-        animatePropertiesAlongPath(MarginProperties.MARGIN_LEFT, MarginProperties.MARGIN_TOP, null, path);
-        return self();
+        return animatePropertiesAlongPath(MarginProperties.MARGIN_LEFT, MarginProperties.MARGIN_TOP, null, path);
     }
 
     public T topRightMarginAlongPath(Path path) {
-        animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_TOP, null, path);
-        return self();
+        return animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_TOP, null, path);
     }
 
     public T bottomRightMarginAlongPath(Path path) {
-        animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_BOTTOM, null, path);
-        return self();
+        return animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_BOTTOM, null, path);
     }
 
     public T bottomLeftMarginAlongPath(Path path) {
-        animatePropertiesAlongPath(MarginProperties.MARGIN_LEFT, MarginProperties.MARGIN_BOTTOM, null, path);
-        return self();
+        return animatePropertiesAlongPath(MarginProperties.MARGIN_LEFT, MarginProperties.MARGIN_BOTTOM, null, path);
     }
 
     public T width(int width) {
-        animate(SizeProperties.WIDTH, width);
-        return self();
+        return animate(SizeProperties.WIDTH, width);
     }
 
     public T widthBy(int widthBy) {
-        animatePropertyBy(SizeProperties.WIDTH, widthBy);
-        return self();
+        return animatePropertyBy(SizeProperties.WIDTH, widthBy);
     }
 
     public T height(int height) {
-        animate(SizeProperties.HEIGHT, height);
-        return self();
+        return animate(SizeProperties.HEIGHT, height);
     }
 
     public T heightBy(int heightBy) {
-        animatePropertyBy(SizeProperties.HEIGHT, heightBy);
-        return self();
+        return animatePropertyBy(SizeProperties.HEIGHT, heightBy);
     }
 
     public T size(int size) {
@@ -790,43 +777,35 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T leftPadding(int leftPadding) {
-        animate(PaddingProperties.PADDING_LEFT, leftPadding);
-        return self();
+        return animate(PaddingProperties.PADDING_LEFT, leftPadding);
     }
 
     public T leftPaddingBy(int leftPaddingBy) {
-        animatePropertyBy(PaddingProperties.PADDING_LEFT, leftPaddingBy);
-        return self();
+        return animatePropertyBy(PaddingProperties.PADDING_LEFT, leftPaddingBy);
     }
 
     public T topPadding(int topPadding) {
-        animate(PaddingProperties.PADDING_TOP, topPadding);
-        return self();
+        return animate(PaddingProperties.PADDING_TOP, topPadding);
     }
 
     public T topPaddingBy(int topPaddingBy) {
-        animatePropertyBy(PaddingProperties.PADDING_TOP, topPaddingBy);
-        return self();
+        return animatePropertyBy(PaddingProperties.PADDING_TOP, topPaddingBy);
     }
 
     public T rightPadding(int rightPadding) {
-        animate(PaddingProperties.PADDING_RIGHT, rightPadding);
-        return self();
+        return animate(PaddingProperties.PADDING_RIGHT, rightPadding);
     }
 
     public T rightPaddingBy(int rightPaddingBy) {
-        animatePropertyBy(PaddingProperties.PADDING_RIGHT, rightPaddingBy);
-        return self();
+        return animatePropertyBy(PaddingProperties.PADDING_RIGHT, rightPaddingBy);
     }
 
     public T bottomPadding(int bottomPadding) {
-        animate(PaddingProperties.PADDING_BOTTOM, bottomPadding);
-        return self();
+        return animate(PaddingProperties.PADDING_BOTTOM, bottomPadding);
     }
 
     public T bottomPaddingBy(int bottomPaddingBy) {
-        animatePropertyBy(PaddingProperties.PADDING_BOTTOM, bottomPaddingBy);
-        return self();
+        return animatePropertyBy(PaddingProperties.PADDING_BOTTOM, bottomPaddingBy);
     }
 
     public T horizontalPadding(int horizontalPadding) {
@@ -870,23 +849,19 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T scrollX(int scrollX) {
-        animate(ScrollProperties.SCROLL_X, scrollX);
-        return self();
+        return animate(ScrollProperties.SCROLL_X, scrollX);
     }
 
     public T scrollXBy(int scrollXBy) {
-        animatePropertyBy(ScrollProperties.SCROLL_X, scrollXBy);
-        return self();
+        return animatePropertyBy(ScrollProperties.SCROLL_X, scrollXBy);
     }
 
     public T scrollY(int scrollY) {
-        animate(ScrollProperties.SCROLL_Y, scrollY);
-        return self();
+        return animate(ScrollProperties.SCROLL_Y, scrollY);
     }
 
     public T scrollYBy(int scrollYBy) {
-        animatePropertyBy(ScrollProperties.SCROLL_Y, scrollYBy);
-        return self();
+        return animatePropertyBy(ScrollProperties.SCROLL_Y, scrollYBy);
     }
 
     public T scroll(int x, int y) {
@@ -900,6 +875,23 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         animatePropertyBy(ScrollProperties.SCROLL_Y, yBy);
         return self();
     }
+
+    @SuppressLint("NewApi")
+    public T elevation(int elevation) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            animate(ElevationProperties.ELEVATION, elevation);
+        }
+        return self();
+    }
+
+    @SuppressLint("NewApi")
+    public T elevationBy(int elevationBy) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            animatePropertyBy(ElevationProperties.ELEVATION, elevationBy);
+        }
+        return self();
+    }
+
 
 //    public T widthPercent(float widthPercent) {
 //        if (initPercentListener()){

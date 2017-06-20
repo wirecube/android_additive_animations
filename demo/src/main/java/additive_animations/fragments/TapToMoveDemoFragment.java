@@ -33,7 +33,7 @@ public class TapToMoveDemoFragment extends Fragment {
 
                         AdditiveAnimator.animate(animatedView)
                                 .centerX(event.getX())
-                                .switchInterpolator(new BounceInterpolator())
+//                                .switchInterpolator(new BounceInterpolator())
                                 .centerY(event.getY())
                                 .start();
 
