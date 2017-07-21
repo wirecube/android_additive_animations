@@ -59,6 +59,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     protected final List<View> mViews = new ArrayList<>(); // all views that will be affected by starting the animation.
+    protected boolean mSkipRequestLayout = false;
+    protected boolean mWithLayer = false;
     private boolean mIsValid = true; // invalid after start() has been called.
     private T mParent = null; // true when this animator was queued using `then()` chaining.
 
@@ -125,6 +127,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         target(other.currentTarget());
         setDuration(other.getValueAnimator().getDuration());
         setInterpolator(other.getValueAnimator().getInterpolator());
+        mSkipRequestLayout = other.mSkipRequestLayout;
+        mWithLayer = other.mWithLayer;
         mCurrentCustomInterpolator = other.mCurrentCustomInterpolator;
         mParent = other;
         return self();
@@ -203,6 +207,9 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     public T target(View v) {
         mViews.add(v);
         initValueAnimatorIfNeeded();
+        if(mWithLayer) {
+            withLayer();
+        }
         return self();
     }
 
@@ -422,7 +429,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
             }
         }
         applyCustomProperties(unknownProperties, targetView);
-        if(!ViewCompat.isInLayout(targetView)) {
+        if(!ViewCompat.isInLayout(targetView) && !mSkipRequestLayout) {
             targetView.requestLayout();
         }
     }
@@ -503,6 +510,36 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
 
     public T animateProperty(float target, FloatProperty customProperty) {
         return animate(customProperty, target);
+    }
+
+    public T skipRequestLayout() {
+        mSkipRequestLayout = true;
+        return self();
+    }
+
+    /**
+     * Activates hardware layers.
+     * This property will be applied to all subsequent target views and child animators (created by `then...()` methods) as well.
+     * Note that
+     */
+    public T withLayer() {
+        if(currentAnimationManager() != null) {
+            currentAnimationManager().setUseHardwareLayer(true);
+        }
+        mSkipRequestLayout = true;
+        mWithLayer = true;
+        return self();
+    }
+
+    /**
+     * Deactivates hardware layers for the current view and all subsequently added ones.
+     */
+    public T withoutLayer() {
+        if(currentAnimationManager() != null) {
+            currentAnimationManager().setUseHardwareLayer(false);
+        }
+        mWithLayer = false;
+        return self();
     }
 
     public T backgroundColor(int color) {

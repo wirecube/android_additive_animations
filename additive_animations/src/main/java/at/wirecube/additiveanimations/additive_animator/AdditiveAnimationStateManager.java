@@ -53,6 +53,7 @@ class AdditiveAnimationStateManager {
     private final AccumulatedAnimationValues mAccumulator = new AccumulatedAnimationValues();
 
     private final View mAnimationTargetView;
+    private boolean mUseHardwareLayer = false;
 
     final Set<AdditiveAnimationAccumulator> mAdditiveAnimationAccumulators = new HashSet<>();
     private final Map<String, Integer> mNumAnimationsPerTag = new HashMap<>();
@@ -77,6 +78,10 @@ class AdditiveAnimationStateManager {
         mAdditiveAnimationAccumulators.remove(applier);
         if (mAdditiveAnimationAccumulators.isEmpty()) {
             sStateManagers.remove(mAnimationTargetView);
+            // reset hardware layer
+            if(mUseHardwareLayer) {
+                mAnimationTargetView.setLayerType(View.LAYER_TYPE_NONE, null);
+            }
         }
         mAccumulator.totalNumAnimationUpdaters--;
 
@@ -96,6 +101,9 @@ class AdditiveAnimationStateManager {
     void onAnimationApplierStart(AdditiveAnimationAccumulator applier) {
         // only now are we expecting updates from this applier
         mAccumulator.totalNumAnimationUpdaters++;
+        if(mUseHardwareLayer && mAnimationTargetView.getLayerType() != View.LAYER_TYPE_HARDWARE) {
+            mAnimationTargetView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        }
     }
 
     /**
@@ -130,6 +138,10 @@ class AdditiveAnimationStateManager {
         mQueuedTargetValues.clear();
         mNumAnimationsPerTag.clear();
         sStateManagers.remove(mAnimationTargetView);
+        // reset hardware layer
+        if(mUseHardwareLayer) {
+            mAnimationTargetView.setLayerType(View.LAYER_TYPE_NONE, null);
+        }
     }
 
     void cancelAnimation(String propertyName) {
@@ -197,6 +209,10 @@ class AdditiveAnimationStateManager {
         } else {
             return 0;
         }
+    }
+
+    void setUseHardwareLayer(boolean useHardwareLayer) {
+        mUseHardwareLayer = useHardwareLayer;
     }
 
 }
