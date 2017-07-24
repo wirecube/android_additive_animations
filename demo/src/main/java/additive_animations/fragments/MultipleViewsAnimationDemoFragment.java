@@ -42,6 +42,11 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
         greenView = rootView.findViewById(R.id.animated_view3);
         pinkView = rootView.findViewById(R.id.animated_view4);
 
+        pinkView.setVisibility(View.GONE);
+        blueView.setVisibility(View.GONE);
+        greenView.setVisibility(View.GONE);
+        orangeView.setVisibility(View.GONE);
+
         for(int i = 5; i < 25; i++) {
             views.add(rootView.findViewById(R.id.animated_view4 + i-4));
         }
@@ -68,10 +73,11 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
 
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         AdditiveAnimator animator = new AdditiveAnimator().withLayer()
-                                .target(orangeView).x(x).y(y).rotation(rotation).alpha(alpha).thenWithDelay(50)
-                                .target(blueView).x(width - x - blueView.getWidth()).y(height - y).rotation(-rotation).alpha(alpha).thenWithDelay(50)
-                                .target(greenView).x(x).y(height - y).rotation(-rotation).alpha(alpha).thenWithDelay(50)
-                                .target(pinkView).x(width - x - pinkView.getWidth()).y(y).alpha(alpha).rotation(rotation).thenWithDelay(50);
+//                                .target(orangeView).x(x).y(y).rotation(rotation).alpha(alpha).thenWithDelay(50)
+//                                .target(blueView).x(width - x - blueView.getWidth()).y(height - y).rotation(-rotation).alpha(alpha).thenWithDelay(50)
+//                                .target(greenView).x(x).y(height - y).rotation(-rotation).alpha(alpha).thenWithDelay(50)
+//                                .target(pinkView).x(width - x - pinkView.getWidth()).y(y).alpha(alpha).rotation(rotation).thenWithDelay(50)
+                        ;
                         for(View view : views) {
                             animator = animator.target(view).x(x).y(y).rotation(-rotation).alpha(alpha).thenWithDelay(50);
                         }

@@ -482,8 +482,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     protected final T animatePropertyBy(Property<View, Float> property, float by) {
         initValueAnimatorIfNeeded();
         float currentTarget = getTargetPropertyValue(property);
-        if(currentAnimationManager().getQueuedPropertyValue(property.getName()) != null) {
-            currentTarget = currentAnimationManager().getQueuedPropertyValue(property.getName());
+        if(getQueuedPropertyValue(property.getName()) != null) {
+            currentTarget = getQueuedPropertyValue(property.getName());
         }
         return animate(createAnimation(property, currentTarget + by));
     }
@@ -615,7 +615,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T rotation(float rotation) {
-        float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION), rotation);
+        float currentValue = getTargetPropertyValue(View.ROTATION);
+        if(getQueuedPropertyValue(View.ROTATION.getName()) != null) {
+            currentValue = getQueuedPropertyValue(View.ROTATION.getName());
+        }
+        float shortestDistance = AnimationUtils.shortestAngleBetween(currentValue, rotation);
         return animatePropertyBy(View.ROTATION, shortestDistance);
     }
 
@@ -624,7 +628,11 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T rotationX(float rotationX) {
-        float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_X), rotationX);
+        float currentValue = getTargetPropertyValue(View.ROTATION_X);
+        if(getQueuedPropertyValue(View.ROTATION_X.getName()) != null) {
+            currentValue = getQueuedPropertyValue(View.ROTATION_X.getName());
+        }
+        float shortestDistance = AnimationUtils.shortestAngleBetween(currentValue, rotationX);
         return animatePropertyBy(View.ROTATION_X, shortestDistance);
     }
 
@@ -633,6 +641,10 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T rotationY(float rotationY) {
+        float currentValue = getTargetPropertyValue(View.ROTATION_Y);
+        if(getQueuedPropertyValue(View.ROTATION_Y.getName()) != null) {
+            currentValue = getQueuedPropertyValue(View.ROTATION_Y.getName());
+        }
         float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_Y), rotationY);
         return animatePropertyBy(View.ROTATION_Y, shortestDistance);
     }
