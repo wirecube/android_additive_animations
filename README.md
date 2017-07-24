@@ -7,7 +7,7 @@ Some of the functionality was inspired by the excellent ViewPropertyObjectAnimat
 Here is a sample of what additive animations can do to the user experience (note: there seem to be a few dropped frames in the gif which aren't present when running on a device):
 
 
-![Additive animations demo](https://github.com/davidganster/android_additive_animations/blob/master/gif/additive_animations.gif?raw=true)
+![Additive animations demo](https://github.com/davidganster/android_additive_animations/blob/master/gif/single_view.gif?raw=true)
 
 
 The amount code required to produce this animation is trivial:
