@@ -19,6 +19,7 @@ package at.wirecube.additiveanimations.additive_animator;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
+import android.renderscript.Sampler;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -30,36 +31,56 @@ import java.util.Map;
 import java.util.Set;
 
 class AdditiveAnimationAccumulator {
-    private Map<AdditiveAnimation, Float> mPreviousValues = new HashMap<>();
-    private Map<View, Set<AdditiveAnimation>> mAnimationsPerView = new HashMap<>();
-    private final Map<View, Set<String>> mAnimatedPropertiesPerView = new HashMap<>();
-    private ValueAnimator mAnimator = ValueAnimator.ofFloat(0f, 1f);
+
+    // Exists only for performance reasons
+    private class AdditiveAnimationWrapper {
+        private final AdditiveAnimation animation;
+        private float previousValue;
+        AdditiveAnimationWrapper(AdditiveAnimation animation) {
+            this.animation = animation;
+            previousValue = 0f;
+        }
+
+        @Override
+        public int hashCode() {
+            return animation.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if(this == obj) {
+                return true;
+            }
+            return animation.equals(((AdditiveAnimationWrapper)obj).animation);
+        }
+    }
+
+    private List<AdditiveAnimationWrapper> mAnimationWrappers = new ArrayList<>();
+    private Map<View, Set<AdditiveAnimationWrapper>> mAnimationsPerView = new HashMap<>();
+    private ValueAnimator mAnimator = null;
     private boolean mHasInformedStateManagerAboutAnimationStart = false;
     private AdditiveAnimator mAdditiveAnimator;
 
     AdditiveAnimationAccumulator(AdditiveAnimator additiveAnimator) {
+        mAnimator = ValueAnimator.ofFloat(0f, 1f);
         mAdditiveAnimator = additiveAnimator;
+        // it's better not to allocate once every frame:
+        final List<AccumulatedAnimationValue> accumulatedAnimationValues = new ArrayList<>();
         mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                notifyStateManagerAboutAnimationStartIfNeeded();
-                List<View> modifiedViews = new ArrayList<>();
-                for (AdditiveAnimation animation : mPreviousValues.keySet()) {
-                    AccumulatedAnimationValues tempProperties = AdditiveAnimationStateManager.getAccumulatedProperties(animation.getView());
-                    tempProperties.addDelta(animation, getDelta(animation, valueAnimator.getAnimatedFraction()));
-                    modifiedViews.add(animation.getView());
+                if(!mHasInformedStateManagerAboutAnimationStart) {
+                    notifyStateManagerAboutAnimationStartIfNeeded();
                 }
-                for (View v : modifiedViews) {
-                    if (!mAnimatedPropertiesPerView.containsKey(v)) {
-                        continue;
-                    }
-                    AccumulatedAnimationValues accumulator = AdditiveAnimationStateManager.getAccumulatedProperties(v);
-//                    accumulator.updateCounter += 1;
-//                    if (accumulator.updateCounter >= AdditiveAnimationStateManager.from(v).mAdditiveAnimationAccumulators.size()) {
-                        mAdditiveAnimator.applyChanges(accumulator.getAccumulatedProperties(), v);
-//                        accumulator.updateCounter = 0;
-//                    }
+                for (AdditiveAnimationWrapper animationWrapper : mAnimationWrappers) {
+                    AdditiveAnimation animation = animationWrapper.animation;
+                    AccumulatedAnimationValue tempProperties = animation.getAccumulatedValues();
+                    tempProperties.addDelta(getDelta(animationWrapper, valueAnimator.getAnimatedFraction()));
+                    accumulatedAnimationValues.add(tempProperties);
                 }
+                // TODO: is there some way to figure out whether or not to apply the changes?
+                mAdditiveAnimator.applyChanges(accumulatedAnimationValues);
+                accumulatedAnimationValues.clear();
             }
         });
 
@@ -74,7 +95,7 @@ class AdditiveAnimationAccumulator {
             @Override
             public void onAnimationEnd(Animator animation) {
                 // now we are actually done
-                for (View v : mAnimatedPropertiesPerView.keySet()) {
+                for (View v : mAnimationsPerView.keySet()) {
                     AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, animationDidCancel);
                 }
             }
@@ -88,12 +109,12 @@ class AdditiveAnimationAccumulator {
 
     private void notifyStateManagerAboutAnimationStartIfNeeded() {
         if(!mHasInformedStateManagerAboutAnimationStart) {
-            for (View v : mAnimatedPropertiesPerView.keySet()) {
+            for (View v : mAnimationsPerView.keySet()) {
                 AdditiveAnimationStateManager manager = AdditiveAnimationStateManager.from(v);
                 manager.onAnimationApplierStart(AdditiveAnimationAccumulator.this);
-                for(AdditiveAnimation animation : getAnimations(v)) {
-                    manager.prepareAnimationStart(animation);
-                    mPreviousValues.put(animation, animation.getStartValue());
+                for(AdditiveAnimationWrapper wrapper : getAnimationWrappers(v)) {
+                    manager.prepareAnimationStart(wrapper.animation);
+                    wrapper.previousValue = wrapper.animation.getStartValue();
                 }
             }
             mHasInformedStateManagerAboutAnimationStart = true;
@@ -102,90 +123,100 @@ class AdditiveAnimationAccumulator {
 
     void addAnimation(AdditiveAnimation animation) {
         // the correct value will be set when the animation actually starts instead of when we add the animation.
-        mPreviousValues.put(animation, 0f);
-        addToAnimationMap(animation);
-        addTarget(animation.getView(), animation.getTag());
+        AdditiveAnimationWrapper wrapper = new AdditiveAnimationWrapper(animation);
+        mAnimationWrappers.add(wrapper);
+
+        // TODO: speed this up
+        addToAnimationMap(wrapper);
     }
 
+    /*
+     * Returns true if this removed all animations from the view, false if there are still more animations running.
+     */
     boolean removeAnimation(String animatedPropertyName, View v) {
-        return removeTarget(v, animatedPropertyName);
-    }
-
-    private void addTarget(View v, String animationTag) {
-        Set<String> animations = mAnimatedPropertiesPerView.get(v);
-        if(animations == null) {
-            animations = new HashSet<>();
-            mAnimatedPropertiesPerView.put(v, animations);
-        }
-        animations.add(animationTag);
+        removeTarget(v, animatedPropertyName);
+        Collection c = mAnimationsPerView.get(v);
+        return c == null || c.size() == 0;
     }
 
     private void removeTarget(View v) {
-        if(mAnimatedPropertiesPerView.get(v) == null) {
+        Set<String> animatedValues = collectAnimatedProperties(v);
+        if(animatedValues == null) {
             return;
         }
-        // avoid ConcurrentModificationException
-        Collection<String> animatedValues = new ArrayList<>(mAnimatedPropertiesPerView.get(v));
-        for(String animatedValue : animatedValues) {
-            removeTarget(v, animatedValue);
+        if(animatedValues.size() == mAnimationWrappers.size()) {
+            cancel();
+        } else {
+            for (String animatedValue : animatedValues) {
+                removeTarget(v, animatedValue);
+            }
         }
+    }
+
+    private Set<String> collectAnimatedProperties(View v) {
+        Collection<AdditiveAnimationWrapper> wrappers = mAnimationsPerView.get(v);
+        if(wrappers == null) {
+            return new HashSet<>();
+        }
+        Set<String> properties = new HashSet<>(2);
+        for(AdditiveAnimationWrapper wrapper : wrappers) {
+            properties.add(wrapper.animation.getTag());
+        }
+        return properties;
     }
 
     /**
      * Removes the animation with the given name from the given view.
-     * Returns true if this removed all animations from the view, false if there are still more animations running.
      */
-    private boolean removeTarget(View v, String additiveAnimationName) {
-        AdditiveAnimation animationToRemove = null;
-        for(AdditiveAnimation anim : getAnimations(v)) {
-            if(anim.getTag() == additiveAnimationName) {
+    private void removeTarget(View v, String additiveAnimationName) {
+        AdditiveAnimationWrapper animationToRemove = null;
+        for(AdditiveAnimationWrapper anim : getAnimationWrappers(v)) {
+            if(anim.animation.getTag().equals(additiveAnimationName)) {
                 animationToRemove = anim;
                 break;
             }
         }
         if(animationToRemove != null) {
-            mPreviousValues.remove(animationToRemove);
+            mAnimationWrappers.remove(animationToRemove);
             removeFromAnimationMap(animationToRemove);
         }
-
-        Set<String> animations = mAnimatedPropertiesPerView.get(v);
-        if(animations == null) {
-            return true;
-        }
-        animations.remove(additiveAnimationName);
-        if(animations.isEmpty()) {
-            mAnimatedPropertiesPerView.remove(v);
-            return true;
-        }
-        return false;
     }
 
-    private void addToAnimationMap(AdditiveAnimation animation) {
-        Set<AdditiveAnimation> animations = mAnimationsPerView.get(animation.getView());
+    private void addToAnimationMap(AdditiveAnimationWrapper wrapper) {
+        Set<AdditiveAnimationWrapper> animations = mAnimationsPerView.get(wrapper.animation.getView());
         if(animations == null) {
-            animations = new HashSet<>();
-            mAnimationsPerView.put(animation.getView(), animations);
+            animations = new HashSet<>(1);
+            mAnimationsPerView.put(wrapper.animation.getView(), animations);
         }
-        animations.add(animation);
+        animations.add(wrapper);
     }
 
-    private void removeFromAnimationMap(AdditiveAnimation animation) {
-        Set<AdditiveAnimation> animations = mAnimationsPerView.get(animation.getView());
+    private void removeFromAnimationMap(AdditiveAnimationWrapper wrapper) {
+        Set<AdditiveAnimationWrapper> animations = mAnimationsPerView.get(wrapper.animation.getView());
         if(animations == null) {
             return;
         }
-        animations.remove(animation);
+        animations.remove(wrapper);
         if(animations.size() == 0) {
-            mAnimationsPerView.remove(animation.getView());
+            mAnimationsPerView.remove(wrapper.animation.getView());
         }
     }
 
     Collection<AdditiveAnimation> getAnimations(View v) {
-        Set<AdditiveAnimation> animations = mAnimationsPerView.get(v);
-        if(animations == null) {
-            return new HashSet<>();
+        Collection<AdditiveAnimationWrapper> wrappers = getAnimationWrappers(v);
+        List<AdditiveAnimation> animations = new ArrayList<>(wrappers.size());
+        for(AdditiveAnimationWrapper wrapper : wrappers) {
+            animations.add(wrapper.animation);
         }
         return animations;
+    }
+
+    private Collection<AdditiveAnimationWrapper> getAnimationWrappers(View v) {
+        Set<AdditiveAnimationWrapper> wrappers = mAnimationsPerView.get(v);
+        if(wrappers == null) {
+            return new HashSet<>();
+        }
+        return wrappers;
     }
 
     ValueAnimator getAnimator() {
@@ -193,18 +224,19 @@ class AdditiveAnimationAccumulator {
     }
 
     Collection<AdditiveAnimation> getAnimations() {
-        List<AdditiveAnimation> allAnimations = new ArrayList<>();
-        for(Set<AdditiveAnimation> animations : mAnimationsPerView.values()) {
-            allAnimations.addAll(animations);
+        Set<AdditiveAnimation> allAnimations = new HashSet<>(mAnimationWrappers.size());
+        for(AdditiveAnimationWrapper wrapper : mAnimationWrappers) {
+            allAnimations.add(wrapper.animation);
         }
         return allAnimations;
     }
 
-    final float getDelta(AdditiveAnimation animation, float progress) {
-        float lastVal = mPreviousValues.get(animation);
+    final float getDelta(AdditiveAnimationWrapper wrapper, float progress) {
+        float lastVal = wrapper.previousValue;
+        AdditiveAnimation animation = wrapper.animation;
         float newVal = animation.evaluateAt(progress);
         float delta = newVal - lastVal;
-        mPreviousValues.put(animation, newVal);
+        wrapper.previousValue = newVal;
         return delta;
     }
 
@@ -212,14 +244,24 @@ class AdditiveAnimationAccumulator {
      * Remove all properties belonging to `v`.
      */
     final void cancel(View v) {
-        if(mAnimatedPropertiesPerView.containsKey(v) && mAnimatedPropertiesPerView.size() == 1) {
-            cancel();
-        } else {
-            removeTarget(v);
-        }
+        removeTarget(v);
     }
 
     final void cancel() {
         mAnimator.cancel();
+    }
+
+    @Override
+    public int hashCode() {
+        return mAnimator.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this) {
+            return true;
+        }
+        AdditiveAnimationAccumulator other = (AdditiveAnimationAccumulator) obj;
+        return other.mAnimator == mAnimator;
     }
 }

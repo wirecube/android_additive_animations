@@ -40,6 +40,8 @@ public class AdditiveAnimation {
     private View mTargetView;
     private int mHashCode;
     private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
+//    private AccumulatedAnimationValueManager mAccumulator;
+    private AccumulatedAnimationValue mAccumulatedValues;
 
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
@@ -85,8 +87,11 @@ public class AdditiveAnimation {
         mSharedPathEvaluator = sharedEvaluator;
         mPathMode = pathMode;
         mTargetValue = evaluateAt(1f);
-
         setTag(property.getName());
+    }
+
+    public void setAccumulatedValues(AccumulatedAnimationValue av) {
+        mAccumulatedValues = av;
     }
 
     private void setTag(String tag) {
@@ -155,10 +160,14 @@ public class AdditiveAnimation {
 
     @Override
     public boolean equals(Object o) {
-        if(!(o instanceof AdditiveAnimation)) {
-            return false;
+        if(this == o) {
+            return true;
         }
         AdditiveAnimation other = (AdditiveAnimation) o;
         return other.mTag.hashCode() == mTag.hashCode() && other.mTargetView == mTargetView;
+    }
+
+    public AccumulatedAnimationValue getAccumulatedValues() {
+        return mAccumulatedValues;
     }
 }

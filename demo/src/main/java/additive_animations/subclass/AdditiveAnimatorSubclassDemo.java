@@ -1,6 +1,5 @@
 package additive_animations.subclass;
 
-import android.animation.ValueAnimator;
 import android.view.View;
 
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
@@ -22,14 +21,14 @@ public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnima
 
     public void startPulsing() {
         setDuration(3000);
-        currentTarget().setScaleX(0);
-        currentTarget().setScaleY(0);
-        currentTarget().setAlpha(1f);
+        getCurrentTarget().setScaleX(0);
+        getCurrentTarget().setScaleY(0);
+        getCurrentTarget().setAlpha(1f);
         addEndAction(new AnimationEndListener() {
             @Override
             public void onAnimationEnd(boolean wasCancelled) {
                 if (isPulsing) {
-                    AdditiveAnimatorSubclassDemo.animate(currentTarget()).startPulsing();
+                    AdditiveAnimatorSubclassDemo.animate(getCurrentTarget()).startPulsing();
                 }
             }
         });

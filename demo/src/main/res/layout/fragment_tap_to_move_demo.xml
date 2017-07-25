@@ -9,6 +9,12 @@
     tools:showIn="@layout/app_bar_additive_animations_showcase"
     tools:context="additive_animations.AdditiveAnimationsShowcaseActivity">
 
+    <View android:id="@+id/touch_view"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:background="@drawable/round_blue_12_point_5_dp_radius"
+        android:alpha="0"></View>
+
     <View
         android:id="@+id/animated_view"
         android:layout_width="100dp"
