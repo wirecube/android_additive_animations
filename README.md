@@ -19,7 +19,7 @@ public boolean onTouch(View v, MotionEvent event) {
 }
 ```
 
-Additionally, `AdditiveAnimator` supports animating multiple views simultaneously without additional boilerplate:
+Additionally, `AdditiveAnimator` supports animating multiple views simultaneously without any boilerplate:
 
 ```java
 new AdditiveAnimator().setDuration(1000)
