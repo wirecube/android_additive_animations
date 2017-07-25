@@ -7,7 +7,7 @@ import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnimatorSubclassDemo> {
 
     public static AdditiveAnimatorSubclassDemo animate(View v) {
-        return new AdditiveAnimatorSubclassDemo().addTarget(v);
+        return new AdditiveAnimatorSubclassDemo().target(v);
     }
 
     public AdditiveAnimatorSubclassDemo() { super(); }

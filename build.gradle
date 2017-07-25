@@ -3,12 +3,14 @@
 buildscript {
     repositories {
         jcenter()
+//        google()
     }
     configurations {
         // javadocDeps 
     }
     dependencies {
-        // javadocDeps 'com.android.tools.build:gradle:1.3.0'
+//         javadocDeps 'com.android.tools.build:gradle:1.3.0'
+//        classpath 'com.android.tools.build:gradle:3.0.0-alpha5'
         classpath 'com.android.tools.build:gradle:1.3.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
@@ -28,6 +30,6 @@ task clean(type: Delete) {
 }
 
 task javadoc(type: Javadoc) {
-    failOnError false // add this line
+    failOnError false
     // classpath += configurations.javadocDeps
 }
