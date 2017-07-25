@@ -15,6 +15,7 @@ The amount code required to produce this animation is trivial:
 ```java
 public boolean onTouch(View v, MotionEvent event) {
     AdditiveAnimator.animate(animatedView).x(event.getX()).y(event.getY()).setDuration(1000).start();
+    return true;
 }
 ```
 
@@ -22,7 +23,7 @@ Additionally, `AdditiveAnimator` supports animating multiple views simultaneousl
 
 ```java
 new AdditiveAnimator().setDuration(1000)
-    .setTarget(myView1).x(100).y(100)
-    .setTarget(myView2).xBy(20).yBy(20)
+    .target(myView1).x(100).y(100)
+    .target(myView2).xBy(20).yBy(20)
     .start();
 ```
