@@ -1,5 +1,5 @@
 # android_additive_animations
-Additive animations for Android! Inspired by a blog Post by David Rönnqvist: http://ronnqvi.st/multiple-animations/
+Additive animations for Android! Inspired by a blog post by David Rönnqvist: http://ronnqvi.st/multiple-animations/
 
 This library provides an easy way to additively animate a huge number of properties. 
 Some of the functionality was inspired by the excellent ViewPropertyObjectAnimator library: https://github.com/blipinsk/ViewPropertyObjectAnimator.
