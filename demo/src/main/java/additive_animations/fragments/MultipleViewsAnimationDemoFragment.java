@@ -48,11 +48,12 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
         orangeView.setVisibility(View.GONE);
 
         for(int i = 5; i < 25; i++) {
-            views.add(rootView.findViewById(R.id.animated_view4 + i-4));
+            View v = rootView.findViewById(R.id.animated_view4 + i - 4);
+            views.add(v);
+            v.setAlpha(0.2f);
         }
 
         rootView.setOnTouchListener(new View.OnTouchListener() {
-            float alpha = 0.2f;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_UP) {
@@ -72,20 +73,16 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                     float height = rootView.getHeight();
 
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator animator = new AdditiveAnimator().withLayer().setDuration(2000)
+                        AdditiveAnimator animator = new AdditiveAnimator().withLayer()
 //                                .target(orangeView).x(x).y(y).rotation(rotation).alpha(alpha).thenWithDelay(50)
 //                                .target(blueView).x(width - x - blueView.getWidth()).y(height - y).rotation(-rotation).alpha(alpha).thenWithDelay(50)
 //                                .target(greenView).x(x).y(height - y).rotation(-rotation).alpha(alpha).thenWithDelay(50)
 //                                .target(pinkView).x(width - x - pinkView.getWidth()).y(y).alpha(alpha).rotation(rotation).thenWithDelay(50)
                         ;
                         for(View view : views) {
-                            animator = animator.target(view).x(x).y(y).rotation(-rotation).alpha(alpha).thenWithDelay(50);
+                            animator = animator.target(view).x(x).y(y).rotation(rotation).thenWithDelay(50);
                         }
                         animator.start();
-                        alpha += 0.1;
-                        if(alpha >= 0.7f) {
-                            alpha = 0.2f;
-                        }
                     } else {
                         AnimatorSet animatorSet = new AnimatorSet();
                         animatorSet.setInterpolator(EaseInOutPathInterpolator.create());

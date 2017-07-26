@@ -120,7 +120,7 @@ class AdditiveAnimationStateManager {
      */
     void prepareAnimationStart(AdditiveAnimation animation) {
         // TODO: can we speed up this lookup?
-        AccumulatedAnimationValue av = mAccumulator.registerAccumulatedValue(animation);
+        AccumulatedAnimationValue av = mAccumulator.getAccumulatedAnimationValue(animation);
 
         AnimationInfo info = getAnimationInfo(animation.getTag(), true);
         if(getLastTargetValue(animation.getTag()) == null || info.numAnimations == 0) {
@@ -134,7 +134,7 @@ class AdditiveAnimationStateManager {
         } else {
             animation.setStartValue(getLastTargetValue(animation.getTag()));
         }
-        animation.setAccumulatedValues(av);
+        animation.setAccumulatedValue(av);
         info.numAnimations++;
         info.lastTargetValue = animation.getTargetValue();
     }

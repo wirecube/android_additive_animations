@@ -90,7 +90,7 @@ public class AdditiveAnimation {
         setTag(property.getName());
     }
 
-    public void setAccumulatedValues(AccumulatedAnimationValue av) {
+    public void setAccumulatedValue(AccumulatedAnimationValue av) {
         mAccumulatedValues = av;
     }
 
