@@ -23,12 +23,10 @@ import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Path;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.Property;
 import android.view.View;
-import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 
 import java.util.ArrayList;
@@ -40,7 +38,7 @@ import java.util.Map;
 import at.wirecube.additiveanimations.helper.AnimationUtils;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 import at.wirecube.additiveanimations.helper.FloatProperty;
-import at.wirecube.additiveanimations.helper.evaluators.ArgbFloatEvaluator;
+import at.wirecube.additiveanimations.helper.evaluators.ColorEvaluator;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 import at.wirecube.additiveanimations.helper.propertywrappers.ColorProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.ElevationProperties;
@@ -502,13 +500,30 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return self();
     }
 
+
+    /**
+     * Old API for {@link #property(float, TypeEvaluator, FloatProperty)}, which should be used instead.
+     * @deprecated Use {@link #property(float, TypeEvaluator, FloatProperty)} instead.
+     */
     public T animateProperty(float target, TypeEvaluator evaluator, FloatProperty property) {
+        return property(target, evaluator, property);
+    }
+
+    public T property(float target, TypeEvaluator evaluator, FloatProperty property) {
         AdditiveAnimation animation = createAnimation(property, target);
         animation.setCustomTypeEvaluator(evaluator);
         return animate(animation);
     }
 
+    /**
+     * Old API for {@link #property(float, FloatProperty)}, which should be used instead.
+     * @deprecated Use {@link #property(float, FloatProperty)} instead.
+     */
     public T animateProperty(float target, FloatProperty customProperty) {
+        return property(target, customProperty);
+    }
+
+    public T property(float target, FloatProperty customProperty) {
         return animate(customProperty, target);
     }
 
@@ -543,7 +558,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T backgroundColor(int color) {
-        return animate(ColorProperties.BACKGROUND_COLOR, color, new ArgbFloatEvaluator());
+        return animate(ColorProperties.BACKGROUND_COLOR, color, new ColorEvaluator());
     }
 
     public T scaleX(float scaleX) {

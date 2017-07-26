@@ -18,7 +18,7 @@ package at.wirecube.additiveanimations.helper.evaluators;
 
 import android.animation.TypeEvaluator;
 
-public class ArgbFloatEvaluator implements TypeEvaluator<Float>{
+public class ColorEvaluator implements TypeEvaluator<Float>{
 
     @Override
     public Float evaluate(float fraction, Float startValue, Float endValue) {

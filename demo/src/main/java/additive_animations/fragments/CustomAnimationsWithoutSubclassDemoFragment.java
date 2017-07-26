@@ -3,16 +3,18 @@ package additive_animations.fragments;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.BounceInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
 
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.FloatProperty;
-import at.wirecube.additiveanimations.helper.evaluators.ArgbFloatEvaluator;
+import at.wirecube.additiveanimations.helper.evaluators.ColorEvaluator;
 
 public class CustomAnimationsWithoutSubclassDemoFragment extends Fragment {
     ViewGroup rootView;
@@ -34,11 +36,18 @@ public class CustomAnimationsWithoutSubclassDemoFragment extends Fragment {
             };
             @Override
             public void onClick(View v) {
-                AdditiveAnimator.animate(animatedView)
-                        .animateProperty(colors[currentColor++ % 4], new ArgbFloatEvaluator(), new FloatProperty("TextColorAnimationTag") {
-                            @Override public Float get(View object) { return Float.valueOf(animatedView.getCurrentTextColor()); }
-                            @Override public void set(View object, Float value) { animatedView.setTextColor(value.intValue()); }
-                        }).start();
+                AdditiveAnimator.animate(animatedView).setInterpolator(new LinearOutSlowInInterpolator())
+                        .property(colors[currentColor++ % 4], new ColorEvaluator(), new FloatProperty("TextColorAnimationTag") {
+                    @Override
+                    public Float get(View object) {
+                        return Float.valueOf(animatedView.getCurrentTextColor());
+                    }
+
+                    @Override
+                    public void set(View object, Float value) {
+                        animatedView.setTextColor(value.intValue());
+                    }
+                }).start();
             }
         });
         return rootView;
