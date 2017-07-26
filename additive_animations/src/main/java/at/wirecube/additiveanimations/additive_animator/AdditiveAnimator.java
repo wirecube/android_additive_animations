@@ -32,8 +32,10 @@ import android.view.animation.LinearInterpolator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import at.wirecube.additiveanimations.helper.AnimationUtils;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
@@ -56,11 +58,14 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         public abstract void onAnimationEnd(boolean wasCancelled);
     }
 
-    protected final List<View> mViews = new ArrayList<>(); // all views that will be affected by starting the animation.
+    protected final List<View> mViews = new ArrayList<>(1); // all views that will be affected by starting the animation.
     protected boolean mSkipRequestLayout = false;
     protected boolean mWithLayer = false;
     private boolean mIsValid = true; // invalid after start() has been called.
     private T mParent = null; // true when this animator was queued using `then()` chaining.
+
+    private View mCurrentTarget = null; // only used for performance reasons
+    private AdditiveAnimationStateManager mCurrentStateManager = null; // only used for performance reasons
 
     private static long sDefaultAnimationDuration = 300;
     private static TimeInterpolator sDefaultInterpolator = EaseInOutPathInterpolator.create();
@@ -122,7 +127,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * Override if you have custom properties that need to be copied.
      */
     protected T setParent(T other) {
-        target(other.currentTarget());
+        target(other.getCurrentTarget());
         setDuration(other.getValueAnimator().getDuration());
         setInterpolator(other.getValueAnimator().getInterpolator());
         mSkipRequestLayout = other.mSkipRequestLayout;
@@ -177,10 +182,6 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         }
     }
 
-    protected AdditiveAnimationStateManager currentAnimationManager() {
-        return AdditiveAnimationStateManager.from(currentTarget());
-    }
-
     protected ValueAnimator getValueAnimator() {
         initValueAnimatorIfNeeded();
         return mAnimationAccumulator.getAnimator();
@@ -204,6 +205,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      */
     public T target(View v) {
         mViews.add(v);
+        mCurrentTarget = v;
+        mCurrentStateManager = AdditiveAnimationStateManager.from(v);
         initValueAnimatorIfNeeded();
         if(mWithLayer) {
             withLayer();
@@ -396,7 +399,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * if the property isn't animating at the moment.
      */
     public float getTargetPropertyValue(Property<View, Float> property) {
-        return currentAnimationManager() == null ? 0 : currentAnimationManager().getActualPropertyValue(property);
+        return mCurrentStateManager == null ? 0 : mCurrentStateManager.getActualPropertyValue(property);
     }
 
     /**
@@ -406,7 +409,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * the actual model value.
      */
     public Float getTargetPropertyValue(String propertyName) {
-        return currentAnimationManager().getLastTargetValue(propertyName);
+        return mCurrentStateManager == null ? null : mCurrentStateManager.getLastTargetValue(propertyName);
     }
 
     /**
@@ -414,21 +417,43 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * This method is for internal use only (keeping track of chained `animateBy` calls).
      */
     protected Float getQueuedPropertyValue(String propertyName) {
-        return currentAnimationManager().getQueuedPropertyValue(propertyName);
+        return mCurrentStateManager.getQueuedPropertyValue(propertyName);
     }
 
-    final void applyChanges(Map<AdditiveAnimation, Float> accumulatedProperties, View targetView) {
-        Map<String, Float> unknownProperties = new HashMap<>();
-        for(AdditiveAnimation animation : accumulatedProperties.keySet()) {
-            if(animation.getProperty() != null) {
-                animation.getProperty().set(targetView, accumulatedProperties.get(animation));
+    final void applyChanges(List<AccumulatedAnimationValue> accumulatedAnimations) {
+        Map<View, List<AccumulatedAnimationValue>> unknownProperties = null;
+        Set<View> viewsToRequestLayoutFor = new HashSet<>(1);
+        for(AccumulatedAnimationValue accumulatedAnimationValue : accumulatedAnimations) {
+            View targetView = accumulatedAnimationValue.animation.getView();
+            viewsToRequestLayoutFor.add(targetView);
+            if(accumulatedAnimationValue.animation.getProperty() != null) {
+                accumulatedAnimationValue.animation.getProperty().set(targetView, accumulatedAnimationValue.tempValue);
             } else {
-                unknownProperties.put(animation.getTag(), accumulatedProperties.get(animation));
+                if(unknownProperties == null) {
+                    unknownProperties = new HashMap<>();
+                }
+                List<AccumulatedAnimationValue> accumulatedValues = unknownProperties.get(targetView);
+                if(accumulatedValues == null) {
+                    unknownProperties.put(targetView, accumulatedValues);
+                }
+                accumulatedValues.add(accumulatedAnimationValue);
             }
         }
-        applyCustomProperties(unknownProperties, targetView);
-        if(!ViewCompat.isInLayout(targetView) && !mSkipRequestLayout) {
-            targetView.requestLayout();
+
+        for(View v : viewsToRequestLayoutFor) {
+            if(!ViewCompat.isInLayout(v) && !mSkipRequestLayout) {
+                v.requestLayout();
+            }
+        }
+
+        if(unknownProperties != null) {
+            for (View v : unknownProperties.keySet()) {
+                HashMap<String, Float> properties = new HashMap<>();
+                for(AccumulatedAnimationValue value : unknownProperties.get(v)) {
+                    properties.put(value.animation.getTag(), value.tempValue);
+                }
+                applyCustomProperties(properties, v);
+            }
         }
     }
 
@@ -436,28 +461,25 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         // Override to apply custom properties
     }
 
-    protected View currentTarget() {
-        if(mViews.size() == 0) {
-            return null;
-        }
-        return mViews.get(mViews.size() - 1);
+    protected View getCurrentTarget() {
+        return mCurrentTarget;
     }
 
     protected final AdditiveAnimation createAnimation(Property<View, Float> property, float targetValue) {
-        AdditiveAnimation animation = new AdditiveAnimation(currentTarget(), property, property.get(currentTarget()), targetValue);
+        AdditiveAnimation animation = new AdditiveAnimation(mCurrentTarget, property, property.get(mCurrentTarget), targetValue);
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
         return animation;
     }
 
     protected final AdditiveAnimation createAnimation(Property<View, Float> property, Path path, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
-        AdditiveAnimation animation = new AdditiveAnimation(currentTarget(), property, property.get(currentTarget()), path, mode, sharedEvaluator);
+        AdditiveAnimation animation = new AdditiveAnimation(mCurrentTarget, property, property.get(mCurrentTarget), path, mode, sharedEvaluator);
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
         return animation;
     }
 
     protected final T animate(AdditiveAnimation animation) {
         initValueAnimatorIfNeeded();
-        currentAnimationManager().addAnimation(mAnimationAccumulator, animation);
+        mCurrentStateManager.addAnimation(mAnimationAccumulator, animation);
         return self();
     }
 
@@ -538,8 +560,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * Note that
      */
     public T withLayer() {
-        if(currentAnimationManager() != null) {
-            currentAnimationManager().setUseHardwareLayer(true);
+        if(mCurrentStateManager != null) {
+            mCurrentStateManager.setUseHardwareLayer(true);
         }
         mSkipRequestLayout = true;
         mWithLayer = true;
@@ -550,8 +572,8 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
      * Deactivates hardware layers for the current view and all subsequently added ones.
      */
     public T withoutLayer() {
-        if(currentAnimationManager() != null) {
-            currentAnimationManager().setUseHardwareLayer(false);
+        if(mCurrentStateManager != null) {
+            mCurrentStateManager.setUseHardwareLayer(false);
         }
         mWithLayer = false;
         return self();
@@ -677,7 +699,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T centerX(float centerX) {
-        return animate(View.X, centerX - currentTarget().getWidth() / 2);
+        return animate(View.X, centerX - mCurrentTarget.getWidth() / 2);
     }
 
     public T y(float y) {
@@ -689,7 +711,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
     }
 
     public T centerY(float centerY) {
-        return animate(View.Y, centerY - currentTarget().getHeight() / 2);
+        return animate(View.Y, centerY - mCurrentTarget.getHeight() / 2);
     }
 
     @SuppressLint("NewApi")
