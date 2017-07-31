@@ -30,3 +30,14 @@ new AdditiveAnimator().setDuration(1000)
     .target(myView2).xBy(20).yBy(20)
     .start();
 ```
+
+To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
+```
+dependencies {
+    compile 'at.wirecube:additive_animations:1.3'
+}
+...
+repositories {
+    jcenter()
+}
+```
