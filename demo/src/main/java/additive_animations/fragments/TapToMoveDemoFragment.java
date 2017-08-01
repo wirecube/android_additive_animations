@@ -38,7 +38,7 @@ public class TapToMoveDemoFragment extends Fragment {
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
                         AdditiveAnimator.animate(animatedView)
                                 .centerX(event.getX())
-                                // uncomment the next line to see how you can use a different interpolator for all properties!
+                                // uncomment the next line to see how you can use a different interpolator for each property!
 //                                .switchInterpolator(new BounceInterpolator())
                                 .centerY(event.getY())
                                 .start();

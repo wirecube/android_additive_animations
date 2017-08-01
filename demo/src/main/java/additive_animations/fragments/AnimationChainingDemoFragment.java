@@ -12,8 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
-
 import additive_animations.AdditiveAnimationsShowcaseActivity;
 import additive_animations.helper.DpConverter;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;

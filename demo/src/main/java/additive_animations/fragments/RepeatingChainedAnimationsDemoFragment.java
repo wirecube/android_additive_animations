@@ -45,6 +45,7 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
                 getResources().getColor(R.color.niceGreen),
                 getResources().getColor(R.color.nicePink)
         };
+        // TODO: don't use hardcoded px values
         AdditiveAnimatorSubclassDemo.animate(animatedView)
                 .x(px(50)).y(px(100)).backgroundColor(colors[1]).rotation(0)
                 .thenBounceBeforeEnd(800, 300)
