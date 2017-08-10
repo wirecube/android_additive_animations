@@ -434,6 +434,7 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
                 }
                 List<AccumulatedAnimationValue> accumulatedValues = unknownProperties.get(targetView);
                 if(accumulatedValues == null) {
+                    accumulatedValues = new ArrayList<>();
                     unknownProperties.put(targetView, accumulatedValues);
                 }
                 accumulatedValues.add(accumulatedAnimationValue);

@@ -34,7 +34,7 @@ new AdditiveAnimator().setDuration(1000)
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-compile 'at.wirecube:additive_animations:1.3'
+compile 'at.wirecube:additive_animations:1.3.1'
 }
 ...
 repositories {
