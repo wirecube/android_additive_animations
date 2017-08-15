@@ -14,6 +14,7 @@ import android.widget.Switch;
 
 import additive_animations.fragments.AnimationChainingDemoFragment;
 import additive_animations.fragments.CustomAnimationsWithoutSubclassDemoFragment;
+import additive_animations.fragments.KotlinTestFragment;
 import additive_animations.fragments.MarginsDemoFragment;
 import additive_animations.fragments.MoveAlongPathDemoFragment;
 import additive_animations.fragments.MultipleViewsAnimationDemoFragment;
@@ -109,6 +110,8 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new RepeatingChainedAnimationsDemoFragment()).commit();
         } else if(id == R.id.nav_change_text_color) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CustomAnimationsWithoutSubclassDemoFragment()).commit();
+        } else if(id == R.id.nav_kotlin_test) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new KotlinTestFragment()).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

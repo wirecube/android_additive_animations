@@ -94,6 +94,20 @@ public class AdditiveAnimator<T extends AdditiveAnimator> {
         return new AdditiveAnimator(view).setDuration(duration);
     }
 
+    /**
+     * Convenience method to make instantiation in Kotlin less painful
+     */
+    public static AdditiveAnimator create() {
+        return new AdditiveAnimator();
+    }
+
+    /**
+     * Convenience method to make instantiation in Kotlin less painful
+     */
+    public static AdditiveAnimator create(long duration) {
+        return new AdditiveAnimator().setDuration(duration);
+    }
+
     public static void cancelAnimations(View view) {
         AdditiveAnimationStateManager.from(view).cancelAllAnimations();
     }
