@@ -24,7 +24,7 @@ import at.wirecube.additiveanimations.helper.FloatProperty;
 
 public class PaddingProperties {
 
-    public static Property<View, Float> PADDING_LEFT = new FloatProperty("PADDING_LEFT") {
+    public static Property<View, Float> PADDING_LEFT = new FloatProperty<View>("PADDING_LEFT") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getPaddingLeft());
@@ -36,7 +36,7 @@ public class PaddingProperties {
         }
     };
 
-    public static Property<View, Float> PADDING_RIGHT = new FloatProperty("PADDING_RIGHT") {
+    public static Property<View, Float> PADDING_RIGHT = new FloatProperty<View>("PADDING_RIGHT") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getPaddingRight());
@@ -48,7 +48,7 @@ public class PaddingProperties {
         }
     };
 
-    public static Property<View, Float> PADDING_TOP = new FloatProperty("PADDING_TOP") {
+    public static Property<View, Float> PADDING_TOP = new FloatProperty<View>("PADDING_TOP") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getPaddingTop());
@@ -60,7 +60,7 @@ public class PaddingProperties {
         }
     };
 
-    public static Property<View, Float> PADDING_BOTTOM = new FloatProperty("PADDING_BOTTOM") {
+    public static Property<View, Float> PADDING_BOTTOM = new FloatProperty<View>("PADDING_BOTTOM") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getPaddingBottom());

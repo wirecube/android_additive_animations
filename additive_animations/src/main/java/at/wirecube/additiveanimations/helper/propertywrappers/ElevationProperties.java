@@ -24,7 +24,7 @@ import at.wirecube.additiveanimations.helper.FloatProperty;
 public class ElevationProperties {
 
     @SuppressWarnings("NewApi")
-    public static Property<View, Float> ELEVATION = new FloatProperty( "ELEVATION") {
+    public static Property<View, Float> ELEVATION = new FloatProperty<View>("ELEVATION") {
         @Override
         public Float get(View object) {
             return Float.valueOf(object.getElevation());

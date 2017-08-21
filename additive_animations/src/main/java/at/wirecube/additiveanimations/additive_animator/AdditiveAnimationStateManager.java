@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * A class that manages internal values about the state of all running additive animations for a single view.
  */
-class AdditiveAnimationStateManager {
+class AdditiveAnimationStateManager<T> {
 
     private class AnimationInfo {
         int numAnimations = 0;
@@ -38,9 +38,9 @@ class AdditiveAnimationStateManager {
         Float queuedTargetValue = null;
     }
 
-    private static final Map<View, AdditiveAnimationStateManager> sStateManagers = new HashMap<>();
+    private static final Map<Object, AdditiveAnimationStateManager> sStateManagers = new HashMap<>();
 
-    static final AdditiveAnimationStateManager from(View targetView) {
+    static final AdditiveAnimationStateManager from(Object targetView) {
         if(targetView == null) {
             return null;
         }
@@ -58,14 +58,14 @@ class AdditiveAnimationStateManager {
 
     private final AccumulatedAnimationValueManager mAccumulator = new AccumulatedAnimationValueManager();
 
-    private final View mAnimationTargetView;
+    private final T mAnimationTargetView;
     private boolean mUseHardwareLayer = false;
 
     final Set<AdditiveAnimationAccumulator> mAdditiveAnimationAccumulators = new HashSet<>();
 
     private final Map<String, AnimationInfo> mAnimationInfos = new HashMap<>();
 
-    private AdditiveAnimationStateManager(View animationTarget) {
+    private AdditiveAnimationStateManager(T animationTarget) {
         mAnimationTargetView = animationTarget;
     }
 
@@ -93,8 +93,8 @@ class AdditiveAnimationStateManager {
         if (mAdditiveAnimationAccumulators.isEmpty()) {
             sStateManagers.remove(mAnimationTargetView);
             // reset hardware layer
-            if(mUseHardwareLayer) {
-                mAnimationTargetView.setLayerType(View.LAYER_TYPE_NONE, null);
+            if(mUseHardwareLayer && mAnimationTargetView instanceof View) {
+                ((View)mAnimationTargetView).setLayerType(View.LAYER_TYPE_NONE, null);
             }
         }
 
@@ -106,8 +106,10 @@ class AdditiveAnimationStateManager {
 
     void onAnimationApplierStart(AdditiveAnimationAccumulator applier) {
         // only now are we expecting updates from this applier
-        if(mUseHardwareLayer && mAnimationTargetView.getLayerType() != View.LAYER_TYPE_HARDWARE) {
-            mAnimationTargetView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        if(mUseHardwareLayer && mAnimationTargetView instanceof View) {
+            if(((View)mAnimationTargetView).getLayerType() != View.LAYER_TYPE_HARDWARE) {
+                ((View)mAnimationTargetView).setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            }
         }
     }
 
@@ -147,8 +149,8 @@ class AdditiveAnimationStateManager {
         mAnimationInfos.clear();
         sStateManagers.remove(mAnimationTargetView);
         // reset hardware layer
-        if(mUseHardwareLayer) {
-            mAnimationTargetView.setLayerType(View.LAYER_TYPE_NONE, null);
+        if(mUseHardwareLayer && mAnimationTargetView instanceof View) {
+            ((View)mAnimationTargetView).setLayerType(View.LAYER_TYPE_NONE, null);
         }
     }
 
@@ -171,7 +173,7 @@ class AdditiveAnimationStateManager {
         return info.lastTargetValue;
     }
 
-    Float getActualPropertyValue(Property<View, Float> property) {
+    Float getActualPropertyValue(Property<T, Float> property) {
         Float lastTarget = getLastTargetValue(property.getName());
         if(lastTarget == null) {
             lastTarget = property.get(mAnimationTargetView);

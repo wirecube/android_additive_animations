@@ -11,6 +11,7 @@ import android.view.animation.BounceInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
 
+import additive_animations.subclass.AdditiveAnimatorSubclassDemo;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.FloatProperty;
@@ -37,7 +38,7 @@ public class CustomAnimationsWithoutSubclassDemoFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 AdditiveAnimator.animate(animatedView).setInterpolator(new LinearOutSlowInInterpolator())
-                        .property(colors[currentColor++ % 4], new ColorEvaluator(), new FloatProperty("TextColorAnimationTag") {
+                        .property(colors[currentColor++ % 4], new ColorEvaluator(), new FloatProperty<View>("TextColorAnimationTag") {
                     @Override
                     public Float get(View object) {
                         return Float.valueOf(animatedView.getCurrentTextColor());

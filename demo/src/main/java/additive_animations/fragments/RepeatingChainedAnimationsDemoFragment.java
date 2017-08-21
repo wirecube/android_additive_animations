@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import additive_animations.helper.DpConverter;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import additive_animations.subclass.AdditiveAnimatorSubclassDemo;
+import at.wirecube.additiveanimations.additive_animator.AnimationEndListener;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
 public class RepeatingChainedAnimationsDemoFragment extends Fragment {
@@ -55,7 +56,7 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
                 .thenBounceBeforeEnd(800, 300)
                 .thenBeforeEnd(400).x(px(50)).backgroundColor(colors[0]).rotationBy(90).setDuration(1000)
                 .thenBounceBeforeEnd(800, 300)
-                .addEndAction(new AdditiveAnimator.AnimationEndListener() {
+                .addEndAction(new AnimationEndListener() {
                     @Override
                     public void onAnimationEnd(boolean wasCancelled) {
                         if (getActivity() != null) {

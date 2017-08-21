@@ -22,7 +22,7 @@ import android.view.View;
 import at.wirecube.additiveanimations.helper.FloatProperty;
 
 public class SizeProperties {
-    public static Property<View, Float> WIDTH = new FloatProperty("VIEW_WIDTH") {
+    public static Property<View, Float> WIDTH = new FloatProperty<View>("VIEW_WIDTH") {
         @Override
         public Float get(View object) {
             return Float.valueOf((object.getLayoutParams()).width);
@@ -34,7 +34,7 @@ public class SizeProperties {
         }
     };
 
-    public static Property<View, Float> HEIGHT = new FloatProperty("VIEW_HEIGHT") {
+    public static Property<View, Float> HEIGHT = new FloatProperty<View>("VIEW_HEIGHT") {
         @Override
         public Float get(View object) {
             return Float.valueOf((object.getLayoutParams()).height);

@@ -24,7 +24,7 @@ import android.view.ViewGroup;
 import at.wirecube.additiveanimations.helper.FloatProperty;
 
 public class ColorProperties {
-    public static Property<View, Float> BACKGROUND_COLOR = new FloatProperty("BACKGROUND_COLOR") {
+    public static Property<View, Float> BACKGROUND_COLOR = new FloatProperty<View>("BACKGROUND_COLOR") {
         @Override
         public Float get(View object) {
             try {

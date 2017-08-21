@@ -2,9 +2,10 @@ package additive_animations.subclass;
 
 import android.view.View;
 
-import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
+import at.wirecube.additiveanimations.additive_animator.AnimationEndListener;
+import at.wirecube.additiveanimations.additive_animator.SubclassableAdditiveViewAnimator;
 
-public class AdditiveAnimatorSubclassDemo extends AdditiveAnimator<AdditiveAnimatorSubclassDemo> {
+public class AdditiveAnimatorSubclassDemo extends SubclassableAdditiveViewAnimator<AdditiveAnimatorSubclassDemo> {
 
     public static AdditiveAnimatorSubclassDemo animate(View v) {
         return new AdditiveAnimatorSubclassDemo().addTarget(v);
