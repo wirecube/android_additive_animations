@@ -23,4 +23,7 @@ public abstract class FloatProperty <T> extends Property<T, Float> {
     public FloatProperty(String name) {
         super(Float.class, name);
     }
+
+    @Override
+    public abstract void set(T object, Float value);
 }

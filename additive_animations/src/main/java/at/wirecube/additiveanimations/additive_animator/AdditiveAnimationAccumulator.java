@@ -30,7 +30,7 @@ import java.util.Set;
 
 class AdditiveAnimationAccumulator {
 
-    // Exists only for performance reasons
+    // Exists only for performance reasons to avoid map lookups
     private class AdditiveAnimationWrapper<T> {
         private final AdditiveAnimation<T> animation;
         private float previousValue;
@@ -129,7 +129,7 @@ class AdditiveAnimationAccumulator {
     }
 
     /*
-     * Returns true if this removed all animations from the view, false if there are still more animations running.
+     * Returns true if this removed all animations from the object, false if there are still more animations running.
      */
     boolean removeAnimation(String animatedPropertyName, Object v) {
         removeTarget(v, animatedPropertyName);
@@ -164,7 +164,7 @@ class AdditiveAnimationAccumulator {
     }
 
     /**
-     * Removes the animation with the given name from the given view.
+     * Removes the animation with the given name from the given object.
      */
     private void removeTarget(Object v, String additiveAnimationName) {
         AdditiveAnimationWrapper animationToRemove = null;

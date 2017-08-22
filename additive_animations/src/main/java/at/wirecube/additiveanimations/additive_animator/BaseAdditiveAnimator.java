@@ -9,7 +9,6 @@ import android.annotation.SuppressLint;
 import android.graphics.Path;
 import android.os.Build;
 import android.util.Property;
-import android.view.View;
 import android.view.animation.LinearInterpolator;
 
 import java.util.ArrayList;
@@ -24,13 +23,23 @@ import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 import at.wirecube.additiveanimations.helper.FloatProperty;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
+/**
+ * This is the base class which provides access to all non-specific animation creation methods such as
+ * creation, timing and chaining of additive animations.
+ * Subclasses should provide builder methods which create specific animations (see {@link SubclassableAdditiveViewAnimator} for examples).
+ * @param <T> This generic should be instantiated with a concrete subclass of BaseAdditiveAnimator. It is used to access the builder methods across hierarchies.
+ *           Example:<p>
+ *
+ *           <b><code>public class MyViewAnimator extends BaseAdditiveAnimator{@literal<}MyAnimator, View{@literal>}</code></b>
+ * @param <V> The type of object to be animated.
+ */
 public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V extends Object> {
     protected T mParent = null; // true when this animator was queued using `then()` chaining.
     protected V mCurrentTarget = null;
     protected AdditiveAnimationStateManager<V> mCurrentStateManager = null; // only used for performance reasons
     protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to.
     protected TimeInterpolator mCurrentCustomInterpolator = null;
-    protected final List<V> mTargets = new ArrayList<>(1); // all views that will be affected by starting the animation.
+    protected final List<V> mTargets = new ArrayList<>(1); // all targets that will be affected by starting the animation.
 
     private boolean mIsValid = true; // invalid after start() has been called.
 
@@ -142,7 +151,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         }
     }
 
-    protected void applyCustomProperties(Map<String, Float> tempProperties, V targetView) {
+    protected void applyCustomProperties(Map<String, Float> tempProperties, V target) {
         // Override to apply custom properties
     }
 
@@ -370,7 +379,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     protected abstract T newInstance();
 
     /**
-     * Creates a new animator configured to start after the current animator, targeting the last view
+     * Creates a new animator configured to start after the current animator with the current target
      * that was configured with this animator.
      */
     public T then() {
@@ -381,7 +390,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     /**
-     * Creates a new animator configured to start after <code>delay</code>, targeting the last view
+     * Creates a new animator configured to start after <code>delay</code> with the current target
      * that was configured with this animator.
      */
     public T thenWithDelay(long delay) {
@@ -435,7 +444,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         }
     }
 
-    public void cancelAnimation(Property<View, Float> property) {
+    public void cancelAnimation(Property<V, Float> property) {
         cancelAnimation(property.getName());
     }
 

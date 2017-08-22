@@ -20,7 +20,6 @@ import android.animation.TimeInterpolator;
 import android.animation.TypeEvaluator;
 import android.graphics.Path;
 import android.util.Property;
-import android.view.View;
 
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 

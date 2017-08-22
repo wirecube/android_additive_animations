@@ -18,6 +18,8 @@
             android:title="Chaining repeated animations" />
         <item android:id="@+id/nav_change_text_color" android:icon="@android:drawable/ic_menu_edit"
             android:title="Animate text color w/o subclass" />
+        <item android:id="@+id/nav_custom_drawing" android:icon="@android:drawable/ic_menu_view"
+            android:title="Custom drawing on canvas"/>
     </group>
 
     <!--<item android:title="Communicate">-->

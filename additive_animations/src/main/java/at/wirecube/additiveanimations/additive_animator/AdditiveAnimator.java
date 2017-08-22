@@ -19,6 +19,8 @@ package at.wirecube.additiveanimations.additive_animator;
 import android.view.View;
 
 /**
+ * Use this class to additively animate a lot of properties of Views.
+ * If you want to extend the animatable properties, you should extend `SubclassableAdditiveViewAnimator`.
  * Additive animations are nicely explained here: http://ronnqvi.st/multiple-animations/
 */
 public final class AdditiveAnimator extends SubclassableAdditiveViewAnimator<AdditiveAnimator> {
