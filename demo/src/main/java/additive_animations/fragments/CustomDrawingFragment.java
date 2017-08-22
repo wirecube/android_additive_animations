@@ -28,7 +28,7 @@ import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.FloatProperty;
 import at.wirecube.additiveanimations.helper.evaluators.ColorEvaluator;
 
-public class CustomDrawingFragmentWithoutSubclass extends Fragment {
+public class CustomDrawingFragment extends Fragment {
 
     @Nullable
     @Override
@@ -56,7 +56,7 @@ public class CustomDrawingFragmentWithoutSubclass extends Fragment {
                 mParent = parent;
             }
 
-            // Example of a subclass that works with a class which doesn't derive from `View`
+            // Example of an animator subclass that works with a class which doesn't derive from `View`
             private static class AdditiveRectAnimator extends BaseAdditiveAnimator<AdditiveRectAnimator, Rect> {
 
                 private static final String X = "RectX";
@@ -75,6 +75,7 @@ public class CustomDrawingFragmentWithoutSubclass extends Fragment {
                 }
 
                 public AdditiveRectAnimator x(float x) {
+                    // AdditiveAnimation objects can be instantiated with a getter/setter or just by providing a key which will later be retrieved in applyCustomProperties()
                     return animate(new AdditiveAnimation(mCurrentTarget, X, mCurrentTarget.mX, x));
                 }
                 public AdditiveRectAnimator y(float y) {
@@ -90,6 +91,7 @@ public class CustomDrawingFragmentWithoutSubclass extends Fragment {
                     return animate(new AdditiveAnimation(mCurrentTarget, ROTATION, mCurrentTarget.mRotation, rotation));
                 }
 
+                // This method is called when we try to animate keys without a getter/setter, as we do in this example
                 @Override
                 protected void applyCustomProperties(Map<String, Float> tempProperties, Rect target) {
                     Float x = tempProperties.get(X);
@@ -153,14 +155,15 @@ public class CustomDrawingFragmentWithoutSubclass extends Fragment {
                     .property(semiTransparentEndColor, new ColorEvaluator(), paintColorProperty)
                     .start();
 
-            // Animate size and corner radius of all rects with some delay
+            // Use the custom subclass to animate size and corner radius of all rects
             Rect.AdditiveRectAnimator rectAnimator = new Rect.AdditiveRectAnimator();
 
             for(Rect rect : mRects) {
                 rectAnimator = rectAnimator.target(rect)
+                                           .setDuration(2000)
                                            .setRepeatCount(ValueAnimator.INFINITE).setRepeatMode(ValueAnimator.REVERSE)
                                            .size(DpConverter.converDpToPx(200))
-                                           .cornerRadius(DpConverter.converDpToPx(30))
+                                           .cornerRadius(DpConverter.converDpToPx(100))
                                            .thenWithDelay(50);
             }
             rectAnimator.start();

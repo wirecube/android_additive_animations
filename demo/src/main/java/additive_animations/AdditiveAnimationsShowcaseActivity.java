@@ -14,7 +14,7 @@ import android.widget.Switch;
 
 import additive_animations.fragments.AnimationChainingDemoFragment;
 import additive_animations.fragments.CustomAnimationsWithoutSubclassDemoFragment;
-import additive_animations.fragments.CustomDrawingFragmentWithoutSubclass;
+import additive_animations.fragments.CustomDrawingFragment;
 import additive_animations.fragments.MarginsDemoFragment;
 import additive_animations.fragments.MoveAlongPathDemoFragment;
 import additive_animations.fragments.MultipleViewsAnimationDemoFragment;
@@ -111,7 +111,7 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
         } else if(id == R.id.nav_change_text_color) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CustomAnimationsWithoutSubclassDemoFragment()).commit();
         } else if(id == R.id.nav_custom_drawing) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CustomDrawingFragmentWithoutSubclass()).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CustomDrawingFragment()).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
