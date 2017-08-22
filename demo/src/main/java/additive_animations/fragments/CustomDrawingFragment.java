@@ -3,18 +3,15 @@ package additive_animations.fragments;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.LinearInterpolator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,15 +75,19 @@ public class CustomDrawingFragment extends Fragment {
                     // AdditiveAnimation objects can be instantiated with a getter/setter or just by providing a key which will later be retrieved in applyCustomProperties()
                     return animate(new AdditiveAnimation(mCurrentTarget, X, mCurrentTarget.mX, x));
                 }
+
                 public AdditiveRectAnimator y(float y) {
                     return animate(new AdditiveAnimation(mCurrentTarget, Y, mCurrentTarget.mY, y));
                 }
+
                 public AdditiveRectAnimator size(float size) {
                     return animate(new AdditiveAnimation(mCurrentTarget, SIZE, mCurrentTarget.mSize, size));
                 }
+
                 public AdditiveRectAnimator cornerRadius(float cornerRadius) {
                     return animate(new AdditiveAnimation(mCurrentTarget, CORNER_RADIUS, mCurrentTarget.mCornerRadius, cornerRadius));
                 }
+
                 public AdditiveRectAnimator rotation(float rotation) {
                     return animate(new AdditiveAnimation(mCurrentTarget, ROTATION, mCurrentTarget.mRotation, rotation));
                 }
@@ -119,7 +120,7 @@ public class CustomDrawingFragment extends Fragment {
         }
 
         // Animating a non-view property using AdditiveObjectAnimator just requires a getter and setter for the property:
-        private FloatProperty<Paint> paintColorProperty = new FloatProperty<Paint>("PaintColor") {
+        private FloatProperty<Paint> mPaintColorProperty = new FloatProperty<Paint>("PaintColor") {
             @Override
             public Float get(Paint paint) {
                 return Float.valueOf(paint.getColor());
@@ -142,7 +143,7 @@ public class CustomDrawingFragment extends Fragment {
 
         public DemoView(Context context) {
             super(context);
-            for(int i = 0; i < 10; i++) {
+            for(int i = 0; i < 5; i++) {
                 mRects.add(new Rect(this));
             }
 
@@ -154,7 +155,7 @@ public class CustomDrawingFragment extends Fragment {
                     .setRepeatCount(ValueAnimator.INFINITE)
                     .setRepeatMode(ValueAnimator.REVERSE)
                     .setAnimationApplier(animationApplier)
-                    .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), paintColorProperty)
+                    .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), mPaintColorProperty)
                     .start();
 
             // Use the custom subclass to animate size and corner radius of all rects
