@@ -41,6 +41,11 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     protected TimeInterpolator mCurrentCustomInterpolator = null;
     protected final List<V> mTargets = new ArrayList<>(1); // all targets that will be affected by starting the animation.
 
+    private Map<V, List<AccumulatedAnimationValue<V>>> mUnknownProperties = new HashMap<>();
+    private Set<V> mChangedTargets = new HashSet<>(1);
+    private HashMap<String, Float> mChangedUnknownProperties = new HashMap<>();
+
+
     private boolean mIsValid = true; // invalid after start() has been called.
 
     private static long sDefaultAnimationDuration = 300;
@@ -118,21 +123,19 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     void applyChanges(List<AccumulatedAnimationValue<V>> accumulatedAnimations) {
-        Map<V, List<AccumulatedAnimationValue<V>>> unknownProperties = null;
-        Set<V> changedTargets = new HashSet<>(1);
         for(AccumulatedAnimationValue<V> accumulatedAnimationValue : accumulatedAnimations) {
             V target = accumulatedAnimationValue.animation.getTarget();
-            changedTargets.add(target);
+            mChangedTargets.add(target);
             if(accumulatedAnimationValue.animation.getProperty() != null) {
                 accumulatedAnimationValue.animation.getProperty().set(target, accumulatedAnimationValue.tempValue);
             } else {
-                if(unknownProperties == null) {
-                    unknownProperties = new HashMap<>();
+                if(mUnknownProperties == null) {
+                    mUnknownProperties = new HashMap<>();
                 }
-                List<AccumulatedAnimationValue<V>> accumulatedValues = unknownProperties.get(target);
+                List<AccumulatedAnimationValue<V>> accumulatedValues = mUnknownProperties.get(target);
                 if(accumulatedValues == null) {
-                    accumulatedValues = new ArrayList<>();
-                    unknownProperties.put(target, accumulatedValues);
+                    accumulatedValues = new ArrayList<>(1);
+                    mUnknownProperties.put(target, accumulatedValues);
                 }
                 accumulatedValues.add(accumulatedAnimationValue);
             }
@@ -140,15 +143,21 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
         // TODO: onChangedTargets method for subclasses
 
-        if(unknownProperties != null) {
-            for (V v : unknownProperties.keySet()) {
-                HashMap<String, Float> properties = new HashMap<>();
-                for(AccumulatedAnimationValue value : unknownProperties.get(v)) {
-                    properties.put(value.animation.getTag(), value.tempValue);
+        if(mUnknownProperties != null) {
+            for (V v : mUnknownProperties.keySet()) {
+                for(AccumulatedAnimationValue value : mUnknownProperties.get(v)) {
+                    mChangedUnknownProperties.put(value.animation.getTag(), value.tempValue);
                 }
-                applyCustomProperties(properties, v);
+                applyCustomProperties(mChangedUnknownProperties, v);
             }
         }
+
+        // reuse the set/map/lists
+        mChangedTargets.clear();
+        for(Collection<AccumulatedAnimationValue<V>> properties : mUnknownProperties.values()) {
+            properties.clear();
+        }
+        mChangedUnknownProperties.clear();
     }
 
     protected void applyCustomProperties(Map<String, Float> tempProperties, V target) {

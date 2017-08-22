@@ -48,7 +48,7 @@ public class CustomDrawingFragment extends Fragment {
             private final View mParent;
             float mRotation = 0;
             float mX = DpConverter.converDpToPx(60);
-            float mY = DpConverter.converDpToPx(20);
+            float mY = DpConverter.converDpToPx(120);
             float mSize = DpConverter.converDpToPx(100);
             float mCornerRadius = 0;
 
@@ -94,16 +94,23 @@ public class CustomDrawingFragment extends Fragment {
                 // This method is called when we try to animate keys without a getter/setter, as we do in this example
                 @Override
                 protected void applyCustomProperties(Map<String, Float> tempProperties, Rect target) {
-                    Float x = tempProperties.get(X);
-                    if(x != null) { target.mX = x; }
-                    Float y = tempProperties.get(Y);
-                    if(y != null) { target.mY = y; }
-                    Float size = tempProperties.get(SIZE);
-                    if(size != null) { target.mSize = size; }
-                    Float cornerRadius = tempProperties.get(CORNER_RADIUS);
-                    if(cornerRadius != null) { target.mCornerRadius = cornerRadius; }
-                    Float rotation = tempProperties.get(ROTATION);
-                    if(rotation != null) { target.mRotation = rotation; }
+                    for(Map.Entry<String, Float> entry : tempProperties.entrySet()) {
+                        if(entry.getKey().equals(X)) {
+                           target.mX = entry.getValue();
+                        }
+                        if(entry.getKey().equals(Y)) {
+                            target.mY = entry.getValue();
+                        }
+                        if(entry.getKey().equals(SIZE)) {
+                            target.mSize = entry.getValue();
+                        }
+                        if(entry.getKey().equals(ROTATION)) {
+                            target.mRotation = entry.getValue();
+                        }
+                        if(entry.getKey().equals(CORNER_RADIUS)) {
+                            target.mCornerRadius = entry.getValue();
+                        }
+                    }
 
                     // force redraw of the parent view:
                     target.mParent.invalidate();
@@ -138,21 +145,16 @@ public class CustomDrawingFragment extends Fragment {
             for(int i = 0; i < 10; i++) {
                 mRects.add(new Rect(this));
             }
+
             mPaint.setStyle(Paint.Style.FILL);
-
-            int paintStartColor = context.getResources().getColor(R.color.niceOrange);
-            int semiTransparentStartColor = Color.argb(50, Color.red(paintStartColor), Color.green(paintStartColor), Color.blue(paintStartColor));
-            int paintEndColor = context.getResources().getColor(R.color.nicePink);
-            int semiTransparentEndColor = Color.argb(50, Color.red(paintEndColor), Color.green(paintEndColor), Color.blue(paintEndColor));
-
-            mPaint.setColor(semiTransparentStartColor);
+            mPaint.setColor(context.getResources().getColor(R.color.niceBlue));
 
             // Animate the color of the paint object without a subclass
             AdditiveObjectAnimator.animate(mPaint)
                     .setRepeatCount(ValueAnimator.INFINITE)
                     .setRepeatMode(ValueAnimator.REVERSE)
                     .setAnimationApplier(animationApplier)
-                    .property(semiTransparentEndColor, new ColorEvaluator(), paintColorProperty)
+                    .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), paintColorProperty)
                     .start();
 
             // Use the custom subclass to animate size and corner radius of all rects
@@ -160,11 +162,11 @@ public class CustomDrawingFragment extends Fragment {
 
             for(Rect rect : mRects) {
                 rectAnimator = rectAnimator.target(rect)
-                                           .setDuration(2000)
+                                           .setDuration(1000)
                                            .setRepeatCount(ValueAnimator.INFINITE).setRepeatMode(ValueAnimator.REVERSE)
-                                           .size(DpConverter.converDpToPx(200))
-                                           .cornerRadius(DpConverter.converDpToPx(100))
-                                           .thenWithDelay(50);
+                                           .size(DpConverter.converDpToPx(100))
+                                           .cornerRadius(DpConverter.converDpToPx(50))
+                                           .thenWithDelay(100);
             }
             rectAnimator.start();
 
@@ -193,6 +195,15 @@ public class CustomDrawingFragment extends Fragment {
                     return true;
                 }
             });
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            AdditiveObjectAnimator.cancelAnimations(mPaint);
+            for(Rect rect : mRects) {
+                Rect.AdditiveRectAnimator.cancelAnimations(rect);
+            }
         }
 
         @Override protected void onDraw(Canvas canvas) {
