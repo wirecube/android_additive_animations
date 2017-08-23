@@ -20,8 +20,9 @@ import android.view.View;
 
 /**
  * Use this class to additively animate a lot of properties of Views.
- * If you want to extend the animatable properties, you should extend `SubclassableAdditiveViewAnimator`.
+ * If you want to extend the animatable properties, you should make a subclass that extends `SubclassableAdditiveViewAnimator`.
  * Additive animations are nicely explained here: http://ronnqvi.st/multiple-animations/
+ * - but generally, they just make your animations appear smoother and more natural.
 */
 public final class AdditiveAnimator extends SubclassableAdditiveViewAnimator<AdditiveAnimator> {
 

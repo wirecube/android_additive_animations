@@ -7,7 +7,6 @@ import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Path;
-import android.os.Build;
 import android.util.Property;
 import android.view.animation.LinearInterpolator;
 
@@ -44,7 +43,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     private Map<V, List<AccumulatedAnimationValue<V>>> mUnknownProperties = new HashMap<>();
     private Set<V> mChangedTargets = new HashSet<>(1);
     private HashMap<String, Float> mChangedUnknownProperties = new HashMap<>();
-
+    private ValueAnimatorManager mValueAnimatorManager;
 
     private boolean mIsValid = true; // invalid after start() has been called.
 
@@ -72,21 +71,29 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         cancelAnimation(target, property.getName());
     }
 
-    private void initValueAnimatorIfNeeded() {
+    private void initAnimationAccumulatorIfNeeded() {
         if(!mIsValid) {
             throw new RuntimeException("AdditiveAnimator instances cannot be reused.");
         }
         if(mAnimationAccumulator == null) {
             mAnimationAccumulator = new AdditiveAnimationAccumulator(this);
-            getValueAnimator().setInterpolator(sDefaultInterpolator);
-            getValueAnimator().setDuration(sDefaultAnimationDuration);
+            mAnimationAccumulator.setDuration(sDefaultAnimationDuration);
         }
     }
 
-    protected ValueAnimator getValueAnimator() {
-        initValueAnimatorIfNeeded();
-        return mAnimationAccumulator.getAnimator();
+    protected ValueAnimatorManager getValueAnimator() {
+        if(mValueAnimatorManager == null) {
+            mValueAnimatorManager = new ValueAnimatorManager();
+            mValueAnimatorManager.setInterpolator(sDefaultInterpolator);
+        }
+        return mValueAnimatorManager;
     }
+
+    protected AdditiveAnimationAccumulator getAnimationAccumulator() {
+        initAnimationAccumulatorIfNeeded();
+        return mAnimationAccumulator;
+    }
+
     /**
      * Old API for {@link #target(V)}, which should be used instead.
      * @deprecated Use {@link #target(V)} instead.
@@ -181,13 +188,13 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     protected final T animate(AdditiveAnimation animation) {
-        initValueAnimatorIfNeeded();
+        initAnimationAccumulatorIfNeeded();
         mCurrentStateManager.addAnimation(mAnimationAccumulator, animation);
         return self();
     }
 
     protected final T animate(Property<V, Float> property, Path p, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
-        initValueAnimatorIfNeeded();
+        initAnimationAccumulatorIfNeeded();
         return animate(createAnimation(property, p, mode, sharedEvaluator));
     }
 
@@ -196,14 +203,14 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     protected final T animate(Property<V, Float> property, float target, TypeEvaluator evaluator) {
-        initValueAnimatorIfNeeded();
+        initAnimationAccumulatorIfNeeded();
         AdditiveAnimation animation = createAnimation(property, target);
         animation.setCustomTypeEvaluator(evaluator);
         return animate(animation);
     }
 
     protected final T animatePropertyBy(Property<V, Float> property, float by) {
-        initValueAnimatorIfNeeded();
+        initAnimationAccumulatorIfNeeded();
         float currentTarget = getTargetPropertyValue(property);
         if(getQueuedPropertyValue(property.getName()) != null) {
             currentTarget = getQueuedPropertyValue(property.getName());
@@ -278,22 +285,22 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     public T target(V v) {
         mCurrentTarget = v;
         mCurrentStateManager = AdditiveAnimationStateManager.from(v);
-        initValueAnimatorIfNeeded();
+        initAnimationAccumulatorIfNeeded();
         return self();
     }
 
     public T addUpdateListener(ValueAnimator.AnimatorUpdateListener listener) {
-        getValueAnimator().addUpdateListener(listener);
+        mValueAnimatorManager.addUpdateListener(listener);
         return self();
     }
 
     @SuppressLint("NewApi")
-    public T addPauseListener(Animator.AnimatorPauseListener listener) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            getValueAnimator().addPauseListener(listener);
-        }
-        return self();
-    }
+//    public T addPauseListener(Animator.AnimatorPauseListener listener) {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//            getValueAnimator().addPauseListener(listener);
+//        }
+//        return self();
+//    }
 
     public T addListener(Animator.AnimatorListener listener) {
         getValueAnimator().addListener(listener);
@@ -328,12 +335,16 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T setStartDelay(long startDelay) {
-        getValueAnimator().setStartDelay(startDelay);
+        if(mParent == null) {
+            getValueAnimator().setStartDelay(startDelay);
+        } else {
+            getAnimationAccumulator().setStartDelay(startDelay);
+        }
         return self();
     }
 
     public T setDuration(long duration) {
-        getValueAnimator().setDuration(duration);
+        getAnimationAccumulator().setDuration(duration);
         return self();
     }
 
@@ -349,13 +360,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     // TODO: docs for possible values (ValueAnimator.INFINITE)
     // TODO: handle parent repeat
     public T setRepeatCount(int repeatCount) {
-        getValueAnimator().setRepeatCount(repeatCount);
+        getAnimationAccumulator().setRepeatCount(repeatCount);
         return self();
     }
 
-    // TODO: investigate possible problems when repeat modes of children/parents don't match
     public T setRepeatMode(int repeatMode) {
-        getValueAnimator().setRepeatMode(repeatMode);
+        getAnimationAccumulator().setRepeatMode(repeatMode);
         return self();
     }
 
@@ -367,7 +377,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * to prevent accidentally overriding the effects of `switchInterpolator`.
      */
     public T switchInterpolator(TimeInterpolator newInterpolator) {
-        initValueAnimatorIfNeeded();
+        initAnimationAccumulatorIfNeeded();
         // set custom interpolator for all animations so far
         Collection<AdditiveAnimation> animations = mAnimationAccumulator.getAnimations();
         for(AdditiveAnimation animation : animations) {
@@ -387,13 +397,36 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     protected abstract T newInstance();
 
+    protected void setParent(T parent) {
+        // implement in subclass if needed
+    }
+
     /**
      * Creates a new animator configured to start after the current animator with the current target
      * that was configured with this animator.
      */
     public T then() {
         T newInstance = newInstance();
-        newInstance.setParent((T) this);
+        // switch to linear interpolation if necessary
+        if(!(getValueAnimator().getInterpolator() instanceof LinearInterpolator)) {
+            TimeInterpolator myInterpolator = getValueAnimator().getInterpolator();
+            switchInterpolator(myInterpolator);
+            newInstance.mCurrentCustomInterpolator = myInterpolator;
+        }
+
+        // value animator shouldn't have start delay when there are multiple accumulators
+        if(getAnimationAccumulator().getStartDelay() == 0 && getValueAnimator().getStartDelay() != 0) {
+            getAnimationAccumulator().setStartDelay(getValueAnimator().getStartDelay());
+            getValueAnimator().setStartDelay(0);
+        }
+
+        newInstance.target(getCurrentTarget());
+        newInstance.setDuration(getAnimationAccumulator().getDuration());
+        newInstance.mParent = this;
+
+        newInstance.setParent(this);
+
+        ((BaseAdditiveAnimator)newInstance).mValueAnimatorManager = mValueAnimatorManager;
         newInstance.setStartDelay(getTotalDuration());
         return newInstance;
     }
@@ -404,7 +437,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     public T thenWithDelay(long delay) {
         T newAnimator = then();
-        newAnimator.setStartDelay(getValueAnimator().getStartDelay() + delay);
+        newAnimator.setStartDelay(getAnimationAccumulator().getStartDelay() + delay);
         return newAnimator;
     }
 
@@ -421,20 +454,21 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     private long getTotalDuration() {
-        if (getValueAnimator().getRepeatCount()== ValueAnimator.INFINITE) {
+        if (getAnimationAccumulator().getRepeatCount() == ValueAnimator.INFINITE) {
             return ValueAnimator.DURATION_INFINITE;
         } else {
-            return getValueAnimator().getStartDelay() + (getValueAnimator().getDuration() * (getValueAnimator().getRepeatCount() + 1));
+            return getAnimationAccumulator().getStartDelay() + (getAnimationAccumulator().getDuration() * (getAnimationAccumulator().getRepeatCount() + 1));
         }
     }
 
     public void start() {
+        getValueAnimator().addAnimationAccumulator(getAnimationAccumulator());
+
         if(mParent != null) {
             mParent.start();
+        } else {
+            getValueAnimator().start();
         }
-
-        // TODO: don't start a ValueAnimator if getTotalDuration() == 0
-        getValueAnimator().start();
 
         // invalidate this animator to prevent incorrect usage:
         // TODO: get rid of this flag. Animators should simply not become invalid.
@@ -455,20 +489,6 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     public void cancelAnimation(Property<V, Float> property) {
         cancelAnimation(property.getName());
-    }
-
-
-    /**
-     * Copies all relevant attributes, including (ONLY) current target from `other` to self.
-     * Override if you have custom properties that need to be copied.
-     */
-    protected T setParent(T other) {
-        target((V) other.getCurrentTarget());
-        setDuration(other.getValueAnimator().getDuration());
-        setInterpolator(other.getValueAnimator().getInterpolator());
-        mCurrentCustomInterpolator = other.mCurrentCustomInterpolator;
-        mParent = other;
-        return self();
     }
 
 }

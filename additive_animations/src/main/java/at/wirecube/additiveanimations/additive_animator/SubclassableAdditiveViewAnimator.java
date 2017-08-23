@@ -49,11 +49,9 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     @Override
-    protected T setParent(T other) {
-        super.setParent(other);
+    protected void setParent(T other) {
         mSkipRequestLayout = other.mSkipRequestLayout;
         mWithLayer = other.mWithLayer;
-        return self();
     }
 
     @Override

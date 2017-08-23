@@ -19,6 +19,7 @@ package at.wirecube.additiveanimations.additive_animator;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
+import android.view.animation.Interpolator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,55 +56,53 @@ class AdditiveAnimationAccumulator {
 
     private List<AdditiveAnimationWrapper> mAnimationWrappers = new ArrayList<>();
     private Map<Object, Set<AdditiveAnimationWrapper>> mAnimationsPerObject = new HashMap<>();
-    private ValueAnimator mAnimator = null;
+    final List<AccumulatedAnimationValue> accumulatedAnimationValues = new ArrayList<>();
     private boolean mHasInformedStateManagerAboutAnimationStart = false;
+    boolean mAnimationDidCancel = false;
     private BaseAdditiveAnimator mAdditiveAnimator;
 
+    // Metadata about the animation
+    private long mDuration;
+    private long mStartDelay;
+    private int mRepeatCount = 1;
+    private int mRepeatMode = ValueAnimator.RESTART;
+    private long mRemainingDuration; // to be used by ValueAnimatorManager only!
+    private boolean mCanceled = false;
+
     AdditiveAnimationAccumulator(BaseAdditiveAnimator additiveAnimator) {
-        mAnimator = ValueAnimator.ofFloat(0f, 1f);
         mAdditiveAnimator = additiveAnimator;
-        // it's better not to allocate once every frame:
-        final List<AccumulatedAnimationValue> accumulatedAnimationValues = new ArrayList<>();
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                if(!mHasInformedStateManagerAboutAnimationStart) {
-                    notifyStateManagerAboutAnimationStartIfNeeded();
-                }
-                for (AdditiveAnimationWrapper animationWrapper : mAnimationWrappers) {
-                    AdditiveAnimation animation = animationWrapper.animation;
-                    AccumulatedAnimationValue tempProperties = animation.getAccumulatedValues();
-                    tempProperties.addDelta(getDelta(animationWrapper, valueAnimator.getAnimatedFraction()));
-                    accumulatedAnimationValues.add(tempProperties);
-                }
-                // TODO: is there some way to figure out whether or not to apply the changes?
-                mAdditiveAnimator.applyChanges(accumulatedAnimationValues);
-                accumulatedAnimationValues.clear();
-            }
-        });
-
-        mAnimator.addListener(new AnimatorListenerAdapter() {
-            boolean animationDidCancel = false;
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                animationDidCancel = true;
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                // now we are actually done
-                for (Object v : mAnimationsPerObject.keySet()) {
-                    AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, animationDidCancel);
-                }
-            }
-
-            @Override
-            public void onAnimationStart(Animator animation) {
-                notifyStateManagerAboutAnimationStartIfNeeded();
-            }
-        });
     }
+
+    public void onAnimationStart() {
+        notifyStateManagerAboutAnimationStartIfNeeded();
+    }
+
+    public void onAnimationCancel() {
+        mAnimationDidCancel = true;
+    }
+
+    public void onAnimationEnd() {
+        // now we are actually done
+        for (Object v : mAnimationsPerObject.keySet()) {
+            AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, mAnimationDidCancel);
+        }
+    }
+
+    public void onAnimationUpdate(float fractionComplete) {
+        if(!mHasInformedStateManagerAboutAnimationStart) {
+            notifyStateManagerAboutAnimationStartIfNeeded();
+        }
+        for (AdditiveAnimationWrapper animationWrapper : mAnimationWrappers) {
+            AdditiveAnimation animation = animationWrapper.animation;
+            AccumulatedAnimationValue tempProperties = animation.getAccumulatedValues();
+            tempProperties.addDelta(getDelta(animationWrapper, fractionComplete));
+            accumulatedAnimationValues.add(tempProperties);
+        }
+        // TODO: is there some way to figure out whether or not to apply the changes?
+        mAdditiveAnimator.applyChanges(accumulatedAnimationValues);
+        accumulatedAnimationValues.clear();
+    }
+
 
     private void notifyStateManagerAboutAnimationStartIfNeeded() {
         if(!mHasInformedStateManagerAboutAnimationStart) {
@@ -217,10 +216,6 @@ class AdditiveAnimationAccumulator {
         return wrappers;
     }
 
-    ValueAnimator getAnimator() {
-        return mAnimator;
-    }
-
     Collection<AdditiveAnimation> getAnimations() {
         Set<AdditiveAnimation> allAnimations = new HashSet<>(mAnimationWrappers.size());
         for(AdditiveAnimationWrapper wrapper : mAnimationWrappers) {
@@ -246,12 +241,12 @@ class AdditiveAnimationAccumulator {
     }
 
     final void cancel() {
-        mAnimator.cancel();
+        mCanceled = true;
     }
 
     @Override
     public int hashCode() {
-        return mAnimator.hashCode();
+        return mAnimationWrappers.hashCode();
     }
 
     @Override
@@ -260,6 +255,52 @@ class AdditiveAnimationAccumulator {
             return true;
         }
         AdditiveAnimationAccumulator other = (AdditiveAnimationAccumulator) obj;
-        return other.mAnimator == mAnimator;
+        return other.mAnimationWrappers == mAnimationWrappers;
     }
+
+    public long getDuration() {
+        return mDuration;
+    }
+
+    public void setDuration(long mDuration) {
+        this.mDuration = mDuration;
+    }
+
+    public long getStartDelay() {
+        return mStartDelay;
+    }
+
+    public void setStartDelay(long mStartDelay) {
+        this.mStartDelay = mStartDelay;
+    }
+
+    public int getRepeatCount() {
+        return mRepeatCount;
+    }
+
+    public void setRepeatCount(int mRepeatCount) {
+        this.mRepeatCount = mRepeatCount;
+    }
+
+
+    public int getRepeatMode() {
+        return mRepeatMode;
+    }
+
+    public void setRepeatMode(int mRepeatMode) {
+        this.mRepeatMode = mRepeatMode;
+    }
+
+    public long getemainingDuration() {
+        return mRemainingDuration;
+    }
+
+    public void setRemainingDuration(long mRemainingDuration) {
+        this.mRemainingDuration = mRemainingDuration;
+    }
+
+    public boolean getCanceled() {
+        return mCanceled;
+    }
+
 }
