@@ -51,11 +51,11 @@ class ValueAnimatorManager {
     }
 
     public void addAnimationAccumulator(AdditiveAnimationAccumulator accumulator) {
-        // TODO: create a new ValueAnimatorManager when there's an infinite repeat count!
         long totalDuration = calculateTotalDuration(accumulator);
-        if(totalDuration == ValueAnimator.DURATION_INFINITE) {
+        if(accumulator.getRepeatCount() == ValueAnimator.INFINITE) {
             mValueAnimator.setDuration(accumulator.getDuration());
             mValueAnimator.setRepeatCount(ValueAnimator.INFINITE);
+            mValueAnimator.setRepeatMode(accumulator.getRepeatMode());
         } else if(mValueAnimator.getDuration() < totalDuration) {
             mValueAnimator.setDuration(totalDuration);
         }

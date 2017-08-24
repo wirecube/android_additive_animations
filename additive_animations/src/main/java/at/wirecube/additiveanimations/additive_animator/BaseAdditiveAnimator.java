@@ -349,7 +349,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T setInterpolator(TimeInterpolator interpolator) {
-        if(mCurrentCustomInterpolator != null) {
+        if(mCurrentCustomInterpolator != null || (mParent != null && mParent.getValueAnimator() == getValueAnimator())) {
             switchInterpolator(interpolator);
         } else {
             getValueAnimator().setInterpolator(interpolator);
@@ -361,6 +361,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     // TODO: handle parent repeat
     public T setRepeatCount(int repeatCount) {
         getAnimationAccumulator().setRepeatCount(repeatCount);
+        if(repeatCount == ValueAnimator.INFINITE && mParent != null && mParent.getValueAnimator() == getValueAnimator()) {
+            mValueAnimatorManager = new ValueAnimatorManager();
+            if(mCurrentCustomInterpolator != null) {
+                mValueAnimatorManager.setInterpolator(mCurrentCustomInterpolator);
+            }
+        }
         return self();
     }
 
@@ -420,13 +426,15 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             getValueAnimator().setStartDelay(0);
         }
 
+        ((BaseAdditiveAnimator) newInstance).mValueAnimatorManager = mValueAnimatorManager;
+
         newInstance.target(getCurrentTarget());
         newInstance.setDuration(getAnimationAccumulator().getDuration());
+        newInstance.setRepeatCount(getAnimationAccumulator().getRepeatCount());
         newInstance.mParent = this;
 
         newInstance.setParent(this);
 
-        ((BaseAdditiveAnimator)newInstance).mValueAnimatorManager = mValueAnimatorManager;
         newInstance.setStartDelay(getTotalDuration());
         return newInstance;
     }
