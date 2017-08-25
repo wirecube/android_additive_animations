@@ -143,7 +143,7 @@ public class CustomDrawingFragment extends Fragment {
 
         public DemoView(Context context) {
             super(context);
-            for(int i = 0; i < 30; i++) {
+            for(int i = 0; i < 10; i++) {
                 mRects.add(new Rect(this));
             }
 
@@ -152,25 +152,30 @@ public class CustomDrawingFragment extends Fragment {
 
             // Animate the color of the paint object without a subclass
             AdditiveObjectAnimator.animate(mPaint)
-                    .setRepeatCount(ValueAnimator.INFINITE)
-                    .setRepeatMode(ValueAnimator.REVERSE)
                     .setAnimationApplier(animationApplier)
                     .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), mPaintColorProperty)
+                    .then()
+                    .property(context.getResources().getColor(R.color.nicePink), new ColorEvaluator(), mPaintColorProperty)
+                    .then()
+                    .property(context.getResources().getColor(R.color.niceOrange), new ColorEvaluator(), mPaintColorProperty)
+                    .then()
+                    .property(context.getResources().getColor(R.color.niceBlue), new ColorEvaluator(), mPaintColorProperty)
+                    .repeatAll(ValueAnimator.INFINITE)
+                    .repeatModeAll(ValueAnimator.RESTART)
                     .start();
 
             // Use the custom subclass to animate size and corner radius of all rects
-            Rect.AdditiveRectAnimator rectAnimator = new Rect.AdditiveRectAnimator().setDuration(1000)
-                                                                                    .setRepeatCount(ValueAnimator.INFINITE)
-                                                                                    .setRepeatMode(ValueAnimator.REVERSE);
+            Rect.AdditiveRectAnimator rectAnimator = new Rect.AdditiveRectAnimator();
 
             for(Rect rect : mRects) {
                 // demoing delayed infinite animations:
                 rectAnimator = rectAnimator.target(rect)
-
-
-                                           .size(DpConverter.converDpToPx(100))
-                                           .cornerRadius(DpConverter.converDpToPx(50))
-                                           .thenWithDelay(100);
+                                            .setDuration(1000)
+                                            .setRepeatCount(ValueAnimator.INFINITE)
+                                            .setRepeatMode(ValueAnimator.REVERSE)
+                                            .size(DpConverter.converDpToPx(100))
+                                            .cornerRadius(DpConverter.converDpToPx(50))
+                                            .thenWithDelay(100);
             }
             rectAnimator.start();
 

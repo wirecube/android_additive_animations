@@ -549,12 +549,14 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
 
-    public void repeatAll(int repeatCount) {
+    public T repeatAll(int repeatCount) {
         getValueAnimator().setRepeatCount(repeatCount);
+        return self();
     }
 
-    public void repeatModeAll(int repeatMode) {
+    public T repeatModeAll(int repeatMode) {
         getValueAnimator().setRepeatMode(repeatMode);
+        return self();
     }
 
 }

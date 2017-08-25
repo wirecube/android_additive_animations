@@ -29,6 +29,11 @@ class ValueAnimatorManager {
             @Override
             public void onAnimationRepeat(Animator animation) {
                 mValueAnimatorRepeatCount++;
+                // TOOD: need to somehow tell the AdditiveAnimationAccumulator that the animation restarted, which has to update its from/to values.
+//                for(int i = mAnimationAccumulatorArray.length - 1; i >= 0; i--) {
+//                    BaseAdditiveAnimator animator = mAnimationAccumulatorArray[i];
+//                    animator.getAnimationAccumulator().onAnimationRepeat();
+//                }
             }
         });
         mValueAnimator.setInterpolator(new LinearInterpolator());
@@ -45,13 +50,14 @@ class ValueAnimatorManager {
     }
 
     public void start() {
-        // sort animators such that they
-        Collections.reverse(mAnimationAccumulators);
-        for(BaseAdditiveAnimator animator : mAnimationAccumulators) {
-            animator.getAnimationAccumulator().onAnimationStart();
-        }
         mAnimationAccumulatorArray = new BaseAdditiveAnimator[mAnimationAccumulators.size()];
         mAnimationAccumulators.toArray(mAnimationAccumulatorArray);
+
+        for(int i = mAnimationAccumulatorArray.length - 1; i >= 0; i--) {
+            BaseAdditiveAnimator animator = mAnimationAccumulatorArray[i];
+            animator.getAnimationAccumulator().onAnimationStart();
+        }
+
         mNumRunningAnimators = mAnimationAccumulators.size();
 
         mValueAnimator.start();
@@ -99,7 +105,7 @@ class ValueAnimatorManager {
             float animatedFraction = valueAnimator.getAnimatedFraction();
 
             boolean animationWasCancelled = false;
-            for(int i = 0; i < mAnimationAccumulatorArray.length; i++) {
+            for(int i = mAnimationAccumulatorArray.length - 1; i >= 0; i--) {
                 BaseAdditiveAnimator animator = mAnimationAccumulatorArray[i];
                 if(animator == null) {
                     continue;
@@ -125,6 +131,8 @@ class ValueAnimatorManager {
                 float fractionInCurrentRepeat = calculateCurrentRepeatFraction(fractionComplete, animator);
                 // make sure the animation gets its final update even if fractionComplete == 1
                 acc.onAnimationUpdate(fractionInCurrentRepeat);
+
+                // TODO: correct onAnimationEnd callback when number of animator repeats == animator.getRepeatCount().
 
                 if(fractionComplete >= 1 && mValueAnimatorRepeatCount >= mValueAnimator.getRepeatCount() && mValueAnimator.getRepeatCount() != ValueAnimator.INFINITE) {
                     acc.onAnimationEnd();
@@ -201,18 +209,31 @@ class ValueAnimatorManager {
     }
 
     private float calculateStartFraction(BaseAdditiveAnimator acc) {
-        if(getValueAnimatorTotalDuration() == 0) {
+        float totalDuration = getValueAnimatorTotalDuration();
+        if(totalDuration == 0) {
             return 0;
         }
-        return acc.getStartDelay()/getValueAnimatorTotalDuration();
+        if(totalDuration == ValueAnimator.DURATION_INFINITE) {
+            return (float)acc.getStartDelay()/(float)mValueAnimator.getDuration();
+        } else {
+            return acc.getStartDelay() / getValueAnimatorTotalDuration();
+        }
     }
 
     private float calculateEndFraction(BaseAdditiveAnimator acc) {
-        if(getValueAnimatorTotalDuration() == 0) {
+        float totalDuration = getValueAnimatorTotalDuration();
+        if(totalDuration == 0) {
             return 0;
         }
-
-        return (float)calculateTotalDuration(acc)/getValueAnimatorTotalDuration();
+        if(totalDuration == ValueAnimator.DURATION_INFINITE) {
+            float multiplier = 1;
+            if(acc.getRepeatCount() != ValueAnimator.INFINITE) {
+                multiplier = acc.getRepeatCount() + 1;
+            }
+            return ((acc.getDuration() * multiplier) + acc.getStartDelay())/(float)mValueAnimator.getDuration();
+        } else {
+            return (float) calculateTotalDuration(acc) / getValueAnimatorTotalDuration();
+        }
     }
 
     private int calculateCurrentRepeat(float relativeFractionComplete, BaseAdditiveAnimator acc) {
