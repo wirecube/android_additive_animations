@@ -54,19 +54,12 @@ class AdditiveAnimationAccumulator {
         }
     }
 
-    private List<AdditiveAnimationWrapper> mAnimationWrappers = new ArrayList<>();
-    private Map<Object, Set<AdditiveAnimationWrapper>> mAnimationsPerObject = new HashMap<>();
-    final List<AccumulatedAnimationValue> accumulatedAnimationValues = new ArrayList<>();
+    private List<AdditiveAnimationWrapper> mAnimationWrappers = new ArrayList<>(2);
+    private Map<Object, Set<AdditiveAnimationWrapper>> mAnimationsPerObject = new HashMap<>(1);
+    private final List<AccumulatedAnimationValue> accumulatedAnimationValues = new ArrayList<>(2);
     private boolean mHasInformedStateManagerAboutAnimationStart = false;
-    boolean mAnimationDidCancel = false;
+    private boolean mAnimationDidCancel = false;
     private BaseAdditiveAnimator mAdditiveAnimator;
-
-    // Metadata about the animation
-    private long mDuration;
-    private long mStartDelay;
-    private int mRepeatCount = 1;
-    private int mRepeatMode = ValueAnimator.RESTART;
-    private long mRemainingDuration; // to be used by ValueAnimatorManager only!
     private boolean mCanceled = false;
 
     AdditiveAnimationAccumulator(BaseAdditiveAnimator additiveAnimator) {
@@ -244,60 +237,17 @@ class AdditiveAnimationAccumulator {
         mCanceled = true;
     }
 
-    @Override
-    public int hashCode() {
-        return mAnimationWrappers.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(obj == this) {
-            return true;
-        }
-        AdditiveAnimationAccumulator other = (AdditiveAnimationAccumulator) obj;
-        return other.mAnimationWrappers == mAnimationWrappers;
-    }
-
-    public long getDuration() {
-        return mDuration;
-    }
-
-    public void setDuration(long mDuration) {
-        this.mDuration = mDuration;
-    }
-
-    public long getStartDelay() {
-        return mStartDelay;
-    }
-
-    public void setStartDelay(long mStartDelay) {
-        this.mStartDelay = mStartDelay;
-    }
-
-    public int getRepeatCount() {
-        return mRepeatCount;
-    }
-
-    public void setRepeatCount(int mRepeatCount) {
-        this.mRepeatCount = mRepeatCount;
-    }
-
-
-    public int getRepeatMode() {
-        return mRepeatMode;
-    }
-
-    public void setRepeatMode(int mRepeatMode) {
-        this.mRepeatMode = mRepeatMode;
-    }
-
-    public long getemainingDuration() {
-        return mRemainingDuration;
-    }
-
-    public void setRemainingDuration(long mRemainingDuration) {
-        this.mRemainingDuration = mRemainingDuration;
-    }
+//    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (o == null || getClass() != o.getClass()) return false;
+//        return mHashCode == ((AdditiveAnimationAccumulator) o).mHashCode;
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return mHashCode;
+//    }
 
     public boolean getCanceled() {
         return mCanceled;

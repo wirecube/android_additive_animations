@@ -46,7 +46,7 @@ public class CustomDrawingFragment extends Fragment {
             float mRotation = 0;
             float mX = DpConverter.converDpToPx(60);
             float mY = DpConverter.converDpToPx(120);
-            float mSize = DpConverter.converDpToPx(100);
+            float mSize = DpConverter.converDpToPx(50);
             float mCornerRadius = 0;
 
             Rect(View parent) {
@@ -143,7 +143,7 @@ public class CustomDrawingFragment extends Fragment {
 
         public DemoView(Context context) {
             super(context);
-            for(int i = 0; i < 2; i++) {
+            for(int i = 0; i < 30; i++) {
                 mRects.add(new Rect(this));
             }
 
@@ -151,25 +151,28 @@ public class CustomDrawingFragment extends Fragment {
             mPaint.setColor(context.getResources().getColor(R.color.niceBlue));
 
             // Animate the color of the paint object without a subclass
-//            AdditiveObjectAnimator.animate(mPaint)
-//                    .setRepeatCount(ValueAnimator.INFINITE)
-//                    .setRepeatMode(ValueAnimator.REVERSE)
-//                    .setAnimationApplier(animationApplier)
-//                    .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), mPaintColorProperty)
-//                    .start();
+            AdditiveObjectAnimator.animate(mPaint)
+                    .setRepeatCount(ValueAnimator.INFINITE)
+                    .setRepeatMode(ValueAnimator.REVERSE)
+                    .setAnimationApplier(animationApplier)
+                    .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), mPaintColorProperty)
+                    .start();
 
             // Use the custom subclass to animate size and corner radius of all rects
-            Rect.AdditiveRectAnimator rectAnimator = new Rect.AdditiveRectAnimator();
+            Rect.AdditiveRectAnimator rectAnimator = new Rect.AdditiveRectAnimator().setDuration(1000)
+                                                                                    .setRepeatCount(ValueAnimator.INFINITE)
+                                                                                    .setRepeatMode(ValueAnimator.REVERSE);
 
-//            for(Rect rect : mRects) {
-//                rectAnimator = rectAnimator.target(rect)
-//                                           .setDuration(1000)
-//                                           .setRepeatCount(ValueAnimator.INFINITE).setRepeatMode(ValueAnimator.REVERSE)
-//                                           .size(DpConverter.converDpToPx(100))
-//                                           .cornerRadius(DpConverter.converDpToPx(50))
-//                                           .thenWithDelay(100);
-//            }
-//            rectAnimator.start();
+            for(Rect rect : mRects) {
+                // demoing delayed infinite animations:
+                rectAnimator = rectAnimator.target(rect)
+
+
+                                           .size(DpConverter.converDpToPx(100))
+                                           .cornerRadius(DpConverter.converDpToPx(50))
+                                           .thenWithDelay(100);
+            }
+            rectAnimator.start();
 
             setOnTouchListener(new OnTouchListener() {
                 float rotationTarget = 0;
@@ -201,6 +204,7 @@ public class CustomDrawingFragment extends Fragment {
         @Override
         protected void onDetachedFromWindow() {
             super.onDetachedFromWindow();
+            // Make sure to cancel all of the infinitely running animations when the view is detached:
             AdditiveObjectAnimator.cancelAnimations(mPaint);
             for(Rect rect : mRects) {
                 Rect.AdditiveRectAnimator.cancelAnimations(rect);
@@ -217,14 +221,14 @@ public class CustomDrawingFragment extends Fragment {
                 canvas.translate(rect.mX, rect.mY);
                 canvas.rotate(rect.mRotation);
 
-                float hs = rect.mSize / 2; // half size
+                float halfSize = rect.mSize / 2; // half size
 
+                // the canvas center is now at rect.mX/rect.mY, so we need to draw ourselves from -rect.mSize/2 to rect.mSize/2.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    // the canvas center is now at mRect.mX/mRect.mY, so we need to draw ourselves from -size/2 to size/2.
-                    canvas.drawRoundRect(-hs, -hs, hs, hs, rect.mCornerRadius, rect.mCornerRadius, mPaint);
+                    canvas.drawRoundRect(-halfSize, -halfSize, halfSize, halfSize, rect.mCornerRadius, rect.mCornerRadius, mPaint);
                 } else {
                     // No rounded corners for API <= 21 :(
-                    canvas.drawRect(-hs, -hs, hs, hs, mPaint);
+                    canvas.drawRect(-halfSize, -halfSize, halfSize, halfSize, mPaint);
                 }
 
                 canvas.restore();

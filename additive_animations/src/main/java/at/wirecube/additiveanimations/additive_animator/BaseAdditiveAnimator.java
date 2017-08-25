@@ -7,6 +7,8 @@ import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Path;
+import android.renderscript.Sampler;
+import android.support.annotation.CallSuper;
 import android.util.Property;
 import android.view.animation.LinearInterpolator;
 
@@ -17,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Delayed;
 
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 import at.wirecube.additiveanimations.helper.FloatProperty;
@@ -47,9 +50,15 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     private boolean mIsValid = true; // invalid after start() has been called.
 
+
+    // Metadata about the animation
+    private long mDuration = sDefaultAnimationDuration;
+    private long mStartDelay;
+    private int mRepeatCount = 0;
+    private int mRepeatMode = ValueAnimator.RESTART;
+
     private static long sDefaultAnimationDuration = 300;
     private static TimeInterpolator sDefaultInterpolator = EaseInOutPathInterpolator.create();
-
 
     protected T self() {
         try {
@@ -72,12 +81,9 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     private void initAnimationAccumulatorIfNeeded() {
-        if(!mIsValid) {
-            throw new RuntimeException("AdditiveAnimator instances cannot be reused.");
-        }
         if(mAnimationAccumulator == null) {
             mAnimationAccumulator = new AdditiveAnimationAccumulator(this);
-            mAnimationAccumulator.setDuration(sDefaultAnimationDuration);
+            setDuration(mDuration);
         }
     }
 
@@ -334,17 +340,22 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return self();
     }
 
-    public T setStartDelay(long startDelay) {
-        if(mParent == null) {
+    T setRawStartDelay(long startDelay) {
+        if(mParent == null || mParent.getValueAnimator() != getValueAnimator()) {
             getValueAnimator().setStartDelay(startDelay);
         } else {
-            getAnimationAccumulator().setStartDelay(startDelay);
+            mStartDelay = startDelay;
         }
         return self();
     }
 
+    public T setStartDelay(long startDelay) {
+        startDelay = mParent != null ? mParent.getStartDelay() + startDelay : startDelay;
+        return setRawStartDelay(startDelay);
+    }
+
     public T setDuration(long duration) {
-        getAnimationAccumulator().setDuration(duration);
+        mDuration = duration;
         return self();
     }
 
@@ -360,18 +371,28 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     // TODO: docs for possible values (ValueAnimator.INFINITE)
     // TODO: handle parent repeat
     public T setRepeatCount(int repeatCount) {
-        getAnimationAccumulator().setRepeatCount(repeatCount);
+        mRepeatCount = repeatCount;
         if(repeatCount == ValueAnimator.INFINITE && mParent != null && mParent.getValueAnimator() == getValueAnimator()) {
             mValueAnimatorManager = new ValueAnimatorManager();
             if(mCurrentCustomInterpolator != null) {
                 mValueAnimatorManager.setInterpolator(mCurrentCustomInterpolator);
+                mValueAnimatorManager.setStartDelay(getStartDelay());
+                mStartDelay = 0;
+                mValueAnimatorManager.setRepeatCount(ValueAnimator.INFINITE);
             }
         }
         return self();
     }
 
+    /**
+     * Defines what this animation should do when it reaches the end. This
+     * setting is applied only when the repeat count is either greater than
+     * 0 or {@link android.animation.ValueAnimator#INFINITE}. Defaults to {@link android.animation.ValueAnimator#RESTART}.
+     *
+     * @param repeatMode {@link android.animation.ValueAnimator#RESTART} or {@link android.animation.ValueAnimator#REVERSE}
+     */
     public T setRepeatMode(int repeatMode) {
-        getAnimationAccumulator().setRepeatMode(repeatMode);
+        mRepeatMode = repeatMode;
         return self();
     }
 
@@ -403,7 +424,9 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     protected abstract T newInstance();
 
+    @CallSuper
     protected void setParent(T parent) {
+        mParent = parent;
         // implement in subclass if needed
     }
 
@@ -413,29 +436,34 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     public T then() {
         T newInstance = newInstance();
+        if(getRepeatCount() != ValueAnimator.INFINITE) {
+            ((BaseAdditiveAnimator) newInstance).mValueAnimatorManager = getValueAnimator();
+        }
+        newInstance.setParent(this);
+
+        newInstance.mCurrentCustomInterpolator = mCurrentCustomInterpolator;
+
         // switch to linear interpolation if necessary
-        if(!(getValueAnimator().getInterpolator() instanceof LinearInterpolator)) {
+        if(!(getValueAnimator().getInterpolator() instanceof LinearInterpolator) && getRepeatCount() != ValueAnimator.INFINITE) {
             TimeInterpolator myInterpolator = getValueAnimator().getInterpolator();
             switchInterpolator(myInterpolator);
-            newInstance.mCurrentCustomInterpolator = myInterpolator;
+            newInstance.mCurrentCustomInterpolator = mCurrentCustomInterpolator;
         }
 
         // value animator shouldn't have start delay when there are multiple accumulators
-        if(getAnimationAccumulator().getStartDelay() == 0 && getValueAnimator().getStartDelay() != 0) {
-            getAnimationAccumulator().setStartDelay(getValueAnimator().getStartDelay());
-            getValueAnimator().setStartDelay(0);
+        if(getStartDelay() == 0 && getValueAnimator().getStartDelay() != 0 && getValueAnimator() == newInstance.getValueAnimator()) {
+            setRawStartDelay(mValueAnimatorManager.getStartDelay());
+            mValueAnimatorManager.setStartDelay(0);
         }
 
-        ((BaseAdditiveAnimator) newInstance).mValueAnimatorManager = mValueAnimatorManager;
-
         newInstance.target(getCurrentTarget());
-        newInstance.setDuration(getAnimationAccumulator().getDuration());
-        newInstance.setRepeatCount(getAnimationAccumulator().getRepeatCount());
-        newInstance.mParent = this;
+        newInstance.setDuration(getDuration());
 
-        newInstance.setParent(this);
+        // The order here is important: setRepeatCount() creates a new ValueAnimatorManager if mRepeatCount == ValueAnimator.INFINITE
+        newInstance.setRepeatCount(getRepeatCount());
+        newInstance.setRepeatMode(getRepeatMode());
+        newInstance.setRawStartDelay(Math.max(0, getTotalDuration())); // getTotalDuration() returns -1 for ValueAnimator.DURATION_INFINITE
 
-        newInstance.setStartDelay(getTotalDuration());
         return newInstance;
     }
 
@@ -445,36 +473,38 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     public T thenWithDelay(long delay) {
         T newAnimator = then();
-        newAnimator.setStartDelay(getAnimationAccumulator().getStartDelay() + delay);
+        newAnimator.setRawStartDelay(getStartDelay() + delay);
         return newAnimator;
     }
 
     public T thenDelayAfterEnd(long delayAfterEnd) {
         T newAnimator = then();
-        newAnimator.setStartDelay(getTotalDuration() + delayAfterEnd);
+        newAnimator.setRawStartDelay(getTotalDuration() + delayAfterEnd);
         return newAnimator;
     }
 
     public T thenBeforeEnd(long millisBeforeEnd) {
         T newAnimator = then();
-        newAnimator.setStartDelay(getTotalDuration() - millisBeforeEnd);
+        newAnimator.setRawStartDelay(getTotalDuration() - millisBeforeEnd);
         return newAnimator;
     }
 
     private long getTotalDuration() {
-        if (getAnimationAccumulator().getRepeatCount() == ValueAnimator.INFINITE) {
+        if (getRepeatCount() == ValueAnimator.INFINITE) {
             return ValueAnimator.DURATION_INFINITE;
         } else {
-            return getAnimationAccumulator().getStartDelay() + (getAnimationAccumulator().getDuration() * (getAnimationAccumulator().getRepeatCount() + 1));
+            return getStartDelay() + (getDuration() * (getRepeatCount() + 1));
         }
     }
 
     public void start() {
-        getValueAnimator().addAnimationAccumulator(getAnimationAccumulator());
+        getValueAnimator().addAnimator(this);
 
         if(mParent != null) {
             mParent.start();
-        } else {
+        }
+
+        if(mParent == null || mParent.getValueAnimator() != getValueAnimator()) {
             getValueAnimator().start();
         }
 
@@ -497,6 +527,34 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     public void cancelAnimation(Property<V, Float> property) {
         cancelAnimation(property.getName());
+    }
+
+    public long getDuration() {
+        return mDuration;
+    }
+
+    public long getStartDelay() {
+        return Math.max(mStartDelay, getValueAnimator().getStartDelay());
+    }
+
+    public int getRepeatCount() {
+        return mRepeatCount;
+    }
+
+    /**
+     * @return {@link android.animation.ValueAnimator#RESTART} or {@link android.animation.ValueAnimator#REVERSE}
+     */
+    public int getRepeatMode() {
+        return mRepeatMode;
+    }
+
+
+    public void repeatAll(int repeatCount) {
+        getValueAnimator().setRepeatCount(repeatCount);
+    }
+
+    public void repeatModeAll(int repeatMode) {
+        getValueAnimator().setRepeatMode(repeatMode);
     }
 
 }

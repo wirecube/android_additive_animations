@@ -40,25 +40,21 @@ class AdditiveAnimationStateManager<T> {
 
     private static final Map<Object, AdditiveAnimationStateManager> sStateManagers = new HashMap<>();
 
-    static final AdditiveAnimationStateManager from(Object targetView) {
-        if(targetView == null) {
+    static final AdditiveAnimationStateManager from(Object target) {
+        if(target == null) {
             return null;
         }
-        AdditiveAnimationStateManager animator = sStateManagers.get(targetView);
+        AdditiveAnimationStateManager animator = sStateManagers.get(target);
         if (animator == null) {
-            animator = new AdditiveAnimationStateManager(targetView);
-            sStateManagers.put(targetView, animator);
+            animator = new AdditiveAnimationStateManager(target);
+            sStateManagers.put(target, animator);
         }
         return animator;
     }
 
-    static final AccumulatedAnimationValueManager getAccumulatedProperties(View v) {
-        return from(v).mAccumulator;
-    }
-
     private final AccumulatedAnimationValueManager mAccumulator = new AccumulatedAnimationValueManager();
 
-    private final T mAnimationTargetView;
+    private final T mAnimationTarget;
     private boolean mUseHardwareLayer = false;
 
     final Set<AdditiveAnimationAccumulator> mAdditiveAnimationAccumulators = new HashSet<>();
@@ -66,7 +62,7 @@ class AdditiveAnimationStateManager<T> {
     private final Map<String, AnimationInfo> mAnimationInfos = new HashMap<>();
 
     private AdditiveAnimationStateManager(T animationTarget) {
-        mAnimationTargetView = animationTarget;
+        mAnimationTarget = animationTarget;
     }
 
     private AnimationInfo getAnimationInfo(String tag, boolean addIfNeeded) {
@@ -91,14 +87,14 @@ class AdditiveAnimationStateManager<T> {
         }
         mAdditiveAnimationAccumulators.remove(applier);
         if (mAdditiveAnimationAccumulators.isEmpty()) {
-            sStateManagers.remove(mAnimationTargetView);
-            // reset hardware layer
-            if(mUseHardwareLayer && mAnimationTargetView instanceof View) {
-                ((View)mAnimationTargetView).setLayerType(View.LAYER_TYPE_NONE, null);
+            sStateManagers.remove(mAnimationTarget);
+            // reset hardware layer if we are animating a view
+            if(mUseHardwareLayer && mAnimationTarget instanceof View) {
+                ((View) mAnimationTarget).setLayerType(View.LAYER_TYPE_NONE, null);
             }
         }
 
-        for(AdditiveAnimation animation : applier.getAnimations(mAnimationTargetView)) {
+        for(AdditiveAnimation animation : applier.getAnimations(mAnimationTarget)) {
             AnimationInfo info = getAnimationInfo(animation.getTag(), false);
             info.numAnimations = Math.max(info.numAnimations - 1, 0);
         }
@@ -106,9 +102,9 @@ class AdditiveAnimationStateManager<T> {
 
     void onAnimationApplierStart(AdditiveAnimationAccumulator applier) {
         // only now are we expecting updates from this applier
-        if(mUseHardwareLayer && mAnimationTargetView instanceof View) {
-            if(((View)mAnimationTargetView).getLayerType() != View.LAYER_TYPE_HARDWARE) {
-                ((View)mAnimationTargetView).setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        if(mUseHardwareLayer && mAnimationTarget instanceof View) {
+            if(((View) mAnimationTarget).getLayerType() != View.LAYER_TYPE_HARDWARE) {
+                ((View) mAnimationTarget).setLayerType(View.LAYER_TYPE_HARDWARE, null);
             }
         }
     }
@@ -143,21 +139,21 @@ class AdditiveAnimationStateManager<T> {
 
     void cancelAllAnimations() {
         for(AdditiveAnimationAccumulator additiveAnimationAccumulator : mAdditiveAnimationAccumulators) {
-            additiveAnimationAccumulator.cancel(mAnimationTargetView);
+            additiveAnimationAccumulator.cancel(mAnimationTarget);
         }
         mAdditiveAnimationAccumulators.clear();
         mAnimationInfos.clear();
-        sStateManagers.remove(mAnimationTargetView);
+        sStateManagers.remove(mAnimationTarget);
         // reset hardware layer
-        if(mUseHardwareLayer && mAnimationTargetView instanceof View) {
-            ((View)mAnimationTargetView).setLayerType(View.LAYER_TYPE_NONE, null);
+        if(mUseHardwareLayer && mAnimationTarget instanceof View) {
+            ((View) mAnimationTarget).setLayerType(View.LAYER_TYPE_NONE, null);
         }
     }
 
     void cancelAnimation(String propertyName) {
         List<AdditiveAnimationAccumulator> cancelledAppliers = new ArrayList<>();
         for(AdditiveAnimationAccumulator applier : mAdditiveAnimationAccumulators) {
-            if(applier.removeAnimation(propertyName, mAnimationTargetView)) {
+            if(applier.removeAnimation(propertyName, mAnimationTarget)) {
                 cancelledAppliers.add(applier);
             }
         }
@@ -176,7 +172,7 @@ class AdditiveAnimationStateManager<T> {
     Float getActualPropertyValue(Property<T, Float> property) {
         Float lastTarget = getLastTargetValue(property.getName());
         if(lastTarget == null) {
-            lastTarget = property.get(mAnimationTargetView);
+            lastTarget = property.get(mAnimationTarget);
         }
         return lastTarget;
     }

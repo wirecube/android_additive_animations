@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 
 import additive_animations.AdditiveAnimationsShowcaseActivity;
@@ -28,39 +29,60 @@ public class AnimationChainingDemoFragment extends Fragment {
         rootView = (FrameLayout) inflater.inflate(R.layout.fragment_tap_to_move_demo, container, false);
         animatedView = rootView.findViewById(R.id.animated_view);
 
-        rootView.setOnTouchListener(new View.OnTouchListener() {
+        Button button = new Button(container.getContext());
+        button.setText("Chain animations");
+        button.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, final MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
-                    int offset =  DpConverter.converDpToPx(150);
-                    if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-
-                        AdditiveAnimator.animate(animatedView)
-                                .centerX(event.getX()).centerY(event.getY())
-                                .then() // execute the following animations after the previous ones have finished
-                                .centerX(event.getX() - offset).centerY(event.getY() - offset)
-                                .start();
-
-                    } else {
-
-                        PropertyValuesHolder pvhX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, event.getX() - animatedView.getWidth() / 2);
-                        PropertyValuesHolder pvhY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, event.getY() - animatedView.getHeight() / 2);
-                        ObjectAnimator animator1  = ObjectAnimator.ofPropertyValuesHolder(animatedView, pvhX, pvhY);
-
-                        PropertyValuesHolder pvhX2 = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, (event.getX() - animatedView.getWidth() / 2) - offset);
-                        PropertyValuesHolder pvhY2 = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, (event.getY() - animatedView.getHeight() / 2) - offset);
-                        ObjectAnimator animator2   = ObjectAnimator.ofPropertyValuesHolder(animatedView, pvhX2, pvhY2);
-
-                        AnimatorSet animators = new AnimatorSet();
-                        animators.playSequentially(animator1, animator2);
-                        animators.setDuration(2000);
-                        animators.setInterpolator(EaseInOutPathInterpolator.create());
-                        animators.start();
-                    }
-                }
-                return true;
+            public void onClick(View v) {
+                AdditiveAnimator.animate(animatedView).setDuration(1000)
+                        .x(DpConverter.converDpToPx(20)).y(DpConverter.converDpToPx(20))
+                        .thenDelayAfterEnd(2000)
+                        .x(DpConverter.converDpToPx(100)).y(DpConverter.converDpToPx(20))
+                        .thenDelayAfterEnd(2000)
+                        .x(DpConverter.converDpToPx(100)).y(DpConverter.converDpToPx(100))
+                        .start();
             }
         });
+
+        rootView.addView(button);
+        button.setWidth(DpConverter.converDpToPx(200));
+        button.setHeight(DpConverter.converDpToPx(50));
+        button.setY(DpConverter.converDpToPx(500));
+        button.setX(DpConverter.converDpToPx(20));
+
+//        rootView.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, final MotionEvent event) {
+//                if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
+//                    int offset =  DpConverter.converDpToPx(150);
+//                    if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
+//
+//                        AdditiveAnimator.animate(animatedView)
+//                                .centerX(event.getX()).centerY(event.getY())
+//                                .then() // execute the following animations after the previous ones have finished
+//                                .centerX(event.getX() - offset).centerY(event.getY() - offset)
+//                                .start();
+//
+//                    } else {
+//
+//                        PropertyValuesHolder pvhX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, event.getX() - animatedView.getWidth() / 2);
+//                        PropertyValuesHolder pvhY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, event.getY() - animatedView.getHeight() / 2);
+//                        ObjectAnimator animator1  = ObjectAnimator.ofPropertyValuesHolder(animatedView, pvhX, pvhY);
+//
+//                        PropertyValuesHolder pvhX2 = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, (event.getX() - animatedView.getWidth() / 2) - offset);
+//                        PropertyValuesHolder pvhY2 = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, (event.getY() - animatedView.getHeight() / 2) - offset);
+//                        ObjectAnimator animator2   = ObjectAnimator.ofPropertyValuesHolder(animatedView, pvhX2, pvhY2);
+//
+//                        AnimatorSet animators = new AnimatorSet();
+//                        animators.playSequentially(animator1, animator2);
+//                        animators.setDuration(2000);
+//                        animators.setInterpolator(EaseInOutPathInterpolator.create());
+//                        animators.start();
+//                    }
+//                }
+//                return true;
+//            }
+//        });
         return rootView;
     }
 }
