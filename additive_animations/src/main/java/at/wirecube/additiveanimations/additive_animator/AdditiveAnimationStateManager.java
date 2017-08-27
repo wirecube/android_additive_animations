@@ -16,6 +16,7 @@
 
 package at.wirecube.additiveanimations.additive_animator;
 
+import android.util.Log;
 import android.util.Property;
 import android.view.View;
 
@@ -81,23 +82,35 @@ class AdditiveAnimationStateManager<T> {
         getAnimationInfo(animation.getTag(), true).queuedTargetValue = animation.getTargetValue();
     }
 
-    void onAnimationApplierEnd(AdditiveAnimationAccumulator applier, boolean didCancel) {
+    void onAnimationAccumulatorEnd(AdditiveAnimationAccumulator applier, boolean didCancel, boolean willRestart) {
         if(didCancel) {
+            // already handled
             return;
         }
-        mAdditiveAnimationAccumulators.remove(applier);
-        if (mAdditiveAnimationAccumulators.isEmpty()) {
-            sStateManagers.remove(mAnimationTarget);
-            // reset hardware layer if we are animating a view
-            if(mUseHardwareLayer && mAnimationTarget instanceof View) {
-                ((View) mAnimationTarget).setLayerType(View.LAYER_TYPE_NONE, null);
+
+        if(!willRestart) {
+            mAdditiveAnimationAccumulators.remove(applier);
+            if (mAdditiveAnimationAccumulators.isEmpty()) {
+                sStateManagers.remove(mAnimationTarget);
+                // reset hardware layer if we are animating a view
+                if(mUseHardwareLayer && mAnimationTarget instanceof View) {
+                    ((View) mAnimationTarget).setLayerType(View.LAYER_TYPE_NONE, null);
+                }
+            }
+            for (AdditiveAnimation animation : applier.getAnimations(mAnimationTarget)) {
+                AnimationInfo info = getAnimationInfo(animation.getTag(), false);
+                if (info == null) {
+                    Log.e("AASM", "null animation info!");
+                }
+                info.numAnimations = Math.max(info.numAnimations - 1, 0);
             }
         }
+    }
 
-        for(AdditiveAnimation animation : applier.getAnimations(mAnimationTarget)) {
-            AnimationInfo info = getAnimationInfo(animation.getTag(), false);
-            info.numAnimations = Math.max(info.numAnimations - 1, 0);
-        }
+
+    void onAnimationApplierRestart(AdditiveAnimationAccumulator applier) {
+        // assuming onAnimationAccumulatorEnd() was called before
+        mAdditiveAnimationAccumulators.add(applier);
     }
 
     void onAnimationApplierStart(AdditiveAnimationAccumulator applier) {
@@ -116,11 +129,15 @@ class AdditiveAnimationStateManager<T> {
      * This will also update the accumulator if it doesn't already contain an entry for this animation,
      * using the current property value (if a Property is available)
      */
-    void prepareAnimationStart(AdditiveAnimation animation) {
-        // TODO: can we speed up this lookup?
+    void prepareAnimationStart(AdditiveAnimation animation, boolean resetAnimatorStartValue) {
         AccumulatedAnimationValue av = mAccumulator.getAccumulatedAnimationValue(animation);
 
+        // getAnimationInfo(_, true) creates the AnimationInfo if needed - this might be necessary even when the animator is repeating.
+        // Do NOT move this line after the if().
         AnimationInfo info = getAnimationInfo(animation.getTag(), true);
+        if(!resetAnimatorStartValue) {
+            return;
+        }
         if(getLastTargetValue(animation.getTag()) == null || info.numAnimations == 0) {
             // In case we don't currently have an animation on this property, let's make sure
             // the start value matches the current model value:

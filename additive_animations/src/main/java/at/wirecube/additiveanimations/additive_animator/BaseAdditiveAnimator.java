@@ -196,6 +196,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     protected final T animate(AdditiveAnimation animation) {
         initAnimationAccumulatorIfNeeded();
         mCurrentStateManager.addAnimation(mAnimationAccumulator, animation);
+        animation.setCustomInterpolator(mCurrentCustomInterpolator);
         return self();
     }
 
@@ -343,6 +344,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     T setRawStartDelay(long startDelay) {
         if(mParent == null || mParent.getValueAnimator() != getValueAnimator()) {
             getValueAnimator().setStartDelay(startDelay);
+            mStartDelay = 0;
         } else {
             mStartDelay = startDelay;
         }
@@ -537,6 +539,11 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return Math.max(mStartDelay, getValueAnimator().getStartDelay());
     }
 
+    // only used by ValueAnimatorManager
+    long getRawStartDelay() {
+        return mStartDelay;
+    }
+
     public int getRepeatCount() {
         return mRepeatCount;
     }
@@ -548,13 +555,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return mRepeatMode;
     }
 
-
-    public T repeatAll(int repeatCount) {
+    public T setOverallRepeatCount(int repeatCount) {
         getValueAnimator().setRepeatCount(repeatCount);
         return self();
     }
 
-    public T repeatModeAll(int repeatMode) {
+    public T setOverallRepeatMode(int repeatMode) {
         getValueAnimator().setRepeatMode(repeatMode);
         return self();
     }

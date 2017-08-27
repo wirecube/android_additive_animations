@@ -7,9 +7,8 @@ import android.animation.ValueAnimator;
 import android.util.Log;
 import android.view.animation.LinearInterpolator;
 
+import java.security.cert.CertificateNotYetValidException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 // Responsible for managing a ValueAnimator shared by all animators in a `then()` chain.
@@ -18,8 +17,8 @@ import java.util.List;
 class ValueAnimatorManager {
 
     private ValueAnimator mValueAnimator = ValueAnimator.ofFloat(0, 1);
-    private List<BaseAdditiveAnimator> mAnimationAccumulators = new ArrayList<>(1);
-    private BaseAdditiveAnimator[] mAnimationAccumulatorArray;
+    private List<BaseAdditiveAnimator> mAnimators = new ArrayList<>(1);
+    private BaseAdditiveAnimator[] mAnimatorArray;
     private int mNumRunningAnimators;
     private int mValueAnimatorRepeatCount = 0;
 
@@ -28,15 +27,41 @@ class ValueAnimatorManager {
         mValueAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationRepeat(Animator animation) {
+                if(mNumRunningAnimators > 0) {
+                    // we didn't call onAnimationUpdate()/onAnimationEnd() on all of them correctly!
+                    onAnimationUpdate(1f);
+                }
                 mValueAnimatorRepeatCount++;
-                // TOOD: need to somehow tell the AdditiveAnimationAccumulator that the animation restarted, which has to update its from/to values.
-//                for(int i = mAnimationAccumulatorArray.length - 1; i >= 0; i--) {
-//                    BaseAdditiveAnimator animator = mAnimationAccumulatorArray[i];
-//                    animator.getAnimationAccumulator().onAnimationRepeat();
-//                }
+
+                mAnimators.toArray(mAnimatorArray);
+                mNumRunningAnimators = mAnimators.size();
+
+                for(int i = mAnimatorArray.length - 1; i >= 0; i--) {
+                    BaseAdditiveAnimator animator = mAnimatorArray[i];
+                    animator.getAnimationAccumulator().onAnimationRepeat();
+                    animator.getAnimationAccumulator().setPrepareAnimationStartValuesOnRepeat(false);
+                }
             }
         });
         mValueAnimator.setInterpolator(new LinearInterpolator());
+    }
+
+    private boolean willRunInReverseNextTime() {
+        if(mValueAnimator.getRepeatMode() == ValueAnimator.REVERSE) {
+            // this is a workaround for repeating animations freaking out when run in reverse.
+            // TODO: this breaks the additive nature of animations, so we should instead update the target/start values properly.
+            return true;
+        } else {
+            return false;
+        }
+//        mValueAnimatorRepeatCount++;
+//        boolean willRunInReverse = isRunningInReverse();
+//        mValueAnimatorRepeatCount--;
+//        return willRunInReverse;
+    }
+
+    private boolean isRunningInReverse() {
+        return mValueAnimatorRepeatCount % 2 != 0 && mValueAnimator.getRepeatMode() == ValueAnimator.REVERSE;
     }
 
     // Sets the overall repeat count of ALL added accumulators (set of animations)
@@ -50,16 +75,15 @@ class ValueAnimatorManager {
     }
 
     public void start() {
-        mAnimationAccumulatorArray = new BaseAdditiveAnimator[mAnimationAccumulators.size()];
-        mAnimationAccumulators.toArray(mAnimationAccumulatorArray);
+        mAnimatorArray = new BaseAdditiveAnimator[mAnimators.size()];
+        mAnimators.toArray(mAnimatorArray);
 
-        for(int i = mAnimationAccumulatorArray.length - 1; i >= 0; i--) {
-            BaseAdditiveAnimator animator = mAnimationAccumulatorArray[i];
+        for(int i = mAnimatorArray.length - 1; i >= 0; i--) {
+            BaseAdditiveAnimator animator = mAnimatorArray[i];
             animator.getAnimationAccumulator().onAnimationStart();
         }
 
-        mNumRunningAnimators = mAnimationAccumulators.size();
-
+        mNumRunningAnimators = mAnimators.size();
         mValueAnimator.start();
     }
 
@@ -73,11 +97,13 @@ class ValueAnimatorManager {
             mValueAnimator.setDuration(animator.getDuration());
             mValueAnimator.setRepeatCount(ValueAnimator.INFINITE);
             // TODO: disable erroneous inspection warning
+            // we always restart, the animator itself will have the reverse/restart flag set.
             mValueAnimator.setRepeatMode(animator.getRepeatMode());
+//            animator.setRepeatMode(ValueAnimator.RESTART);
         } else if(mValueAnimator.getDuration() < totalDuration) {
             mValueAnimator.setDuration(totalDuration);
         }
-        mAnimationAccumulators.add(animator);
+        mAnimators.add(animator);
     }
 
     // Includes start delay
@@ -85,86 +111,80 @@ class ValueAnimatorManager {
         if(accumulator.getRepeatCount() == ValueAnimator.INFINITE) {
             return ValueAnimator.DURATION_INFINITE;
         } else {
-            return ((accumulator.getRepeatCount() + 1) * accumulator.getDuration()) + accumulator.getStartDelay();
+            return ((accumulator.getRepeatCount() + 1) * accumulator.getDuration()) + accumulator.getRawStartDelay();
+        }
+    }
+
+    private void onAnimationUpdate(float animatedFraction) {
+        // based on current play time:
+        // * check if canceled
+        // * queue for removal if cancelled
+        // * call onAnimationStart listeners
+        // * call onAnimationUpdate listeners
+        // * call onAnimationEnd listeners
+        // * if all animations are canceled or done - cancel animator.
+
+        boolean animationWasCancelled = false;
+        for(int i = mAnimatorArray.length - 1; i >= 0; i--) {
+            BaseAdditiveAnimator animator = mAnimatorArray[i];
+            if(animator == null) {
+                continue;
+            }
+            AdditiveAnimationAccumulator acc = animator.getAnimationAccumulator();
+            if(acc.getCanceled()) {
+                acc.onAnimationCancel();
+                acc.onAnimationEnd(false);
+                mNumRunningAnimators--;
+                animationWasCancelled = true;
+                mAnimatorArray[i] = null;
+                mAnimators.remove(acc);
+                continue;
+            }
+            animationWasCancelled = false;
+
+            if(calculateStartFraction(animator) > animatedFraction) {
+                // not yet started, but we don't break here because other animators might have been cancelled.
+                continue;
+            }
+
+            float fractionComplete = calculateTotalFractionComplete(animatedFraction, animator);
+            float fractionInCurrentRepeat = calculateCurrentRepeatFraction(fractionComplete, animator);
+            // make sure the animation gets its final update even if fractionComplete == 1
+            acc.onAnimationUpdate(fractionInCurrentRepeat);
+
+            // TODO: correct onAnimationEnd callback when number of animator repeats == animator.getRepeatCount().
+            if(fractionComplete >= 1) {
+                mAnimatorArray[i] = null;
+                mNumRunningAnimators--;
+                if(calculateCurrentRepeat(fractionComplete, animator) == animator.getRepeatCount() || mValueAnimator.getRepeatCount() == ValueAnimator.INFINITE) {
+                    // let's see if our value animator will repeat:
+                    boolean willRepeat = mValueAnimatorRepeatCount < mValueAnimator.getRepeatCount() || mValueAnimator.getRepeatCount() == ValueAnimator.INFINITE;
+                    boolean prepareAnimationStartValues = !willRunInReverseNextTime();
+                    acc.setPrepareAnimationStartValuesOnRepeat(prepareAnimationStartValues);
+                    acc.onAnimationEnd(willRepeat);
+                }
+            }
+        }
+
+        if(mNumRunningAnimators == 0 && mValueAnimatorRepeatCount == mValueAnimator.getRepeatCount()) {
+            // done!
+            // TODO: is this expected behaviour?
+            if(animationWasCancelled) {
+                mValueAnimator.cancel();
+            } else {
+                // TODO: how to handle?
+            }
         }
     }
 
     private ValueAnimator.AnimatorUpdateListener mAnimatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
         @Override
         public void onAnimationUpdate(ValueAnimator valueAnimator) {
-
-            // based on current play time:
-            // * check if canceled
-            // * queue for removal if cancelled
-            // * call onAnimationStart listeners
-            // * call onAnimationUpdate listeners
-            // * call onAnimationEnd listeners
-            // * if all animations are canceled or done - cancel animator.
-
             // Let's hope using getAnimatedFraction() is good enough for any number of consecutive animations
             float animatedFraction = valueAnimator.getAnimatedFraction();
-
-            boolean animationWasCancelled = false;
-            for(int i = mAnimationAccumulatorArray.length - 1; i >= 0; i--) {
-                BaseAdditiveAnimator animator = mAnimationAccumulatorArray[i];
-                if(animator == null) {
-                    continue;
-                }
-                AdditiveAnimationAccumulator acc = animator.getAnimationAccumulator();
-                if(acc.getCanceled()) {
-                    acc.onAnimationCancel();
-                    acc.onAnimationEnd();
-                    mNumRunningAnimators--;
-                    animationWasCancelled = true;
-                    mAnimationAccumulatorArray[i] = null;
-                    continue;
-                }
-                animationWasCancelled = false;
-
-                if(calculateStartFraction(animator) > animatedFraction) {
-                    // not yet started, and our list is sorted - so all the other ones after this one won't start yet either!
-                    // TODO: determine how much time is remaining until the start of the animation. if remainingTime < timeToNextFrame/2, call onAnimationStart() now.
-                    continue;
-                }
-
-                float fractionComplete = calculateTotalFractionComplete(animatedFraction, animator);
-                float fractionInCurrentRepeat = calculateCurrentRepeatFraction(fractionComplete, animator);
-                // make sure the animation gets its final update even if fractionComplete == 1
-                acc.onAnimationUpdate(fractionInCurrentRepeat);
-
-                // TODO: correct onAnimationEnd callback when number of animator repeats == animator.getRepeatCount().
-
-                if(fractionComplete >= 1 && mValueAnimatorRepeatCount >= mValueAnimator.getRepeatCount() && mValueAnimator.getRepeatCount() != ValueAnimator.INFINITE) {
-                    acc.onAnimationEnd();
-                    mAnimationAccumulatorArray[i] = null;
-                    mNumRunningAnimators--;
-                }
-            }
-
-            if(mNumRunningAnimators == 0) {
-                // done!
-                // TODO: is this expected behaviour?
-                if(animationWasCancelled) {
-                    mValueAnimator.cancel();
-                } else {
-                    // TODO: how to handle?
-                }
-            }
+            ValueAnimatorManager.this.onAnimationUpdate(animatedFraction);
         }
     };
-
-//    private float calculateFractionComplete(long currentAnimatedTime, BaseAdditiveAnimator acc) {
-//        if(currentAnimatedTime > calculateTotalDuration(acc)) {
-//            return 1;
-//        }
-//        float fractionCompleteInCurrentRepeat = (float)((currentAnimatedTime - acc.getStartDelay()) % acc.getDuration())/(float)acc.getDuration();
-//        long currentRepeat = (long)Math.floor((currentAnimatedTime - acc.getStartDelay())/acc.getDuration());
-//        boolean isOddRepeat = currentRepeat % 2 != 0;
-//        if(acc.getRepeatMode() == ValueAnimator.REVERSE && isOddRepeat) {
-//            fractionCompleteInCurrentRepeat = 1 - fractionCompleteInCurrentRepeat;
-//        }
-//        return clamp(fractionCompleteInCurrentRepeat);
-//    }
 
     private float calculateTotalFractionComplete(float totalFractionComplete, BaseAdditiveAnimator animator) {
         if(calculateTotalDuration(animator) == ValueAnimator.DURATION_INFINITE) {
@@ -189,14 +209,14 @@ class ValueAnimatorManager {
             return fractionInAnimator;
         }
         int currentRepeat = calculateCurrentRepeat(fractionInAnimator, animator);
-        fractionInAnimator = fractionInAnimator * (animator.getRepeatCount() + 1) - (1.0f/(animator.getRepeatCount() + 1))*currentRepeat;
+        float fractionInCurrentRepeat = (fractionInAnimator - ((1.0f / (animator.getRepeatCount() + 1)) * currentRepeat)) * (animator.getRepeatCount() + 1);
         if(currentRepeat % 2 != 0 && animator.getRepeatMode() == ValueAnimator.REVERSE) {
-            fractionInAnimator = 1f - fractionInAnimator;
+            fractionInCurrentRepeat = 1f - fractionInCurrentRepeat;
         }
-        if(fractionInAnimator > 1 || fractionInAnimator < 0) {
-            Log.e("ValueAnimatorManager", "incorrect fractionComplete: " + fractionInAnimator);
+        if(fractionInCurrentRepeat > 1 || fractionInCurrentRepeat < 0) {
+            Log.e("ValueAnimatorManager", "incorrect fractionComplete: " + fractionInCurrentRepeat);
         }
-        return fractionInAnimator;
+        return clamp(fractionInCurrentRepeat);
     }
 
     // ValueAnimator.getTotalDuration() is only available on API >= 24
@@ -208,39 +228,41 @@ class ValueAnimatorManager {
         }
     }
 
-    private float calculateStartFraction(BaseAdditiveAnimator acc) {
+    private float calculateStartFraction(BaseAdditiveAnimator animator) {
         float totalDuration = getValueAnimatorTotalDuration();
         if(totalDuration == 0) {
             return 0;
         }
         if(totalDuration == ValueAnimator.DURATION_INFINITE) {
-            return (float)acc.getStartDelay()/(float)mValueAnimator.getDuration();
+            return (float)animator.getRawStartDelay()/(float)mValueAnimator.getDuration();
         } else {
-            return acc.getStartDelay() / getValueAnimatorTotalDuration();
+            totalDuration /= (mValueAnimator.getRepeatCount() + 1);
+            return animator.getRawStartDelay() / totalDuration;
         }
     }
 
-    private float calculateEndFraction(BaseAdditiveAnimator acc) {
+    private float calculateEndFraction(BaseAdditiveAnimator animator) {
         float totalDuration = getValueAnimatorTotalDuration();
         if(totalDuration == 0) {
             return 0;
         }
         if(totalDuration == ValueAnimator.DURATION_INFINITE) {
             float multiplier = 1;
-            if(acc.getRepeatCount() != ValueAnimator.INFINITE) {
-                multiplier = acc.getRepeatCount() + 1;
+            if(animator.getRepeatCount() != ValueAnimator.INFINITE) {
+                multiplier = animator.getRepeatCount() + 1;
             }
-            return ((acc.getDuration() * multiplier) + acc.getStartDelay())/(float)mValueAnimator.getDuration();
+            return ((animator.getDuration() * multiplier) + animator.getRawStartDelay())/(float)mValueAnimator.getDuration();
         } else {
-            return (float) calculateTotalDuration(acc) / getValueAnimatorTotalDuration();
+            totalDuration /= (mValueAnimator.getRepeatCount() + 1);
+            return (float) calculateTotalDuration(animator) / totalDuration;
         }
     }
 
-    private int calculateCurrentRepeat(float relativeFractionComplete, BaseAdditiveAnimator acc) {
-        if(acc.getRepeatCount() == ValueAnimator.INFINITE) {
+    private int calculateCurrentRepeat(float relativeFractionComplete, BaseAdditiveAnimator animator) {
+        if(animator.getRepeatCount() == ValueAnimator.INFINITE) {
             return 0;
         }
-        float repeatPercentage = 1f/acc.getRepeatCount();
+        float repeatPercentage = 1f/(animator.getRepeatCount() + 1);
         int currentRepeat = 0;
         while(relativeFractionComplete - repeatPercentage > 0) {
             currentRepeat++;

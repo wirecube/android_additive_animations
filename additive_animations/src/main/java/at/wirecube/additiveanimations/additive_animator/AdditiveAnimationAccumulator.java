@@ -16,10 +16,8 @@
 
 package at.wirecube.additiveanimations.additive_animator;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
-import android.view.animation.Interpolator;
+import android.view.animation.Animation;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 class AdditiveAnimationAccumulator {
+
 
     // Exists only for performance reasons to avoid map lookups
     private class AdditiveAnimationWrapper<T> {
@@ -55,12 +54,20 @@ class AdditiveAnimationAccumulator {
     }
 
     private List<AdditiveAnimationWrapper> mAnimationWrappers = new ArrayList<>(2);
+
+    // animation state listeners can be added to every animation block in a chain:
+    private List<AnimationEndListener> mAnimationEndListeners = new ArrayList<>();
+    private List<Animation.AnimationListener> mAnimationListeners = new ArrayList<>();
+    private List<ValueAnimator.AnimatorUpdateListener> mAnimationUpdateListeners = new ArrayList<>();
+
     private Map<Object, Set<AdditiveAnimationWrapper>> mAnimationsPerObject = new HashMap<>(1);
     private final List<AccumulatedAnimationValue> accumulatedAnimationValues = new ArrayList<>(2);
     private boolean mHasInformedStateManagerAboutAnimationStart = false;
     private boolean mAnimationDidCancel = false;
     private BaseAdditiveAnimator mAdditiveAnimator;
     private boolean mCanceled = false;
+    private boolean mDidRestart = false;
+    private boolean mPrepareAnimationStartValuesOnRepeat = false;
 
     AdditiveAnimationAccumulator(BaseAdditiveAnimator additiveAnimator) {
         mAdditiveAnimator = additiveAnimator;
@@ -74,17 +81,20 @@ class AdditiveAnimationAccumulator {
         mAnimationDidCancel = true;
     }
 
-    public void onAnimationEnd() {
-        // now we are actually done
+    public void onAnimationRepeat() {
+        mHasInformedStateManagerAboutAnimationStart = false;
+        mDidRestart = true;
+        notifyStateManagerAboutAnimationStartIfNeeded();
+    }
+
+    public void onAnimationEnd(boolean willRestart) {
         for (Object v : mAnimationsPerObject.keySet()) {
-            AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, mAnimationDidCancel);
+            AdditiveAnimationStateManager.from(v).onAnimationAccumulatorEnd(AdditiveAnimationAccumulator.this, mAnimationDidCancel, willRestart);
         }
     }
 
     public void onAnimationUpdate(float fractionComplete) {
-        if(!mHasInformedStateManagerAboutAnimationStart) {
-            notifyStateManagerAboutAnimationStartIfNeeded();
-        }
+        notifyStateManagerAboutAnimationStartIfNeeded();
         for (AdditiveAnimationWrapper animationWrapper : mAnimationWrappers) {
             AdditiveAnimation animation = animationWrapper.animation;
             AccumulatedAnimationValue tempProperties = animation.getAccumulatedValues();
@@ -96,15 +106,20 @@ class AdditiveAnimationAccumulator {
         accumulatedAnimationValues.clear();
     }
 
-
     private void notifyStateManagerAboutAnimationStartIfNeeded() {
         if(!mHasInformedStateManagerAboutAnimationStart) {
             for (Object v : mAnimationsPerObject.keySet()) {
                 AdditiveAnimationStateManager manager = AdditiveAnimationStateManager.from(v);
-                manager.onAnimationApplierStart(AdditiveAnimationAccumulator.this);
+                if(mDidRestart) {
+                    manager.onAnimationApplierRestart(AdditiveAnimationAccumulator.this);
+                } else {
+                    manager.onAnimationApplierStart(AdditiveAnimationAccumulator.this);
+                }
                 for(AdditiveAnimationWrapper wrapper : getAnimationWrappers(v)) {
-                    manager.prepareAnimationStart(wrapper.animation);
-                    wrapper.previousValue = wrapper.animation.getStartValue();
+                    manager.prepareAnimationStart(wrapper.animation, mPrepareAnimationStartValuesOnRepeat || !mDidRestart);
+                    if(mPrepareAnimationStartValuesOnRepeat || !mDidRestart) {
+                        wrapper.previousValue = wrapper.animation.getStartValue();
+                    }
                 }
             }
             mHasInformedStateManagerAboutAnimationStart = true;
@@ -158,10 +173,10 @@ class AdditiveAnimationAccumulator {
     /**
      * Removes the animation with the given name from the given object.
      */
-    private void removeTarget(Object v, String additiveAnimationName) {
+    private void removeTarget(Object v, String tag) {
         AdditiveAnimationWrapper animationToRemove = null;
         for(AdditiveAnimationWrapper anim : getAnimationWrappers(v)) {
-            if(anim.animation.getTag().equals(additiveAnimationName)) {
+            if(anim.animation.getTag().equals(tag)) {
                 animationToRemove = anim;
                 break;
             }
@@ -223,6 +238,9 @@ class AdditiveAnimationAccumulator {
         float newVal = animation.evaluateAt(progress);
         float delta = newVal - lastVal;
         wrapper.previousValue = newVal;
+//        if(mIsRunningInReverse) {
+//            delta = -delta;
+//        }
         return delta;
     }
 
@@ -253,4 +271,7 @@ class AdditiveAnimationAccumulator {
         return mCanceled;
     }
 
+    void setPrepareAnimationStartValuesOnRepeat(boolean prepareAnimationStartValuesOnRepeat) {
+        mPrepareAnimationStartValuesOnRepeat = prepareAnimationStartValuesOnRepeat;
+    }
 }

@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
+import android.renderscript.Sampler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -96,23 +97,15 @@ public class CustomDrawingFragment extends Fragment {
                 @Override
                 protected void applyCustomProperties(Map<String, Float> tempProperties, Rect target) {
                     for(Map.Entry<String, Float> entry : tempProperties.entrySet()) {
-                        if(entry.getKey().equals(X)) {
-                           target.mX = entry.getValue();
-                        }
-                        if(entry.getKey().equals(Y)) {
-                            target.mY = entry.getValue();
-                        }
-                        if(entry.getKey().equals(SIZE)) {
-                            target.mSize = entry.getValue();
-                        }
-                        if(entry.getKey().equals(ROTATION)) {
-                            target.mRotation = entry.getValue();
-                        }
-                        if(entry.getKey().equals(CORNER_RADIUS)) {
-                            target.mCornerRadius = entry.getValue();
+                        // switching on strings is faster than if-else compares: http://docs.oracle.com/javase/7/docs/technotes/guides/language/strings-switch.html
+                        switch (entry.getKey()) {
+                            case X:             target.mX            = entry.getValue(); break;
+                            case Y:             target.mY            = entry.getValue(); break;
+                            case SIZE:          target.mSize         = entry.getValue(); break;
+                            case ROTATION:      target.mRotation     = entry.getValue(); break;
+                            case CORNER_RADIUS: target.mCornerRadius = entry.getValue(); break;
                         }
                     }
-
                     // force redraw of the parent view:
                     target.mParent.invalidate();
                 }
@@ -143,7 +136,7 @@ public class CustomDrawingFragment extends Fragment {
 
         public DemoView(Context context) {
             super(context);
-            for(int i = 0; i < 10; i++) {
+            for(int i = 0; i < 2; i++) {
                 mRects.add(new Rect(this));
             }
 
@@ -151,31 +144,41 @@ public class CustomDrawingFragment extends Fragment {
             mPaint.setColor(context.getResources().getColor(R.color.niceBlue));
 
             // Animate the color of the paint object without a subclass
-            AdditiveObjectAnimator.animate(mPaint)
-                    .setAnimationApplier(animationApplier)
-                    .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), mPaintColorProperty)
-                    .then()
-                    .property(context.getResources().getColor(R.color.nicePink), new ColorEvaluator(), mPaintColorProperty)
-                    .then()
-                    .property(context.getResources().getColor(R.color.niceOrange), new ColorEvaluator(), mPaintColorProperty)
-                    .then()
-                    .property(context.getResources().getColor(R.color.niceBlue), new ColorEvaluator(), mPaintColorProperty)
-                    .repeatAll(ValueAnimator.INFINITE)
-                    .repeatModeAll(ValueAnimator.RESTART)
-                    .start();
+//            AdditiveObjectAnimator.animate(mPaint)
+//                    .setAnimationApplier(animationApplier)
+//                    .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), mPaintColorProperty)
+//                    .then()
+//                    .property(context.getResources().getColor(R.color.nicePink), new ColorEvaluator(), mPaintColorProperty)
+//                    .then()
+//                    .property(context.getResources().getColor(R.color.niceOrange), new ColorEvaluator(), mPaintColorProperty)
+//                    .then()
+//                    .property(context.getResources().getColor(R.color.niceBlue), new ColorEvaluator(), mPaintColorProperty)
+//                    .setOverallRepeatCount(ValueAnimator.INFINITE)
+//                    .setOverallRepeatMode(ValueAnimator.RESTART)
+//                    .start();
 
             // Use the custom subclass to animate size and corner radius of all rects
             Rect.AdditiveRectAnimator rectAnimator = new Rect.AdditiveRectAnimator();
 
             for(Rect rect : mRects) {
                 // demoing delayed infinite animations:
-                rectAnimator = rectAnimator.target(rect)
-                                            .setDuration(1000)
-                                            .setRepeatCount(ValueAnimator.INFINITE)
-                                            .setRepeatMode(ValueAnimator.REVERSE)
-                                            .size(DpConverter.converDpToPx(100))
-                                            .cornerRadius(DpConverter.converDpToPx(50))
-                                            .thenWithDelay(100);
+//                rectAnimator = rectAnimator.target(rect)
+//                        .setRepeatCount(ValueAnimator.INFINITE)
+//                        .setRepeatMode(ValueAnimator.REVERSE)
+//                        .setDuration(1000)
+//                        .size(DpConverter.converDpToPx(100))
+//                        .cornerRadius(DpConverter.converDpToPx(50))
+//                        .thenWithDelay(100);
+
+                // DEBUG: this should resize then view, then change the corner radius back and forth, and repeat this process 3 times.
+//                rectAnimator = rectAnimator.target(rect)
+//                                            .setDuration(1000)
+//                                            .setRepeatCount(1)
+//                                            .setRepeatMode(ValueAnimator.REVERSE)
+//                                            .size(DpConverter.converDpToPx(100))
+//                                            .then()
+//                                            .cornerRadius(DpConverter.converDpToPx(25))
+//                                            .setOverallRepeatCount(2);
             }
             rectAnimator.start();
 
@@ -240,6 +243,4 @@ public class CustomDrawingFragment extends Fragment {
             }
         }
     }
-
-
 }

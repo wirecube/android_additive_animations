@@ -42,6 +42,12 @@ public class AdditiveObjectAnimator<V> extends BaseAdditiveAnimator<AdditiveObje
     }
 
     @Override
+    protected void setParent(AdditiveObjectAnimator<V> parent) {
+        super.setParent(parent);
+        mAnimationApplier = parent.mAnimationApplier;
+    }
+
+    @Override
     void applyChanges(List<AccumulatedAnimationValue<V>> accumulatedAnimations) {
         super.applyChanges(accumulatedAnimations);
         if(mAnimationApplier != null) {
