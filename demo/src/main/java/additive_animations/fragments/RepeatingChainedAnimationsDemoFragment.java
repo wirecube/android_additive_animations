@@ -1,6 +1,8 @@
 package additive_animations.fragments;
 
+import android.animation.ValueAnimator;
 import android.os.Bundle;
+import android.renderscript.Sampler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -35,11 +37,6 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
             }
         });
 
-        animate();
-        return rootView;
-    }
-
-    private void animate() {
         int colors[] = new int[] {
                 getResources().getColor(R.color.niceOrange),
                 getResources().getColor(R.color.niceBlue),
@@ -56,15 +53,16 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
                 .thenBounceBeforeEnd(800, 300)
                 .thenBeforeEnd(400).x(px(50)).backgroundColor(colors[0]).rotationBy(90).setDuration(1000)
                 .thenBounceBeforeEnd(800, 300)
-                .addEndAction(new AnimationEndListener() {
-                    @Override
-                    public void onAnimationEnd(boolean wasCancelled) {
-                        if (getActivity() != null) {
-                            animate();
-                        }
-                    }
-                })
+                .setOverallRepeatCount(ValueAnimator.INFINITE)
                 .start();
+
+        return rootView;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        AdditiveAnimatorSubclassDemo.cancelAnimations(animatedView);
     }
 
     private int px(int dp) {

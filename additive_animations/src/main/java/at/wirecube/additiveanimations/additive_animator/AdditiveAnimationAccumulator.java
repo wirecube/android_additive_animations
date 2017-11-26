@@ -118,6 +118,7 @@ class AdditiveAnimationAccumulator {
                 for(AdditiveAnimationWrapper wrapper : getAnimationWrappers(v)) {
                     manager.prepareAnimationStart(wrapper.animation, mPrepareAnimationStartValuesOnRepeat || !mDidRestart);
                     if(mPrepareAnimationStartValuesOnRepeat || !mDidRestart) {
+                        // TODO: this breaks repeating path animations (and probably other things?)
                         wrapper.previousValue = wrapper.animation.getStartValue();
                     }
                 }

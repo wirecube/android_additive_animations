@@ -7,7 +7,6 @@ import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Path;
-import android.renderscript.Sampler;
 import android.support.annotation.CallSuper;
 import android.util.Property;
 import android.view.animation.LinearInterpolator;
@@ -19,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Delayed;
 
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 import at.wirecube.additiveanimations.helper.FloatProperty;
@@ -47,8 +45,6 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     private Set<V> mChangedTargets = new HashSet<>(1);
     private HashMap<String, Float> mChangedUnknownProperties = new HashMap<>();
     private ValueAnimatorManager mValueAnimatorManager;
-
-    private boolean mIsValid = true; // invalid after start() has been called.
 
 
     // Metadata about the animation
@@ -290,6 +286,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * </code>
      */
     public T target(V v) {
+        mTargets.add(v);
         mCurrentTarget = v;
         mCurrentStateManager = AdditiveAnimationStateManager.from(v);
         initAnimationAccumulatorIfNeeded();
@@ -509,10 +506,6 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         if(mParent == null || mParent.getValueAnimator() != getValueAnimator()) {
             getValueAnimator().start();
         }
-
-        // invalidate this animator to prevent incorrect usage:
-        // TODO: get rid of this flag. Animators should simply not become invalid.
-        mIsValid = false;
     }
 
     public void cancelAllAnimations() {
