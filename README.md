@@ -1,7 +1,7 @@
 # Android additive animations
 
 Additive animations for Android!
-An easy way to additively animate a huge number of properties. 
+An easy way to additively animate a huge number of properties of all kinds of objects, with convenient builder methods for `View`s.
 
 Get a good overview of this library here: https://medium.com/@david.gansterd/bringing-smooth-animation-transitions-to-android-88786347e512
 
@@ -22,7 +22,7 @@ public boolean onTouch(View v, MotionEvent event) {
 }
 ```
 
-Additionally, `AdditiveAnimator` supports animating multiple views simultaneously without any boilerplate:
+Additionally, `AdditiveAnimator` supports animating multiple targets simultaneously without any boilerplate:
 
 ```java
 new AdditiveAnimator().setDuration(1000)
@@ -30,6 +30,61 @@ new AdditiveAnimator().setDuration(1000)
                       .target(myView2).xBy(20).yBy(20)
                       .start();
 ```
+
+# Animating all kinds of objects and properties
+In addition to the builder methods for views, there are multiple options for animating custom properties of any object.
+The first option is subclassing `BaseAdditiveAnimator` and providing your own builder methods (which are usually one-liners) such as this:
+
+```java
+class PaintAdditiveAnimator extends BaseAdditiveAnimator<PaintAdditiveAnimator, Paint> {
+    private static final String COLOR_ANIMATION_KEY = "ANIMATION_KEY";
+
+    // Support animation chaining by providing a construction method:
+    @Override protected PaintAdditiveAnimator newInstance() { return new PaintAdditiveAnimator(); }
+
+    // Custom builder method for animating the color of a Paint:
+    public PaintAdditiveAnimator color(int color) {
+        return animate(new AdditiveAnimation<>(
+            mCurrentTarget, // animated object (usually this is the current target)
+            COLOR_ANIMATION_KEY, // key to identify the animation
+            mCurrentTarget.getColor(), // start value
+            color)); // target value
+    }
+
+    // Applying the changed properties when they don't have a Property wrapper:
+    @Override protected void applyCustomProperties(Map<String, Float> tempProperties, Paint target) {
+        if(tempProperties.containsKey(COLOR_ANIMATION_KEY)) {
+            target.setColor(tempProperties.get(COLOR_ANIMATION_KEY).intValue());
+        }
+    }
+}
+
+```
+
+The second option is to simply provide a `Property` for the object you want to animate, plus (if needed) a way to trigger a redraw of your custom object:
+
+```java
+// Declaring an animatable property:
+FloatProperty<Paint> mPaintColorProperty = new FloatProperty<Paint>("PaintColor") {
+    @Override
+    public Float get(Paint paint) { return Float.valueOf(paint.getColor()); }
+
+    @Override
+    public void set(Paint object, Float value) { object.setColor(value.intValue()); }
+};
+
+...
+
+// Using the property to animate the color of a paint:
+AdditiveObjectAnimator.animate(myPaint)
+    .property(targetColor, // target value
+              new ColorEvaluator(), // custom evaluator for colors
+              mPaintColorProperty) // how to get/set the property value
+    .setAnimationApplier(new ViewAnimationApplier(myView)) // tells the generic AdditiveObjectAnimator how to apply the changed values
+    .start();
+```
+
+Both versions don't require a lot of code, and the few lines you have to write are almost always trivial.
 # Integration
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```

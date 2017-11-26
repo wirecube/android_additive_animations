@@ -21,9 +21,11 @@ import additive_animations.helper.DpConverter;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimation;
 import at.wirecube.additiveanimations.additive_animator.AdditiveObjectAnimator;
 import at.wirecube.additiveanimations.additive_animator.BaseAdditiveAnimator;
+import at.wirecube.additiveanimations.additive_animator.ViewAnimationApplier;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 import at.wirecube.additiveanimations.helper.FloatProperty;
 import at.wirecube.additiveanimations.helper.evaluators.ColorEvaluator;
+
 
 public class CustomDrawingFragment extends Fragment {
 
@@ -132,20 +134,16 @@ public class CustomDrawingFragment extends Fragment {
             }
         };
 
-        // Helper to tell AdditiveObjectAnimator how to make our changes visible.
-        // In our case, we just want to invalidate ourselves to trigger a redraw of the canvas.
-        private Runnable animationApplier = new Runnable() {
-            @Override
-            public void run() {
-                invalidate();
-            }
-        };
-
         public DemoView(Context context) {
             super(context);
             for(int i = 0; i < 5; i++) {
                 mRects.add(new Rect(this));
             }
+
+            // Helper to tell AdditiveObjectAnimator how to make our changes visible.
+            // In our case, we just want to invalidate ourselves to trigger a redraw of the canvas.
+            Runnable animationApplier = new ViewAnimationApplier(this);
+
 
             // Default object animator to animate the paints of the rects
             AdditiveObjectAnimator<Paint> paintAnimator = new AdditiveObjectAnimator<Paint>()

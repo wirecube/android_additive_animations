@@ -51,7 +51,6 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     private static long sDefaultAnimationDuration = 300;
     private static TimeInterpolator sDefaultInterpolator = EaseInOutPathInterpolator.create();
 
-
     protected T self() {
         try {
             return (T) this;
