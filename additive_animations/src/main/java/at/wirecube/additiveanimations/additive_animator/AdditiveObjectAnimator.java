@@ -36,6 +36,13 @@ public class AdditiveObjectAnimator<V> extends BaseAdditiveAnimator<AdditiveObje
         return new AdditiveObjectAnimator<V>().setDuration(duration);
     }
 
+    @Override
+    protected AdditiveObjectAnimator<V> setParent(AdditiveObjectAnimator<V> other) {
+        AdditiveObjectAnimator<V>  child = super.setParent(other);
+        child.setAnimationApplier(mAnimationApplier);
+        return child;
+    }
+
     public AdditiveObjectAnimator<V> setAnimationApplier(Runnable animationApplier) {
         mAnimationApplier = animationApplier;
         return this;

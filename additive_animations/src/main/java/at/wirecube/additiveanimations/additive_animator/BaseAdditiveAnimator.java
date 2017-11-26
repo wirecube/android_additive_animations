@@ -34,7 +34,7 @@ import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
  * @param <V> The type of object to be animated.
  */
 public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V extends Object> {
-    protected T mParent = null; // true when this animator was queued using `then()` chaining.
+    protected T mParent = null; // not null when this animator was queued using `then()` chaining.
     protected V mCurrentTarget = null;
     protected AdditiveAnimationStateManager<V> mCurrentStateManager = null; // only used for performance reasons
     protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to.
@@ -399,8 +399,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     /**
-     * Creates a new animator configured to start after <code>delay</code> with the current target
-     * that was configured with this animator.
+     * Creates a new animator configured to start after <code>delay</code> milliseconds from now
+     * with the last used target and interpolator.
      */
     public T thenWithDelay(long delay) {
         T newAnimator = then();
@@ -408,12 +408,20 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return newAnimator;
     }
 
+    /**
+     * Creates a new animator configured to start after <code>delayAfterEnd</code> milliseconds after the previous animation has ended
+     * with the last used target and interpolator.
+     */
     public T thenDelayAfterEnd(long delayAfterEnd) {
         T newAnimator = then();
         newAnimator.setStartDelay(getTotalDuration() + delayAfterEnd);
         return newAnimator;
     }
 
+    /**
+     * Creates a new animator configured to start after <code>delayBeforeEnd</code> milliseconds before the previous animation finishes
+     * with the last used target and interpolator.
+     */
     public T thenBeforeEnd(long millisBeforeEnd) {
         T newAnimator = then();
         newAnimator.setStartDelay(getTotalDuration() - millisBeforeEnd);
@@ -466,6 +474,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         target((V) other.getCurrentTarget());
         setDuration(other.getValueAnimator().getDuration());
         setInterpolator(other.getValueAnimator().getInterpolator());
+        setRepeatCount(other.getValueAnimator().getRepeatCount());
+        setRepeatMode(other.getValueAnimator().getRepeatMode());
         mCurrentCustomInterpolator = other.mCurrentCustomInterpolator;
         mParent = other;
         return self();

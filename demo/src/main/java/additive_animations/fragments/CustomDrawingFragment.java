@@ -39,10 +39,10 @@ public class CustomDrawingFragment extends Fragment {
     private static class DemoView extends View {
 
         final List<Rect> mRects = new ArrayList<>();
-        final Paint mPaint = new Paint();
 
         private static class Rect {
             private final View mParent;
+            final Paint mPaint;
             float mRotation = 0;
             float mX = DpConverter.converDpToPx(60);
             float mY = DpConverter.converDpToPx(120);
@@ -51,6 +51,9 @@ public class CustomDrawingFragment extends Fragment {
 
             Rect(View parent) {
                 mParent = parent;
+                mPaint = new Paint();
+                mPaint.setStyle(Paint.Style.FILL);
+                mPaint.setColor(parent.getContext().getResources().getColor(R.color.niceBlue));
             }
 
             // Example of an animator subclass that works with a class which doesn't derive from `View`
@@ -73,43 +76,40 @@ public class CustomDrawingFragment extends Fragment {
 
                 public AdditiveRectAnimator x(float x) {
                     // AdditiveAnimation objects can be instantiated with a getter/setter or just by providing a key which will later be retrieved in applyCustomProperties()
-                    return animate(new AdditiveAnimation(mCurrentTarget, X, mCurrentTarget.mX, x));
+                    return animate(new AdditiveAnimation<>(mCurrentTarget, X, mCurrentTarget.mX, x));
                 }
 
                 public AdditiveRectAnimator y(float y) {
-                    return animate(new AdditiveAnimation(mCurrentTarget, Y, mCurrentTarget.mY, y));
+                    return animate(new AdditiveAnimation<>(mCurrentTarget, Y, mCurrentTarget.mY, y));
                 }
 
                 public AdditiveRectAnimator size(float size) {
-                    return animate(new AdditiveAnimation(mCurrentTarget, SIZE, mCurrentTarget.mSize, size));
+                    return animate(new AdditiveAnimation<>(mCurrentTarget, SIZE, mCurrentTarget.mSize, size));
                 }
 
                 public AdditiveRectAnimator cornerRadius(float cornerRadius) {
-                    return animate(new AdditiveAnimation(mCurrentTarget, CORNER_RADIUS, mCurrentTarget.mCornerRadius, cornerRadius));
+                    return animate(new AdditiveAnimation<>(mCurrentTarget, CORNER_RADIUS, mCurrentTarget.mCornerRadius, cornerRadius));
                 }
 
                 public AdditiveRectAnimator rotation(float rotation) {
-                    return animate(new AdditiveAnimation(mCurrentTarget, ROTATION, mCurrentTarget.mRotation, rotation));
+                    return animate(new AdditiveAnimation<>(mCurrentTarget, ROTATION, mCurrentTarget.mRotation, rotation));
                 }
 
                 // This method is called when we try to animate keys without a getter/setter, as we do in this example
                 @Override
                 protected void applyCustomProperties(Map<String, Float> tempProperties, Rect target) {
                     for(Map.Entry<String, Float> entry : tempProperties.entrySet()) {
-                        if(entry.getKey().equals(X)) {
-                           target.mX = entry.getValue();
-                        }
-                        if(entry.getKey().equals(Y)) {
-                            target.mY = entry.getValue();
-                        }
-                        if(entry.getKey().equals(SIZE)) {
-                            target.mSize = entry.getValue();
-                        }
-                        if(entry.getKey().equals(ROTATION)) {
-                            target.mRotation = entry.getValue();
-                        }
-                        if(entry.getKey().equals(CORNER_RADIUS)) {
-                            target.mCornerRadius = entry.getValue();
+                        switch (entry.getKey()) {
+                            case X:
+                                target.mX = entry.getValue();
+                            case Y:
+                                target.mY = entry.getValue();
+                            case SIZE:
+                                target.mSize = entry.getValue();
+                            case ROTATION:
+                                target.mRotation = entry.getValue();
+                            case CORNER_RADIUS:
+                                target.mCornerRadius = entry.getValue();
                         }
                     }
 
@@ -147,28 +147,33 @@ public class CustomDrawingFragment extends Fragment {
                 mRects.add(new Rect(this));
             }
 
-            mPaint.setStyle(Paint.Style.FILL);
-            mPaint.setColor(context.getResources().getColor(R.color.niceBlue));
+            // Default object animator to animate the paints of the rects
+            AdditiveObjectAnimator<Paint> paintAnimator = new AdditiveObjectAnimator<Paint>()
+                                                                .setDuration(1000)
+                                                                .setRepeatCount(ValueAnimator.INFINITE)
+                                                                .setRepeatMode(ValueAnimator.REVERSE)
+                                                                .setAnimationApplier(animationApplier);
 
-            // Animate the color of the paint object without a subclass
-            AdditiveObjectAnimator.animate(mPaint)
-                    .setRepeatCount(ValueAnimator.INFINITE)
-                    .setRepeatMode(ValueAnimator.REVERSE)
-                    .setAnimationApplier(animationApplier)
-                    .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), mPaintColorProperty)
-                    .start();
 
             // Use the custom subclass to animate size and corner radius of all rects
-            Rect.AdditiveRectAnimator rectAnimator = new Rect.AdditiveRectAnimator();
+            Rect.AdditiveRectAnimator rectAnimator = new Rect.AdditiveRectAnimator()
+                                                                .setDuration(1000)
+                                                                .setRepeatCount(ValueAnimator.INFINITE)
+                                                                .setRepeatMode(ValueAnimator.REVERSE);
 
             for(Rect rect : mRects) {
                 rectAnimator = rectAnimator.target(rect)
-                                           .setDuration(1000)
-                                           .setRepeatCount(ValueAnimator.INFINITE).setRepeatMode(ValueAnimator.REVERSE)
-                                           .size(DpConverter.converDpToPx(100))
+                                           .size(DpConverter.converDpToPx(80))
                                            .cornerRadius(DpConverter.converDpToPx(50))
                                            .thenWithDelay(100);
+
+                // Animate the color of the paint object without a subclass using a custom animation applier
+                paintAnimator = paintAnimator.target(rect.mPaint)
+                        .property(context.getResources().getColor(R.color.niceGreen), new ColorEvaluator(), mPaintColorProperty)
+                        .thenWithDelay(100);
             }
+
+            paintAnimator.start();
             rectAnimator.start();
 
             setOnTouchListener(new OnTouchListener() {
@@ -201,9 +206,9 @@ public class CustomDrawingFragment extends Fragment {
         @Override
         protected void onDetachedFromWindow() {
             super.onDetachedFromWindow();
-            AdditiveObjectAnimator.cancelAnimations(mPaint);
             for(Rect rect : mRects) {
                 Rect.AdditiveRectAnimator.cancelAnimations(rect);
+                AdditiveObjectAnimator.cancelAnimations(rect.mPaint);
             }
         }
 
@@ -217,14 +222,14 @@ public class CustomDrawingFragment extends Fragment {
                 canvas.translate(rect.mX, rect.mY);
                 canvas.rotate(rect.mRotation);
 
-                float hs = rect.mSize / 2; // half size
+                float hs = rect.mSize / 2;
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     // the canvas center is now at mRect.mX/mRect.mY, so we need to draw ourselves from -size/2 to size/2.
-                    canvas.drawRoundRect(-hs, -hs, hs, hs, rect.mCornerRadius, rect.mCornerRadius, mPaint);
+                    canvas.drawRoundRect(-hs, -hs, hs, hs, rect.mCornerRadius, rect.mCornerRadius, rect.mPaint);
                 } else {
                     // No rounded corners for API <= 21 :(
-                    canvas.drawRect(-hs, -hs, hs, hs, mPaint);
+                    canvas.drawRect(-hs, -hs, hs, hs, rect.mPaint);
                 }
 
                 canvas.restore();
