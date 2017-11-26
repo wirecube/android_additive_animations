@@ -84,18 +84,24 @@ AdditiveObjectAnimator.animate(myPaint)
     .start();
 ```
 
+A more complete example of both of these approaches can be found in the sample app in  `CustomDrawingFragment.java`.
+
 Both versions don't require a lot of code, and the few lines you have to write are almost always trivial.
 # Integration
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.3.1'
+    compile 'at.wirecube:additive_animations:1.5.0'
 }
 ...
 repositories {
     jcenter()
 }
 ```
+
+**Note**: Thre is a  breaking change when migrating from a version <1.5.0 to a version >= 1.5.0:
+Instead of subclassing `AdditiveAnimator`, you now have to subclass `SubclassableAdditiveViewAnimator` instead.
+Sorry for the change, it was necessary due to Java constraints (nesting of generics across subclasses) and improves interop with Kotlin (no more generic arguments required!).
 
 # License
 `AdditiveAnimator` is licensed under the Apache v2 license:

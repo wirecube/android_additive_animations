@@ -45,7 +45,7 @@ public final class AdditiveAnimator extends SubclassableAdditiveViewAnimator<Add
     public static AdditiveAnimator animate(View view, long duration) {
         return new AdditiveAnimator(view).setDuration(duration);
     }
-    
+
     @Override
     protected AdditiveAnimator newInstance() {
         return new AdditiveAnimator();
