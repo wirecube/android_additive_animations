@@ -42,6 +42,12 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     @Override
+    public Float getCurrentPropertyValue(String propertyName) {
+        // This subclass only supports property-backed animations.
+        return null;
+    }
+
+    @Override
     public T target(View view) {
         if(mWithLayer) {
             withLayer();
@@ -94,6 +100,11 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
                 v.requestLayout();
             }
         }
+    }
+
+    @Override
+    public void onApplyChanges() {
+        // don't need to do anything, this is handled by applyChanges() already.
     }
 
     public T skipRequestLayout() {

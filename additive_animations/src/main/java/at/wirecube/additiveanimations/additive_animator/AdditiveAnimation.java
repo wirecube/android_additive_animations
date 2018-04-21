@@ -169,19 +169,19 @@ public class AdditiveAnimation<T> {
         return mAccumulatedValues;
     }
 
-    public AdditiveAnimation<T> cloneWithTarget(T target) {
+    public AdditiveAnimation<T> cloneWithTarget(T target, Float startValue) {
         final AdditiveAnimation animation;
         if(this.getProperty() != null) {
             if (this.getPath() != null) {
-                animation = new AdditiveAnimation(target, mProperty, mProperty.get(target), getPath(), mPathMode, mSharedPathEvaluator);
+                animation = new AdditiveAnimation(target, mProperty, startValue, getPath(), mPathMode, mSharedPathEvaluator);
             } else {
-                animation = new AdditiveAnimation(target, mProperty, mProperty.get(target), mTargetValue);
+                animation = new AdditiveAnimation(target, mProperty, startValue, mTargetValue);
             }
         } else {
             if(this.getPath() != null) {
-                animation = new AdditiveAnimation(mTarget, mTag, target.);
+                animation = new AdditiveAnimation(target, mTag, startValue, getPath(), mPathMode, mSharedPathEvaluator);
             } else {
-
+                animation = new AdditiveAnimation(target, mTag, startValue, mTargetValue);
             }
         }
         if(mCustomInterpolator != null) {

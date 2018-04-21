@@ -68,15 +68,22 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                         rotation += 10;
                     }
 
+                    long animationStagger = 50;
+
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(views, 50).withLayer().x(x).y(y).rotation(rotation).start();
+                        AdditiveAnimator.animate(views, animationStagger).withLayer().x(x).y(y).rotation(rotation).start();
+                        // The above line is equivalent to this loop:
+//                    AdditiveAnimator animator = new AdditiveAnimator();
+//                    for(View view : mViews) {
+//                        animator = animator.target(view).x(x).y(y).rotation(rotation).thenWithDelay(50);
+//                    }
+//                    animator.start();
                     } else {
-                        long duration = 1000;
-                        long delayBetweenViews = 50;
                         for(int i = 0; i < views.size(); i++) {
                             ViewPropertyObjectAnimator.animate(views.get(i))
-                                    .setStartDelay(delayBetweenViews * i)
-                                    .setDuration(duration)
+                                    .setStartDelay(animationStagger * i)
+                                    .withLayer()
+                                    .setDuration(1000)
                                     .x(x)
                                     .y(y)
                                     .rotation(rotation)

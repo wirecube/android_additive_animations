@@ -49,8 +49,13 @@ public class AdditiveObjectAnimator<V> extends BaseAdditiveAnimator<AdditiveObje
     }
 
     @Override
-    void applyChanges(List<AccumulatedAnimationValue<V>> accumulatedAnimations) {
-        super.applyChanges(accumulatedAnimations);
+    public Float getCurrentPropertyValue(String propertyName) {
+        // AdditiveObjectAnimator only works with property-backed animations, so we don't need to implement this method
+        return null;
+    }
+
+    @Override
+    public void onApplyChanges() {
         if(mAnimationApplier != null) {
             mAnimationApplier.run();
         }

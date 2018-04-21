@@ -49,6 +49,7 @@ public class DemoView extends View {
         Runnable animationApplier = new ViewAnimationApplier(this);
 
         long delayBetweenAnimations = 100;
+
         // Use the custom subclass to animate size and corner radius of all rects
         new AdditiveRectAnimator().setDuration(1000).setRepeatCount(ValueAnimator.INFINITE).setRepeatMode(ValueAnimator.REVERSE)
                 .targets(mRects, delayBetweenAnimations)
@@ -56,7 +57,7 @@ public class DemoView extends View {
                 .cornerRadius(DpConverter.converDpToPx(50))
                 .start();
 
-        // Default object animator to animate all the paints with some delay:
+        // Default object animator to animate all the paints:
         new AdditiveObjectAnimator<Paint>()
                 .setDuration(1000)
                 .setRepeatCount(ValueAnimator.INFINITE)
@@ -79,17 +80,6 @@ public class DemoView extends View {
                         rotationTarget -= 10;
                     }
                     new AdditiveRectAnimator().targets(mRects, 50).x(event.getX()).y(event.getY()).rotation(rotationTarget).start();
-
-                    // The above line is equivalent to this loop:
-//                    AdditiveRectAnimator animator = new AdditiveRectAnimator();
-//                    for(Rect rect : mRects) {
-//                        animator = animator.target(rect)
-//                                           .rotation(rotationTarget)
-//                                           .x(event.getX())
-//                                           .y(event.getY())
-//                                           .thenWithDelay(50);
-//                    }
-//                    animator.start();
                 }
                 return true;
             }

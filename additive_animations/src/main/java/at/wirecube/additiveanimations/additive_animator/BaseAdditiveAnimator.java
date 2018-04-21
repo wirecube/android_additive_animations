@@ -32,7 +32,7 @@ import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
  * @param <T> This generic should be instantiated with a concrete subclass of BaseAdditiveAnimator. It is used to access the builder methods across hierarchies.
  *           Example:<p>
  *
- *           <b><code>public class MyViewAnimator extends BaseAdditiveAnimator{@literal<}MyAnimator, View{@literal>}</code></b>
+ *           <b><code>public class MyViewAnimator extends BaseAdditiveAnimator{@literal <}MyViewAnimator, View{@literal >}</code></b>
  * @param <V> The type of object to be animated.
  */
 public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V extends Object> {
@@ -144,12 +144,21 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     /**
      * Finds the last target value of the property with the given name, if it was ever animated.
      * This method can return null if the value hasn't been animated or the animation is already done.
-     * If you use custom properties in your subclass, you might want to override this method to return
-     * the actual model value.
      */
     public Float getTargetPropertyValue(String propertyName) {
-        return mCurrentStateManager == null ? null : mCurrentStateManager.getLastTargetValue(propertyName);
+        if(mCurrentStateManager != null && mCurrentStateManager.getLastTargetValue(propertyName) != null) {
+            return mCurrentStateManager.getLastTargetValue(propertyName);
+        } else {
+            return getCurrentPropertyValue(propertyName);
+        }
     }
+
+    /**
+     * Returns the actual value of the animation target with the given name.
+     * @apiNote If you use custom tags in your subclass WITHOUT PROPERTIES, you MUST override this method to return
+     * the actual model value, otherwise some features will crash.
+     */
+    abstract public Float getCurrentPropertyValue(String propertyName);
 
     /**
      * Returns the last value that was queued for animation, but whose animation has not yet started.
@@ -178,8 +187,6 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             }
         }
 
-        // TODO: onChangedTargets method for subclasses
-
         if(mUnknownProperties != null) {
             for (V v : mUnknownProperties.keySet()) {
                 for(AccumulatedAnimationValue value : mUnknownProperties.get(v)) {
@@ -195,7 +202,15 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             properties.clear();
         }
         mChangedUnknownProperties.clear();
+
+        this.onApplyChanges();
     }
+
+    /**
+     * This method will be called when the current frame has been calculated.
+     * Override this method in a subclass to trigger a layout of your view/canvas/custom object.
+     */
+    public abstract void onApplyChanges();
 
     protected void applyCustomProperties(Map<String, Float> tempProperties, V target) {
         // Override to apply custom properties
@@ -220,7 +235,15 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     protected final T animate(final AdditiveAnimation animation) {
         initValueAnimatorIfNeeded();
         mCurrentStateManager.addAnimation(mAnimationAccumulator, animation);
-        runIfParentIsInSameAnimationGroup(() -> mParent.animate(animation.cloneWithTarget(mParent.getCurrentTarget())));
+        runIfParentIsInSameAnimationGroup(() -> {
+            final Float startValue;
+            if(animation.getProperty() != null) {
+                startValue = (Float) animation.getProperty().get(mParent.getCurrentTarget());
+            } else {
+                startValue = getTargetPropertyValue(animation.getTag());
+            }
+            mParent.animate(animation.cloneWithTarget(mParent.getCurrentTarget(), startValue));
+        });
         return self();
     }
 
