@@ -168,4 +168,28 @@ public class AdditiveAnimation<T> {
     public AccumulatedAnimationValue getAccumulatedValues() {
         return mAccumulatedValues;
     }
+
+    public AdditiveAnimation<T> cloneWithTarget(T target) {
+        final AdditiveAnimation animation;
+        if(this.getProperty() != null) {
+            if (this.getPath() != null) {
+                animation = new AdditiveAnimation(target, mProperty, mProperty.get(target), getPath(), mPathMode, mSharedPathEvaluator);
+            } else {
+                animation = new AdditiveAnimation(target, mProperty, mProperty.get(target), mTargetValue);
+            }
+        } else {
+            if(this.getPath() != null) {
+                animation = new AdditiveAnimation(mTarget, mTag, target.);
+            } else {
+
+            }
+        }
+        if(mCustomInterpolator != null) {
+            animation.setCustomInterpolator(mCustomInterpolator);
+        }
+        if(mCustomTypeEvaluator != null) {
+            animation.setCustomTypeEvaluator(mCustomTypeEvaluator);
+        }
+        return animation;
+    }
 }

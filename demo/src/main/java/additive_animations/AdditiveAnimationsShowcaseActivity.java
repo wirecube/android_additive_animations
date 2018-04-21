@@ -14,7 +14,7 @@ import android.widget.Switch;
 
 import additive_animations.fragments.AnimationChainingDemoFragment;
 import additive_animations.fragments.CustomAnimationsWithoutSubclassDemoFragment;
-import additive_animations.fragments.CustomDrawingFragment;
+import additive_animations.fragments.custom_drawing.CustomDrawingFragment;
 import additive_animations.fragments.MarginsDemoFragment;
 import additive_animations.fragments.MoveAlongPathDemoFragment;
 import additive_animations.fragments.MultipleViewsAnimationDemoFragment;

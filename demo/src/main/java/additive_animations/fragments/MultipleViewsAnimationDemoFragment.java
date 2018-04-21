@@ -6,6 +6,7 @@ import android.graphics.Path;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,6 +16,7 @@ import android.widget.FrameLayout;
 import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import additive_animations.AdditiveAnimationsShowcaseActivity;
@@ -25,10 +27,6 @@ import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
 public class MultipleViewsAnimationDemoFragment extends Fragment {
     FrameLayout rootView;
-    View orangeView;
-    View blueView;
-    View greenView;
-    View pinkView;
     int rotation = 0;
 
     List<View> views = new ArrayList<>();
@@ -37,19 +35,20 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = (FrameLayout) inflater.inflate(R.layout.fragment_multiple_views_demo, container, false);
-        orangeView = rootView.findViewById(R.id.animated_view);
-        blueView = rootView.findViewById(R.id.animated_view2);
-        greenView = rootView.findViewById(R.id.animated_view3);
-        pinkView = rootView.findViewById(R.id.animated_view4);
+        views = Arrays.asList(
+                rootView.findViewById(R.id.animated_view4), rootView.findViewById(R.id.animated_view5),
+                rootView.findViewById(R.id.animated_view6), rootView.findViewById(R.id.animated_view7),
+                rootView.findViewById(R.id.animated_view8), rootView.findViewById(R.id.animated_view9),
+                rootView.findViewById(R.id.animated_view10), rootView.findViewById(R.id.animated_view11),
+                rootView.findViewById(R.id.animated_view12), rootView.findViewById(R.id.animated_view13),
+                rootView.findViewById(R.id.animated_view14), rootView.findViewById(R.id.animated_view15),
+                rootView.findViewById(R.id.animated_view16), rootView.findViewById(R.id.animated_view17),
+                rootView.findViewById(R.id.animated_view18), rootView.findViewById(R.id.animated_view19),
+                rootView.findViewById(R.id.animated_view20), rootView.findViewById(R.id.animated_view21),
+                rootView.findViewById(R.id.animated_view22), rootView.findViewById(R.id.animated_view23),
+                rootView.findViewById(R.id.animated_view24), rootView.findViewById(R.id.animated_view25));
 
-        pinkView.setVisibility(View.GONE);
-        blueView.setVisibility(View.GONE);
-        greenView.setVisibility(View.GONE);
-        orangeView.setVisibility(View.GONE);
-
-        for(int i = 5; i < 25; i++) {
-            View v = rootView.findViewById(R.id.animated_view4 + i - 4);
-            views.add(v);
+        for(View v : views) {
             v.setAlpha(0.2f);
         }
 
@@ -61,7 +60,7 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                     float y = event.getY();
 
                     if(event.getAction() == MotionEvent.ACTION_UP && AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        // snap to 360°
+                        // snap to 360° only when using additive animations - you won't ever see the views rotate without additive animations otherwise.
                         rotation = 0;
                     } else if(x < rootView.getWidth()/2.0) {
                         rotation -= 10;
@@ -69,34 +68,29 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                         rotation += 10;
                     }
 
-                    float width = rootView.getWidth();
-                    float height = rootView.getHeight();
-
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator animator = new AdditiveAnimator().withLayer()
-//                                .target(orangeView).x(x).y(y).rotation(rotation).alpha(alpha).thenWithDelay(50)
-//                                .target(blueView).x(width - x - blueView.getWidth()).y(height - y).rotation(-rotation).alpha(alpha).thenWithDelay(50)
-//                                .target(greenView).x(x).y(height - y).rotation(-rotation).alpha(alpha).thenWithDelay(50)
-//                                .target(pinkView).x(width - x - pinkView.getWidth()).y(y).alpha(alpha).rotation(rotation).thenWithDelay(50)
-                        ;
-                        for(View view : views) {
-                            animator = animator.target(view).x(x).y(y).rotation(rotation).thenWithDelay(50);
-                        }
-                        animator.start();
+                        AdditiveAnimator.animate(views, 50).withLayer().x(x).y(y).rotation(rotation).start();
                     } else {
-                        AnimatorSet animatorSet = new AnimatorSet();
-                        animatorSet.setInterpolator(EaseInOutPathInterpolator.create());
-                        animatorSet.setDuration(1000);
-                        List<Animator> animators = new ArrayList<>();
-                        animators.add(ViewPropertyObjectAnimator.animate(orangeView).x(x).y(y).rotation(rotation).get());
-                        animators.add(ViewPropertyObjectAnimator.animate(blueView).x(width - x - blueView.getWidth()).y(height - y).rotation(-rotation).get());
-                        animators.add(ViewPropertyObjectAnimator.animate(greenView).x(x).y(height - y).rotation(-rotation).get());
-                        animators.add(ViewPropertyObjectAnimator.animate(pinkView).x(width - x - pinkView.getWidth()).y(y).rotation(rotation).get());
-                        for(View view :views) {
-                            animators.add(ViewPropertyObjectAnimator.animate(view).x(x).y(y).rotation(-rotation).get());
+                        long duration = 1000;
+                        long delayBetweenViews = 50;
+                        for(int i = 0; i < views.size(); i++) {
+                            ViewPropertyObjectAnimator.animate(views.get(i))
+                                    .setStartDelay(delayBetweenViews * i)
+                                    .setDuration(duration)
+                                    .x(x)
+                                    .y(y)
+                                    .rotation(rotation)
+                                    .start();
                         }
-                        animatorSet.playTogether(animators);
-                        animatorSet.start();
+//                        AnimatorSet animatorSet = new AnimatorSet();
+//                        animatorSet.setInterpolator(EaseInOutPathInterpolator.create());
+//                        animatorSet.setDuration(1000);
+//                        List<Animator> animators = new ArrayList<>();
+//                        for(View view : views) {
+//                            animators.add(ViewPropertyObjectAnimator.animate(view).x(x).y(y).rotation(-rotation).get());
+//                        }
+//                        animatorSet.playTogether(animators);
+//                        animatorSet.start();
                     }
                 }
                 return true;

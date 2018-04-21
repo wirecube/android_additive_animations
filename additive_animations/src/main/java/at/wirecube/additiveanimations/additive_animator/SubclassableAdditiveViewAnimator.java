@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import at.wirecube.additiveanimations.helper.AnimationUtils;
+import at.wirecube.additiveanimations.helper.FloatProperty;
 import at.wirecube.additiveanimations.helper.evaluators.ColorEvaluator;
 import at.wirecube.additiveanimations.helper.propertywrappers.ColorProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.ElevationProperties;
@@ -111,6 +112,9 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
         }
         mSkipRequestLayout = true;
         mWithLayer = true;
+
+        runIfParentIsInSameAnimationGroup(() -> mParent.withLayer());
+
         return self();
     }
 
@@ -122,6 +126,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
             mCurrentStateManager.setUseHardwareLayer(false);
         }
         mWithLayer = false;
+        runIfParentIsInSameAnimationGroup(() -> mParent.withoutLayer());
         return self();
     }
 
@@ -148,7 +153,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     public T scale(float scale) {
         scaleY(scale);
         scaleX(scale);
-        return (T)this;
+        return (T) this;
     }
 
     public T scaleBy(float scalesBy) {
@@ -189,6 +194,26 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
         return self();
     }
 
+    /**
+     * Wrapper for {@link #animatePropertyBy(Property, float, boolean)}, with byValueCanBeUsedByParentAnimators set to true.
+     */
+    private T animatePropertyBy(Property<View, Float> property, float by) {
+        return animatePropertyBy(property, by, true);
+    }
+
+    // Helper for animating rotation properties when we belong to an animation group.
+    // Because we compute a delta value for the current target, we can't simply let BaseAdditiveAnimator
+    // handle the propagation of the update.
+    private T animateRotationProperty(Property<View, Float> property, float target) {
+        float currentValue = getTargetPropertyValue(property);
+        if(getQueuedPropertyValue(property.getName()) != null) {
+            currentValue = getQueuedPropertyValue(property.getName());
+        }
+        float shortestDistance = AnimationUtils.shortestAngleBetween(currentValue, target);
+        runIfParentIsInSameAnimationGroup(() -> ((SubclassableAdditiveViewAnimator) mParent).animateRotationProperty(property, target));
+        return animatePropertyBy(property, shortestDistance, false);
+    }
+
     public T alpha(float alpha) {
         return animate(View.ALPHA, alpha);
     }
@@ -198,12 +223,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     public T rotation(float rotation) {
-        float currentValue = getTargetPropertyValue(View.ROTATION);
-        if(getQueuedPropertyValue(View.ROTATION.getName()) != null) {
-            currentValue = getQueuedPropertyValue(View.ROTATION.getName());
-        }
-        float shortestDistance = AnimationUtils.shortestAngleBetween(currentValue, rotation);
-        return animatePropertyBy(View.ROTATION, shortestDistance);
+        return animateRotationProperty(View.ROTATION, rotation);
     }
 
     public T rotationBy(float rotationBy) {
@@ -211,12 +231,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     public T rotationX(float rotationX) {
-        float currentValue = getTargetPropertyValue(View.ROTATION_X);
-        if(getQueuedPropertyValue(View.ROTATION_X.getName()) != null) {
-            currentValue = getQueuedPropertyValue(View.ROTATION_X.getName());
-        }
-        float shortestDistance = AnimationUtils.shortestAngleBetween(currentValue, rotationX);
-        return animatePropertyBy(View.ROTATION_X, shortestDistance);
+        return animateRotationProperty(View.ROTATION_X, rotationX);
     }
 
     public T rotationXBy(float rotationXBy) {
@@ -224,12 +239,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     public T rotationY(float rotationY) {
-        float currentValue = getTargetPropertyValue(View.ROTATION_Y);
-        if(getQueuedPropertyValue(View.ROTATION_Y.getName()) != null) {
-            currentValue = getQueuedPropertyValue(View.ROTATION_Y.getName());
-        }
-        float shortestDistance = AnimationUtils.shortestAngleBetween(getTargetPropertyValue(View.ROTATION_Y), rotationY);
-        return animatePropertyBy(View.ROTATION_Y, shortestDistance);
+        return animateRotationProperty(View.ROTATION_Y, rotationY);
     }
 
     public T rotationYBy(float rotationYBy) {

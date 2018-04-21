@@ -9,35 +9,6 @@
     tools:context="additive_animations.AdditiveAnimationsShowcaseActivity">
 
     <View
-        android:id="@+id/animated_view"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginLeft="50dp"
-        android:layout_marginTop="50dp"
-        android:background="@color/niceOrange">
-    </View>
-
-    <View
-        android:id="@+id/animated_view2"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_gravity="bottom|right"
-        android:layout_marginRight="50dp"
-        android:layout_marginBottom="50dp"
-        android:background="@color/niceBlue">
-    </View>
-
-    <View
-        android:id="@+id/animated_view3"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_gravity="top|right"
-        android:layout_marginRight="50dp"
-        android:layout_marginTop="50dp"
-        android:background="@color/niceGreen">
-    </View>
-
-    <View
         android:id="@+id/animated_view4"
         android:layout_width="100dp"
         android:layout_height="100dp"
@@ -220,6 +191,15 @@
     </View>
     <View
         android:id="@+id/animated_view24"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="bottom|left"
+        android:layout_marginLeft="50dp"
+        android:layout_marginBottom="50dp"
+        android:background="@color/nicePink">
+    </View>
+    <View
+        android:id="@+id/animated_view25"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_gravity="bottom|left"
