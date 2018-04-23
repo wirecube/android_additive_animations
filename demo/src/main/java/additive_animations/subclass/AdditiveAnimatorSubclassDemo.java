@@ -8,7 +8,7 @@ import at.wirecube.additiveanimations.additive_animator.SubclassableAdditiveView
 public class AdditiveAnimatorSubclassDemo extends SubclassableAdditiveViewAnimator<AdditiveAnimatorSubclassDemo> {
 
     public static AdditiveAnimatorSubclassDemo animate(View v) {
-        return new AdditiveAnimatorSubclassDemo().addTarget(v);
+        return new AdditiveAnimatorSubclassDemo().target(v);
     }
 
     public AdditiveAnimatorSubclassDemo() { super(); }

@@ -37,11 +37,6 @@ import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
  */
 public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V extends Object> {
 
-    private static final long NO_ANIMATION_GROUP = -1;
-
-    /** Global counter for incrementing animation group ids. */
-    private static long ANIMATION_GROUP_COUNTER = 0;
-
     protected T mParent = null; // not null when this animator was queued using `then()` chaining.
     protected V mCurrentTarget = null;
     protected AdditiveAnimationStateManager<V> mCurrentStateManager = null; // only used for performance reasons
@@ -61,7 +56,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * Animation groups are inherited with then() chaining.
      * All animators in the group can have different starting offsets when using the targets(views, stagger) method.
      */
-    protected long mAnimationGroupId = NO_ANIMATION_GROUP;
+    protected AdditiveAnimatorGroup mAnimatorGroup = null;
 
     private boolean mIsValid = true; // invalid after start() has been called.
 
@@ -363,12 +358,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * If you want to animate the same property of multiple views, use {@link #targets(Object[])} or {@link #targets(List, long)}
      */
     public T target(V v) {
-        if(mAnimationGroupId != NO_ANIMATION_GROUP) {
+        if(mAnimatorGroup != null) {
             // Changes to animation duration, interpolator etc. always affect the whole animation group.
             // After changing target, we don't want to mess with the current animation group, because you would want something like this to be possible:
             // new AdditiveAnimator().targets(v1, v2).setDuration(200).x(50).target(v3).x(100).setDuration(100).start();
             // It's clear from that example that the animation duration for v1 and v2 should be the same (200), but different for v3 (100).
-            return (T) thenWithDelay(0).target(v);
+            return (T) createChildWithDelayAfterParentStart(0).target(v);
         }
         mCurrentTarget = v;
         mCurrentStateManager = AdditiveAnimationStateManager.from(v);
@@ -407,24 +402,23 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             throw new IllegalArgumentException("You passed a list containing 0 views to BaseAdditiveAnimator.targets(). This would cause buggy animations, so it's probably more desirable to crash instead.");
         }
 
-        if(mAnimationGroupId != NO_ANIMATION_GROUP) {
+        if(mAnimatorGroup != null) {
             // if we are already part of an animation group, we create a new animator:
-            return (T) thenWithDelay(0).targets(vs, stagger);
+            return (T) createChildWithDelayAfterParentStart(0).targets(vs, stagger);
         }
 
-        long newAnimationGroupId = ++ANIMATION_GROUP_COUNTER;
-
+        AdditiveAnimatorGroup group = new AdditiveAnimatorGroup();
         // Call order is important here:
-        // We must call target() before setting the animation group ID, otherwise we create a new animator!
+        // We must call target() before setting the animator group, otherwise we create a new animator
         this.target(vs.get(0));
-        this.mAnimationGroupId = newAnimationGroupId;
+        group.add(this);
 
         T animator = self();
         for(int i = 1; i < vs.size(); i++) {
-            animator = (T) animator.thenWithDelay(stagger);
-            // Same as above: call order (first target(), then setting mAnimationGroupId) is important.
+            animator = (T) animator.createChildWithDelayAfterParentStart(stagger);
+            // Same as above: call order (first target(), then adding to animator group) is important.
             animator.target(vs.get(i));
-            animator.mAnimationGroupId = newAnimationGroupId;
+            group.add(animator);
         }
         return animator;
     }
@@ -497,7 +491,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T switchDuration(long durationMillis) {
-        T child = thenWithDelay(0);
+        T child = createChildWithDelayAfterParentStart(0);
         child.setDuration(durationMillis);
         return child;
     }
@@ -584,43 +578,80 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * that was configured with this animator.
      */
     public T then() {
-        T newInstance = newInstance();
-        newInstance.setParent(self());
-        newInstance.setStartDelay(getTotalDuration());
-        return newInstance;
+        if(mAnimatorGroup != null) {
+            return (T)mAnimatorGroup.copyAndChain(new AdditiveAnimatorGroup.StartDelayProvider() {
+                @Override
+                public long getStartDelay(BaseAdditiveAnimator parent) {
+                    return parent.getTotalDuration();
+                }
+            }).outermostChildAnimator();
+        }
+        return createChildWithRawDelay(getTotalDuration());
     }
 
     /**
      * Creates a new animator configured to start after <code>delay</code> milliseconds from now
      * with the last used target and interpolator.
      */
-    public T thenWithDelay(long delay) {
-        T newAnimator = then();
-        newAnimator.setStartDelay(getValueAnimator().getStartDelay() + delay);
-        return newAnimator;
+    public T thenWithDelay(final long delay) {
+        if(mAnimatorGroup != null) {
+            return (T) mAnimatorGroup.copyAndChain(new AdditiveAnimatorGroup.StartDelayProvider() {
+                @Override
+                public long getStartDelay(BaseAdditiveAnimator parent) {
+                    return parent.getValueAnimator().getStartDelay() + delay;
+                }
+            }).outermostChildAnimator();
+        }
+        return createChildWithDelayAfterParentStart(delay);
     }
 
     /**
      * Creates a new animator configured to start after <code>delayAfterEnd</code> milliseconds after the previous animation has ended
      * with the last used target and interpolator.
      */
-    public T thenDelayAfterEnd(long delayAfterEnd) {
-        T newAnimator = then();
-        newAnimator.setStartDelay(getTotalDuration() + delayAfterEnd);
-        return newAnimator;
+    public T thenDelayAfterEnd(final long delayAfterEnd) {
+        if(mAnimatorGroup != null) {
+            return (T) mAnimatorGroup.copyAndChain(new AdditiveAnimatorGroup.StartDelayProvider() {
+                @Override
+                public long getStartDelay(BaseAdditiveAnimator parent) {
+                    return parent.getTotalDuration() + delayAfterEnd;
+                }
+            }).outermostChildAnimator();
+        }
+        return createChildWithRawDelay(getTotalDuration() + delayAfterEnd);
     }
 
     /**
      * Creates a new animator configured to start after <code>delayBeforeEnd</code> milliseconds before the previous animation finishes
      * with the last used target and interpolator.
      */
-    public T thenBeforeEnd(long millisBeforeEnd) {
-        T newAnimator = then();
-        newAnimator.setStartDelay(getTotalDuration() - millisBeforeEnd);
-        return newAnimator;
+    public T thenBeforeEnd(final long millisBeforeEnd) {
+        if(mAnimatorGroup != null) {
+            return (T)mAnimatorGroup.copyAndChain(new AdditiveAnimatorGroup.StartDelayProvider() {
+                @Override
+                public long getStartDelay(BaseAdditiveAnimator parent) {
+                    return parent.getTotalDuration() - millisBeforeEnd;
+                }
+            }).outermostChildAnimator();
+        }
+        return createChildWithRawDelay(getTotalDuration() - millisBeforeEnd);
     }
 
-    private long getTotalDuration() {
+    protected T createChildWithRawDelay(long delay) {
+        T newInstance = newInstance();
+        newInstance.setParent(self());
+        newInstance.setStartDelay(delay);
+        return newInstance;
+    }
+
+    protected T createChildWithDelayAfterParentStart(long delay) {
+        T newInstance = createChildWithRawDelay(0);
+        newInstance.setStartDelay(getValueAnimator().getStartDelay() + delay);
+        return newInstance;
+    }
+
+    // package-private on purpose
+    long getTotalDuration() {
         if (getValueAnimator().getRepeatCount()== ValueAnimator.INFINITE) {
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 return ValueAnimator.DURATION_INFINITE;
@@ -661,6 +692,10 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         cancelAnimation(property.getName());
     }
 
+    void setAnimationGroup(AdditiveAnimatorGroup group) {
+        mAnimatorGroup = group;
+    }
+
     /**
      * Copies all relevant attributes, including (ONLY) current target from `other` to self.
      * Override if you have custom properties that need to be copied.
@@ -677,7 +712,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     protected void runIfParentIsInSameAnimationGroup(Runnable r) {
-        if(mAnimationGroupId != NO_ANIMATION_GROUP && mParent != null && mParent.mAnimationGroupId == mAnimationGroupId) {
+        if(mAnimatorGroup != null && mParent != null && mParent.mAnimatorGroup == mAnimatorGroup) {
             r.run();
         }
     }

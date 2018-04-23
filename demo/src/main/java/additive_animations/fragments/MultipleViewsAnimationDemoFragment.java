@@ -2,6 +2,7 @@ package additive_animations.fragments;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
+import android.annotation.SuppressLint;
 import android.graphics.Path;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,6 +18,7 @@ import com.bartoszlipinski.viewpropertyobjectanimator.ViewPropertyObjectAnimator
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import additive_animations.AdditiveAnimationsShowcaseActivity;
@@ -31,6 +33,7 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
 
     List<View> views = new ArrayList<>();
 
+    @SuppressLint("ClickableViewAccessibility")
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -52,10 +55,24 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
             v.setAlpha(0.2f);
         }
 
+        final int blue = getResources().getColor(R.color.niceBlue);
+        final int pink = getResources().getColor(R.color.nicePink);
+
         rootView.setOnTouchListener(new View.OnTouchListener() {
+            Date lastTouchEvent = new Date();
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_UP) {
+                    if((new Date().getTime() - lastTouchEvent.getTime()) < 200 && event.getAction() != MotionEvent.ACTION_UP) {
+                        // Throttle a little - a single call of this function enqueues about 100 animators,
+                        // which means we have about 6000 animators after one second of dragging around.
+                        // Unfortunately, that's too much for the current animation system to handle,
+                        // because creating ValueAnimators is a very expensive operation.
+                        // There is some work on using a single shared value animator for all AdditiveAnimator instances,
+                        // but it's extremely difficult to handle repeat modes correctly, and performance is not really an issue at the moment anyway.
+                        return true;
+                    }
+                    lastTouchEvent = new Date();
                     float x = event.getX();
                     float y = event.getY();
 
@@ -63,41 +80,55 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                         // snap to 360° only when using additive animations - you won't ever see the views rotate without additive animations otherwise.
                         rotation = 0;
                     } else if(x < rootView.getWidth()/2.0) {
-                        rotation -= 10;
+                        rotation -= 30;
                     } else {
-                        rotation += 10;
+                        rotation += 30;
                     }
 
                     long animationStagger = 50;
-
                     if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(views, animationStagger).withLayer().x(x).y(y).rotation(rotation).start();
-                        // The above line is equivalent to this loop:
-//                    AdditiveAnimator animator = new AdditiveAnimator();
-//                    for(View view : mViews) {
-//                        animator = animator.target(view).x(x).y(y).rotation(rotation).thenWithDelay(50);
-//                    }
-//                    animator.start();
+                        // what this line does:
+                        // 1. Create a new additive animator that targets all View objects in the views array.
+                        //    The animationStagger describes how much delay should occur between the animations of each animated View.
+                        // 2. Adding some animations to the view: x(), y(), rotation().
+                        //    These animations apply to all views that were previously targeted.
+                        // 3. thenWithDelay() enqueues new animations after the specified delay.
+                        //    All targets that we previously set are still valid, and the stagger between the views is preserved.
+                        //    Example: views[0] started with 0ms delay, views[1] started with 50ms delay.
+                        //             By calling thenWithDelay(200), the next animations for views[0] will run at 200ms, the ones for view[1] will run at 250ms.
+                        // 4. start() starts the entire block on animations.
+                        AdditiveAnimator.animate(views, animationStagger)
+                                .x(x).y(y).rotation(rotation)
+                                .thenWithDelay(200).scale(1.5f).backgroundColor(blue)
+                                .thenWithDelay(200).scale(1.f).backgroundColor(pink)
+                                .start();
                     } else {
+                        // This approximates the animation code from above, but is much more verbose and doesn't even really work:
+                        // ValueAnimator can't handle startDelays very gracefully, so you'll see a lot of jumping when dragging your finger across the screen.
+                        // We also can't do background color, and the two scale animations will overwrite one another.
                         for(int i = 0; i < views.size(); i++) {
                             ViewPropertyObjectAnimator.animate(views.get(i))
                                     .setStartDelay(animationStagger * i)
-                                    .withLayer()
                                     .setDuration(1000)
                                     .x(x)
                                     .y(y)
                                     .rotation(rotation)
                                     .start();
+
+                            ViewPropertyObjectAnimator.animate(views.get(i))
+                                    .setStartDelay(animationStagger * i + 200)
+                                    .setDuration(1000)
+                                    .scales(1.5f)
+                                    // no support for background color :/
+                                    .start();
+
+                            ViewPropertyObjectAnimator.animate(views.get(i))
+                                    .setStartDelay(animationStagger * i + 200 + 200)
+                                    .setDuration(1000)
+                                    .scales(1.f)
+                                    // no support for background color :/
+                                    .start();
                         }
-//                        AnimatorSet animatorSet = new AnimatorSet();
-//                        animatorSet.setInterpolator(EaseInOutPathInterpolator.create());
-//                        animatorSet.setDuration(1000);
-//                        List<Animator> animators = new ArrayList<>();
-//                        for(View view : views) {
-//                            animators.add(ViewPropertyObjectAnimator.animate(view).x(x).y(y).rotation(-rotation).get());
-//                        }
-//                        animatorSet.playTogether(animators);
-//                        animatorSet.start();
                     }
                 }
                 return true;
