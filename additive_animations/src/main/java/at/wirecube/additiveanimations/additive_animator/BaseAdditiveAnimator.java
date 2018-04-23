@@ -235,14 +235,17 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     protected final T animate(final AdditiveAnimation animation) {
         initValueAnimatorIfNeeded();
         mCurrentStateManager.addAnimation(mAnimationAccumulator, animation);
-        runIfParentIsInSameAnimationGroup(() -> {
-            final Float startValue;
-            if(animation.getProperty() != null) {
-                startValue = (Float) animation.getProperty().get(mParent.getCurrentTarget());
-            } else {
-                startValue = getTargetPropertyValue(animation.getTag());
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                final Float startValue;
+                if (animation.getProperty() != null) {
+                    startValue = (Float) animation.getProperty().get(mParent.getCurrentTarget());
+                } else {
+                    startValue = BaseAdditiveAnimator.this.getTargetPropertyValue(animation.getTag());
+                }
+                mParent.animate(animation.cloneWithTarget(mParent.getCurrentTarget(), startValue));
             }
-            mParent.animate(animation.cloneWithTarget(mParent.getCurrentTarget(), startValue));
         });
         return self();
     }
@@ -266,7 +269,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     /**
      * TODO: documentation of byValueCanBeUsedByParentAnimators
      */
-    protected final T animatePropertyBy(Property<V, Float> property, float by, boolean byValueCanBeUsedByParentAnimators) {
+    protected final T animatePropertyBy(final Property<V, Float> property, final float by, final boolean byValueCanBeUsedByParentAnimators) {
         initValueAnimatorIfNeeded();
         float currentTarget = getTargetPropertyValue(property);
         if(getQueuedPropertyValue(property.getName()) != null) {
@@ -276,7 +279,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         initValueAnimatorIfNeeded();
         mCurrentStateManager.addAnimation(mAnimationAccumulator, animation);
         if(byValueCanBeUsedByParentAnimators) {
-            runIfParentIsInSameAnimationGroup(() -> mParent.animatePropertyBy(property, by, byValueCanBeUsedByParentAnimators));
+            runIfParentIsInSameAnimationGroup(new Runnable() {
+                @Override
+                public void run() {
+                    mParent.animatePropertyBy(property, by, byValueCanBeUsedByParentAnimators);
+                }
+            });
         }
         return self();
     }
@@ -466,15 +474,25 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return self();
     }
 
-    public T setStartDelay(long startDelay) {
+    public T setStartDelay(final long startDelay) {
         getValueAnimator().setStartDelay(startDelay);
-        runIfParentIsInSameAnimationGroup(() -> mParent.setStartDelay(startDelay));
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                mParent.setStartDelay(startDelay);
+            }
+        });
         return self();
     }
 
-    public T setDuration(long duration) {
+    public T setDuration(final long duration) {
         getValueAnimator().setDuration(duration);
-        runIfParentIsInSameAnimationGroup(() -> mParent.setDuration(duration));
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                mParent.setDuration(duration);
+            }
+        });
         return self();
     }
 
@@ -484,12 +502,17 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return child;
     }
 
-    public T setInterpolator(TimeInterpolator interpolator) {
+    public T setInterpolator(final TimeInterpolator interpolator) {
         if(mCurrentCustomInterpolator != null) {
             return switchInterpolator(interpolator);
         }
         getValueAnimator().setInterpolator(interpolator);
-        runIfParentIsInSameAnimationGroup(() -> mParent.setInterpolator(interpolator));
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                mParent.setInterpolator(interpolator);
+            }
+        });
         return self();
     }
 
@@ -499,16 +522,26 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     // TODO: docs for possible values (ValueAnimator.INFINITE)
     // TODO: handle parent repeat
-    public T setRepeatCount(int repeatCount) {
+    public T setRepeatCount(final int repeatCount) {
         getValueAnimator().setRepeatCount(repeatCount);
-        runIfParentIsInSameAnimationGroup(() -> mParent.setRepeatCount(repeatCount));
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                mParent.setRepeatCount(repeatCount);
+            }
+        });
         return self();
     }
 
     // TODO: investigate possible problems when repeat modes of children/parents don't match
-    public T setRepeatMode(int repeatMode) {
+    public T setRepeatMode(final int repeatMode) {
         getValueAnimator().setRepeatMode(repeatMode);
-        runIfParentIsInSameAnimationGroup(() -> mParent.setRepeatMode(repeatMode));
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                mParent.setRepeatMode(repeatMode);
+            }
+        });
         return self();
     }
 
@@ -519,7 +552,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * Calling `setInterpolator` after calling this method at least once will behave the same as calling `switchInterpolator`
      * to prevent accidentally overriding the effects of `switchInterpolator`.
      */
-    public T switchInterpolator(TimeInterpolator newInterpolator) {
+    public T switchInterpolator(final TimeInterpolator newInterpolator) {
         initValueAnimatorIfNeeded();
         // set custom interpolator for all animations so far
         Collection<AdditiveAnimation> animations = mAnimationAccumulator.getAnimations();
@@ -531,7 +564,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         // now we want to animate linearly, all animations are going to map to the current value themselves
         getValueAnimator().setInterpolator(new LinearInterpolator());
 
-        runIfParentIsInSameAnimationGroup(() -> mParent.switchInterpolator(newInterpolator));
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                mParent.switchInterpolator(newInterpolator);
+            }
+        });
         return self();
     }
 

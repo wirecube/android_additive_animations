@@ -48,18 +48,6 @@ public class AdditiveRectAnimator extends BaseAdditiveAnimator<AdditiveRectAnima
         return new AdditiveRectAnimator().target(rect);
     }
 
-    // Implementing this method is only necessary if we don't provide Property<> animations, but use tags instead.
-    // In this demo class, the two approaches are mixed, with only X and Y being animated without a property:
-    @Override
-    public Float getCurrentPropertyValue(String propertyName) {
-        if(X.equals(propertyName)) {
-            return getCurrentTarget().mX;
-        } else if (Y.equals(propertyName)) {
-            return getCurrentTarget().mY;
-        }
-        return null;
-    }
-
     public AdditiveRectAnimator size(float size) {
         // AdditiveAnimation objects can also (and preferably) be created using a FloatProperty object.
         // In this case, you don't need to do anything else to make your property animatable!
@@ -84,6 +72,7 @@ public class AdditiveRectAnimator extends BaseAdditiveAnimator<AdditiveRectAnima
     }
 
     // This method is called when we try to animate keys without a getter/setter, as we do in this example for X and Y.
+    // In this demo class, the two approaches are mixed, with only X and Y being animated without a property:
     @Override
     protected void applyCustomProperties(Map<String, Float> tempProperties, Rect target) {
         for(Map.Entry<String, Float> entry : tempProperties.entrySet()) {
@@ -96,6 +85,18 @@ public class AdditiveRectAnimator extends BaseAdditiveAnimator<AdditiveRectAnima
                     break;
             }
         }
+    }
+
+    // Implementing this method is only necessary if we don't provide Property<> animations, but use tags instead.
+    // In this demo class, the two approaches are mixed, with only X and Y being animated without a property:
+    @Override
+    public Float getCurrentPropertyValue(String propertyName) {
+        if(X.equals(propertyName)) {
+            return getCurrentTarget().mX;
+        } else if (Y.equals(propertyName)) {
+            return getCurrentTarget().mY;
+        }
+        return null;
     }
 
     // This method is called after the current frame has been calculated.

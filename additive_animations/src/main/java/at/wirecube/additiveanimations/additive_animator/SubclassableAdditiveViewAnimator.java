@@ -124,7 +124,12 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
         mSkipRequestLayout = true;
         mWithLayer = true;
 
-        runIfParentIsInSameAnimationGroup(() -> mParent.withLayer());
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                mParent.withLayer();
+            }
+        });
 
         return self();
     }
@@ -137,7 +142,12 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
             mCurrentStateManager.setUseHardwareLayer(false);
         }
         mWithLayer = false;
-        runIfParentIsInSameAnimationGroup(() -> mParent.withoutLayer());
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                mParent.withoutLayer();
+            }
+        });
         return self();
     }
 
@@ -215,13 +225,18 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     // Helper for animating rotation properties when we belong to an animation group.
     // Because we compute a delta value for the current target, we can't simply let BaseAdditiveAnimator
     // handle the propagation of the update.
-    private T animateRotationProperty(Property<View, Float> property, float target) {
+    private T animateRotationProperty(final Property<View, Float> property, final float target) {
         float currentValue = getTargetPropertyValue(property);
         if(getQueuedPropertyValue(property.getName()) != null) {
             currentValue = getQueuedPropertyValue(property.getName());
         }
         float shortestDistance = AnimationUtils.shortestAngleBetween(currentValue, target);
-        runIfParentIsInSameAnimationGroup(() -> ((SubclassableAdditiveViewAnimator) mParent).animateRotationProperty(property, target));
+        runIfParentIsInSameAnimationGroup(new Runnable() {
+            @Override
+            public void run() {
+                ((SubclassableAdditiveViewAnimator) mParent).animateRotationProperty(property, target);
+            }
+        });
         return animatePropertyBy(property, shortestDistance, false);
     }
 

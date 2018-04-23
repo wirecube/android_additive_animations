@@ -73,12 +73,12 @@ public class DemoView extends View {
             @Override
             public boolean onTouch(View view, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
-                    // moving the custom-drawn view additively around the canvas just like a normal view:
                     if (event.getX() >= getRootView().getWidth() / 2) {
                         rotationTarget += 10;
                     } else {
                         rotationTarget -= 10;
                     }
+                    // moving the custom-drawn view additively around the canvas just like a normal view:
                     new AdditiveRectAnimator().targets(mRects, 50).x(event.getX()).y(event.getY()).rotation(rotationTarget).start();
                 }
                 return true;
