@@ -14,6 +14,7 @@
  *  limitations under the License.
  */
 
+apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.android.library'
 
 ext {
@@ -47,8 +48,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 27
-        versionCode 1
-        versionName "1.0"
+        versionCode 16
+        versionName "1.6.0"
     }
     buildTypes {
         release {
@@ -69,7 +70,7 @@ dependencies {
     implementation 'com.android.support:design:27.1.1'
 }
 
-//apply from: 'aar-release.gradle'
+// apply from: 'aar-release.gradle'
 
-//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
-//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'

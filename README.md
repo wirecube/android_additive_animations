@@ -30,6 +30,25 @@ new AdditiveAnimator().setDuration(1000)
                       .target(myView2).xBy(20).yBy(20)
                       .start();
 ```
+**New in 1.6.0:**
+
+1.6.0 added some more syntactic sugar:
+
+You can now animate the same property for multiple views without looping:
+
+```java
+new AdditiveAnimator().targets(myView1, myView2).alpha(0).start();
+```
+
+To achieve a staggered animation, you can optionally add the 'stagger' parameter to add a delay between each of the animations.
+```java
+long staggerBetweenAnimations = 50L;
+new AdditiveAnimator().targets(Arrays.asList(myView1, myView2), staggerBetweenAnimations).alpha(0).start();
+```
+In this example, `myView1` is faded out 50 milliseconds before `myView2`.
+Check out the improved demos for an example of this!
+
+1.6 also added a few other convenience features, such as the ability to switch duration midway to building an animation, providing a `SpringInterpolator` class, and being able to switch back to the default interpolator using the `switchToDefaultInterpolator()` method.
 
 # Animating all kinds of objects and properties
 In addition to the builder methods for views, there are multiple options for animating custom properties of any object.
@@ -58,7 +77,6 @@ class PaintAdditiveAnimator extends BaseAdditiveAnimator<PaintAdditiveAnimator, 
         }
     }
 }
-
 ```
 
 The second option is to simply provide a `Property` for the object you want to animate, plus (if needed) a way to trigger a redraw of your custom object:
@@ -91,7 +109,7 @@ Both versions don't require a lot of code, and the few lines you have to write a
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.5.0'
+    compile 'at.wirecube:additive_animations:1.6.0'
 }
 ...
 repositories {
@@ -99,9 +117,13 @@ repositories {
 }
 ```
 
-**Note**: Thre is a  breaking change when migrating from a version <1.5.0 to a version >= 1.5.0:
+**Note**: There is a  breaking change when migrating from a version <1.5.0 to a version >= 1.5.0:
 Instead of subclassing `AdditiveAnimator`, you now have to subclass `SubclassableAdditiveViewAnimator` instead.
 Sorry for the change, it was necessary due to Java constraints (nesting of generics across subclasses) and improves interop with Kotlin (no more generic arguments required!).
+
+**Note**: There is another breaking change when migrating from <1.6.0 to >= 1.6.0:
+You have to implement a new abstract method (`getCurrentPropertyValue()`) when subclassing `BaseAdditiveAnimator`.
+This method is only called when using tag-based animations, instead of property-based ones. If your subclass does not use tag-based animations, you can simply  `return null;`.
 
 # License
 `AdditiveAnimator` is licensed under the Apache v2 license:
