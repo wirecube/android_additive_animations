@@ -40,7 +40,7 @@ class AdditiveAnimatorGroup {
             newestChild.target(animator.getCurrentTarget());
             // we also need to make sure the animation timing is correct:
             newestChild.setStartDelay(delayProvider.getStartDelay(animator));
-            //
+
             newGroup.add(newestChild);
             parent = newestChild;
         }

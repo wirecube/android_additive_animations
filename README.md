@@ -30,25 +30,38 @@ new AdditiveAnimator().setDuration(1000)
                       .target(myView2).xBy(20).yBy(20)
                       .start();
 ```
-**New in 1.6.0:**
+**New in 1.6:**
 
-1.6.0 added some more syntactic sugar:
+1.6 added a some convenience features, such as the ability to switch duration midway to building an animation, providing a `SpringInterpolator` class, and being able to switch back to the default interpolator using the `switchToDefaultInterpolator()` method.
 
-You can now animate the same property for multiple views without looping:
+Then main attraction of 1.6 though:
+
+You can now animate the same property for multiple views without looping.
 
 ```java
 new AdditiveAnimator().targets(myView1, myView2).alpha(0).start();
 ```
 
-To achieve a staggered animation, you can optionally add the 'stagger' parameter to add a delay between each of the animations.
+To achieve a delay between the start of the animation of each target, you can optionally add the 'stagger' parameter to add a delay between each of the animations.
 ```java
 long staggerBetweenAnimations = 50L;
 new AdditiveAnimator().targets(Arrays.asList(myView1, myView2), staggerBetweenAnimations).alpha(0).start();
 ```
 In this example, `myView1` is faded out 50 milliseconds before `myView2`.
-Check out the improved demos for an example of this!
 
-1.6 also added a few other convenience features, such as the ability to switch duration midway to building an animation, providing a `SpringInterpolator` class, and being able to switch back to the default interpolator using the `switchToDefaultInterpolator()` method.
+Starting with 1.6.1, the delay between the animation of the views is preserved when using `then()` chaining:
+```java
+long staggerBetweenAnimations = 50L;
+AdditiveAnimator.animate(Arrays.asList(myView1, myView2), staggerBetweenAnimations).translationYBy(50).thenWithDelay(20).translationYBy(-50).start();
+```
+
+The timeline of this animation looks like this:
+`myView1` is translated by 50 pixels at delay 0.
+`myView2` is translated by 50 pixels at delay 50.
+`myView1` is translated by -50 pixles at delay 20.
+`myView2` is translated by -50 pixles at delay 70.
+
+Check out `MultipleViewsAnimationDemoFragment` in the demo app for an example of this!
 
 # Animating all kinds of objects and properties
 In addition to the builder methods for views, there are multiple options for animating custom properties of any object.
@@ -109,7 +122,7 @@ Both versions don't require a lot of code, and the few lines you have to write a
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.6.0'
+    compile 'at.wirecube:additive_animations:1.6.1'
 }
 ...
 repositories {
