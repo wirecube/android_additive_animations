@@ -122,7 +122,7 @@ Both versions don't require a lot of code, and the few lines you have to write a
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.6.1'
+    compile 'at.wirecube:additive_animations:1.6.2'
 }
 ...
 repositories {

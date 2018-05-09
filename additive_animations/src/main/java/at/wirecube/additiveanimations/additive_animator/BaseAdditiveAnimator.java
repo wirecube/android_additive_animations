@@ -491,7 +491,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T switchDuration(long durationMillis) {
-        T child = createChildWithDelayAfterParentStart(0);
+        T child = thenWithDelay(0);
         child.setDuration(durationMillis);
         return child;
     }
@@ -652,7 +652,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     // package-private on purpose
     long getTotalDuration() {
-        if (getValueAnimator().getRepeatCount()== ValueAnimator.INFINITE) {
+        if (getValueAnimator().getRepeatCount() == ValueAnimator.INFINITE) {
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 return ValueAnimator.DURATION_INFINITE;
             } else {
