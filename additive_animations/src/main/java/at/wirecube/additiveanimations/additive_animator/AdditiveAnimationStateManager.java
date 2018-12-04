@@ -90,13 +90,7 @@ class AdditiveAnimationStateManager<T> {
             return;
         }
         mAdditiveAnimationAccumulators.remove(applier);
-        if (mAdditiveAnimationAccumulators.isEmpty()) {
-            sStateManagers.remove(mAnimationTargetView);
-            // reset hardware layer
-            if(mUseHardwareLayer && mAnimationTargetView instanceof View) {
-                ((View)mAnimationTargetView).setLayerType(View.LAYER_TYPE_NONE, null);
-            }
-        }
+        removeStateManagerIfAccumulatorSetIsEmpty();
 
         for(AdditiveAnimation animation : applier.getAnimations(mAnimationTargetView)) {
             AnimationInfo info = getAnimationInfo(animation.getTag(), false);
@@ -161,8 +155,19 @@ class AdditiveAnimationStateManager<T> {
                 cancelledAppliers.add(applier);
             }
         }
+        removeStateManagerIfAccumulatorSetIsEmpty();
         mAnimationInfos.remove(propertyName);
         mAdditiveAnimationAccumulators.removeAll(cancelledAppliers);
+    }
+
+    private void removeStateManagerIfAccumulatorSetIsEmpty() {
+        if (mAdditiveAnimationAccumulators.isEmpty()) {
+            sStateManagers.remove(mAnimationTargetView);
+            // reset hardware layer
+            if(mUseHardwareLayer && mAnimationTargetView instanceof View) {
+                ((View)mAnimationTargetView).setLayerType(View.LAYER_TYPE_NONE, null);
+            }
+        }
     }
 
     Float getLastTargetValue(String propertyName) {
