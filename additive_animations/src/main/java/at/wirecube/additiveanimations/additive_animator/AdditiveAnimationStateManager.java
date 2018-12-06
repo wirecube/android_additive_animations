@@ -155,9 +155,9 @@ class AdditiveAnimationStateManager<T> {
                 cancelledAppliers.add(applier);
             }
         }
-        removeStateManagerIfAccumulatorSetIsEmpty();
         mAnimationInfos.remove(propertyName);
         mAdditiveAnimationAccumulators.removeAll(cancelledAppliers);
+        removeStateManagerIfAccumulatorSetIsEmpty();
     }
 
     private void removeStateManagerIfAccumulatorSetIsEmpty() {
