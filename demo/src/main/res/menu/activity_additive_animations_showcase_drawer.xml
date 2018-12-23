@@ -20,6 +20,8 @@
             android:title="Animate text color w/o subclass" />
         <item android:id="@+id/nav_custom_drawing" android:icon="@android:drawable/ic_menu_view"
             android:title="Custom drawing on canvas"/>
+        <item android:id="@+id/nav_state" android:icon="@android:drawable/ic_menu_view"
+            android:title="State animations/animation sets"/>
     </group>
 
     <!--<item android:title="Communicate">-->

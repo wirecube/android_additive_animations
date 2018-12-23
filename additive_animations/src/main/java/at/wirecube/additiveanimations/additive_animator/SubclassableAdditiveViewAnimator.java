@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 
 import at.wirecube.additiveanimations.helper.AnimationUtils;
-import at.wirecube.additiveanimations.helper.FloatProperty;
 import at.wirecube.additiveanimations.helper.evaluators.ColorEvaluator;
 import at.wirecube.additiveanimations.helper.propertywrappers.ColorProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.ElevationProperties;
@@ -30,15 +29,15 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     protected boolean mWithLayer = false;
 
     public static float getTargetPropertyValue(Property<View, Float> property, View v) {
-        return AdditiveAnimationStateManager.from(v).getActualPropertyValue(property);
+        return RunningAnimationsManager.from(v).getActualPropertyValue(property);
     }
 
     public static Float getTargetPropertyValue(String propertyName, View v) {
-        return AdditiveAnimationStateManager.from(v).getLastTargetValue(propertyName);
+        return RunningAnimationsManager.from(v).getLastTargetValue(propertyName);
     }
 
     protected static Float getQueuedPropertyValue(String propertyName, View v) {
-        return AdditiveAnimationStateManager.from(v).getQueuedPropertyValue(propertyName);
+        return RunningAnimationsManager.from(v).getQueuedPropertyValue(propertyName);
     }
 
     @Override

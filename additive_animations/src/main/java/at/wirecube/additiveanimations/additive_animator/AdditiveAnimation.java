@@ -21,6 +21,7 @@ import android.animation.TypeEvaluator;
 import android.graphics.Path;
 import android.util.Property;
 
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
 /**
@@ -40,6 +41,7 @@ public class AdditiveAnimation<T> {
     private int mHashCode;
     private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
     private AccumulatedAnimationValue mAccumulatedValues;
+    private AnimationState mAssociatedAnimationState;
 
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
@@ -191,5 +193,13 @@ public class AdditiveAnimation<T> {
             animation.setCustomTypeEvaluator(mCustomTypeEvaluator);
         }
         return animation;
+    }
+
+    public void setAssociatedAnimationState(AnimationState associatedAnimationStateId) {
+        this.mAssociatedAnimationState = associatedAnimationStateId;
+    }
+
+    public AnimationState getAssociatedAnimationState() {
+        return mAssociatedAnimationState;
     }
 }

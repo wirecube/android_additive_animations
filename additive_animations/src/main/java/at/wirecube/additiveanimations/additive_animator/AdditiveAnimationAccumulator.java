@@ -94,7 +94,7 @@ class AdditiveAnimationAccumulator {
             public void onAnimationEnd(Animator animation) {
                 // now we are actually done
                 for (Object v : mAnimationsPerObject.keySet()) {
-                    AdditiveAnimationStateManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, animationDidCancel);
+                    RunningAnimationsManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, animationDidCancel);
                 }
             }
 
@@ -107,15 +107,16 @@ class AdditiveAnimationAccumulator {
 
     private void notifyStateManagerAboutAnimationStartIfNeeded() {
         if(!mHasInformedStateManagerAboutAnimationStart) {
-            for (Object v : mAnimationsPerObject.keySet()) {
-                AdditiveAnimationStateManager manager = AdditiveAnimationStateManager.from(v);
-                manager.onAnimationApplierStart(AdditiveAnimationAccumulator.this);
+            mHasInformedStateManagerAboutAnimationStart = true;
+            Collection<Object> animationTargets = new ArrayList<>(mAnimationsPerObject.keySet());
+            for (Object v : animationTargets) {
+                RunningAnimationsManager manager = RunningAnimationsManager.from(v);
+                manager.onAnimationAccumulatorStart(AdditiveAnimationAccumulator.this);
                 for(AdditiveAnimationWrapper wrapper : getAnimationWrappers(v)) {
                     manager.prepareAnimationStart(wrapper.animation);
                     wrapper.previousValue = wrapper.animation.getStartValue();
                 }
             }
-            mHasInformedStateManagerAboutAnimationStart = true;
         }
     }
 
@@ -132,7 +133,7 @@ class AdditiveAnimationAccumulator {
      * Returns true if this removed all animations from the object, false if there are still more animations running.
      */
     boolean removeAnimation(String animatedPropertyName, Object v) {
-        removeTarget(v, animatedPropertyName);
+        removeAnimationFromTarget(v, animatedPropertyName);
         Collection c = mAnimationsPerObject.get(v);
         return c == null || c.size() == 0;
     }
@@ -146,7 +147,7 @@ class AdditiveAnimationAccumulator {
             cancel();
         } else {
             for (String animatedValue : animatedValues) {
-                removeTarget(v, animatedValue);
+                removeAnimationFromTarget(v, animatedValue);
             }
         }
     }
@@ -166,7 +167,7 @@ class AdditiveAnimationAccumulator {
     /**
      * Removes the animation with the given name from the given object.
      */
-    private void removeTarget(Object v, String additiveAnimationName) {
+    private void removeAnimationFromTarget(Object v, String additiveAnimationName) {
         AdditiveAnimationWrapper animationToRemove = null;
         for(AdditiveAnimationWrapper anim : getAnimationWrappers(v)) {
             if(anim.animation.getTag().equals(additiveAnimationName)) {

@@ -18,7 +18,6 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
     ViewGroup rootView;
     View animatedView;
 
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction;
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
 import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 import at.wirecube.additiveanimations.helper.FloatProperty;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
@@ -39,11 +41,11 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     protected T mParent = null; // not null when this animator was queued using `then()` chaining.
     protected V mCurrentTarget = null;
-    protected AdditiveAnimationStateManager<V> mCurrentStateManager = null; // only used for performance reasons
+    protected RunningAnimationsManager<V> mCurrentStateManager = null; // only used for performance reasons
     protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to.
     protected TimeInterpolator mCurrentCustomInterpolator = null;
-    protected final List<V> mTargets = new ArrayList<>(1); // all targets that will be affected by starting the animation.
 
+    // These properties are stored to avoid any allocations during the animations for performance reasons.
     private Map<V, List<AccumulatedAnimationValue<V>>> mUnknownProperties = new HashMap<>();
     private Set<V> mChangedTargets = new HashSet<>(1);
     private HashMap<String, Float> mChangedUnknownProperties = new HashMap<>();
@@ -72,7 +74,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public static void cancelAnimations(Object target) {
-        AdditiveAnimationStateManager.from(target).cancelAllAnimations();
+        RunningAnimationsManager.from(target).cancelAllAnimations();
     }
 
     public static void cancelAnimations(Object... targets) {
@@ -90,13 +92,13 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public static void cancelAnimation(Object target, String animationTag) {
-        AdditiveAnimationStateManager.from(target).cancelAnimation(animationTag);
+        RunningAnimationsManager.from(target).cancelAnimation(animationTag);
     }
 
     public static void cancelAnimation(List<Object> targets, String animationTag) {
         if(targets == null) { return; }
         for(Object target : targets) {
-            AdditiveAnimationStateManager.from(target).cancelAnimation(animationTag);
+            RunningAnimationsManager.from(target).cancelAnimation(animationTag);
         }
     }
 
@@ -221,6 +223,13 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return animation;
     }
 
+    protected final AdditiveAnimation createAnimation(Property<V, Float> property, float targetValue, TypeEvaluator evaluator) {
+        AdditiveAnimation animation = new AdditiveAnimation(mCurrentTarget, property, property.get(mCurrentTarget), targetValue);
+        animation.setCustomTypeEvaluator(evaluator);
+        animation.setCustomInterpolator(mCurrentCustomInterpolator);
+        return animation;
+    }
+
     protected final AdditiveAnimation createAnimation(Property<V, Float> property, Path path, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
         AdditiveAnimation animation = new AdditiveAnimation(mCurrentTarget, property, property.get(mCurrentTarget), path, mode, sharedEvaluator);
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
@@ -256,8 +265,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     protected final T animate(Property<V, Float> property, float target, TypeEvaluator evaluator) {
         initValueAnimatorIfNeeded();
-        AdditiveAnimation animation = createAnimation(property, target);
-        animation.setCustomTypeEvaluator(evaluator);
+        AdditiveAnimation animation = createAnimation(property, target, evaluator);
         return animate(animation);
     }
 
@@ -324,6 +332,46 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return animate(customProperty, target);
     }
 
+    public T state(AnimationState<V> state) {
+        mCurrentStateManager.setCurrentState(state);
+        for(AnimationAction.Animation<V> animation : state.getAnimations()) {
+            AdditiveAnimation anim = createAnimation(animation.getProperty(), animation.getTargetValue(), animation.getTypeEvaluator());
+            anim.setAssociatedAnimationState(state);
+            animate(anim);
+        }
+        return self();
+    }
+
+    public T action(AnimationAction<V> animationAction) {
+        for(AnimationAction.Animation<V> animation : animationAction.getAnimations()) {
+            animate(animation.getProperty(), animation.getTargetValue(), animation.getTypeEvaluator());
+        }
+        return self();
+    }
+
+    /**
+     * Immediately applies the animation action to the given targets. (similar to Butterknife's `apply' method).
+     */
+    public static <V extends Object> void apply(AnimationAction<V> action, V... targets) {
+        apply(action, Arrays.asList(targets));
+    }
+
+    public static <V extends Object> void apply(AnimationAction<V> action, List<V> targets) {
+        for(V target : targets) {
+            if(action instanceof AnimationState) {
+                RunningAnimationsManager.from(target).setCurrentState((AnimationState) action);
+            }
+            for(AnimationAction.Animation<V> animation : action.getAnimations()) {
+                animation.getProperty().set(target, animation.getTargetValue());
+                if(action instanceof AnimationState) {
+                    if(((AnimationState) action).getAnimationEndAction() != null) {
+                        ((AnimationState) action).getAnimationEndAction().onEnd(target, false);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Globally sets the default animation duration to use for all AdditiveAnimator instances.
      * You can override this by calling {@link #setDuration(long)} on a specific instance.
@@ -366,7 +414,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             return (T) createChildWithDelayAfterParentStart(0).target(v);
         }
         mCurrentTarget = v;
-        mCurrentStateManager = AdditiveAnimationStateManager.from(v);
+        mCurrentStateManager = RunningAnimationsManager.from(v);
         initValueAnimatorIfNeeded();
         return self();
     }
