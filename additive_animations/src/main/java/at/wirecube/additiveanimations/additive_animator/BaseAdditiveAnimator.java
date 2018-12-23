@@ -676,22 +676,6 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         mIsValid = false;
     }
 
-    public void cancelAllAnimations() {
-        for(V v : mTargets) {
-            AdditiveAnimationStateManager.from(v).cancelAllAnimations();
-        }
-    }
-
-    public void cancelAnimation(String propertyName) {
-        for(V v : mTargets) {
-            cancelAnimation(v, propertyName);
-        }
-    }
-
-    public void cancelAnimation(Property<V, Float> property) {
-        cancelAnimation(property.getName());
-    }
-
     void setAnimationGroup(AdditiveAnimatorGroup group) {
         mAnimatorGroup = group;
     }
