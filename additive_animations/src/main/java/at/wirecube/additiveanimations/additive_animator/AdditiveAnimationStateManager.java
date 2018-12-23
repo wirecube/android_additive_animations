@@ -128,6 +128,7 @@ class AdditiveAnimationStateManager<T> {
         if(getLastTargetValue(animation.getTag()) == null || info.numAnimations == 0) {
             // In case we don't currently have an animation on this property, let's make sure
             // the start value matches the current model value:
+            // TODO: we might want to use the queuedTargetValue instead of the lastTargetValue in some cases? (https://github.com/wirecube/android_additive_animations/issues/11)
             Float currentModelValue = getActualAnimationStartValue(animation);
             if(currentModelValue != null) {
                 animation.setStartValue(currentModelValue);
