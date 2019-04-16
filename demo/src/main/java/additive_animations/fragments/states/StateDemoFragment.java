@@ -20,7 +20,7 @@ import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
 public class StateDemoFragment extends Fragment {
 
-    FrameLayout rootView;
+    View rootView;
     View view1;
     View view2;
     View mTouchView;
@@ -30,7 +30,7 @@ public class StateDemoFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = (FrameLayout) inflater.inflate(R.layout.fragment_state_demo, container, false);
+        rootView = inflater.inflate(R.layout.fragment_state_demo, container, false);
         mTouchView = rootView.findViewById(R.id.touch_view);
         view1 = rootView.findViewById(R.id.animated_view);
         view2 = rootView.findViewById(R.id.animated_view2);

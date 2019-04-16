@@ -30,7 +30,7 @@ ext {
     siteUrl = 'https://github.com/davidganster/android_additive_animations'
     gitUrl = 'https://github.com/davidganster/android_additive_animations.git'
 
-    libraryVersion = '1.7'
+    libraryVersion = '1.7.1'
 
     developerId = 'davidganster'
     developerName = 'David Ganster'
@@ -48,8 +48,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 27
-        versionCode 18
-        versionName "1.7"
+        versionCode 19
+        versionName "1.7.1"
     }
     buildTypes {
         release {

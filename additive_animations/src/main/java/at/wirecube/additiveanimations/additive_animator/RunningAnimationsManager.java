@@ -44,7 +44,7 @@ class RunningAnimationsManager<T> {
     private static final Map<Object, RunningAnimationsManager> sStateManagers = new HashMap<>();
 
     static final RunningAnimationsManager from(Object targetView) {
-        if(targetView == null) {
+        if (targetView == null) {
             return null;
         }
         RunningAnimationsManager animator = sStateManagers.get(targetView);
@@ -79,7 +79,7 @@ class RunningAnimationsManager<T> {
 
     private AnimationInfo getAnimationInfo(String tag, boolean addIfNeeded) {
         AnimationInfo info = mAnimationInfos.get(tag);
-        if(info == null && addIfNeeded) {
+        if (info == null && addIfNeeded) {
             info = new AnimationInfo();
             mAnimationInfos.put(tag, info);
         }
@@ -94,38 +94,44 @@ class RunningAnimationsManager<T> {
     }
 
     void onAnimationApplierEnd(AdditiveAnimationAccumulator accumulator, boolean didCancel) {
-        if(didCancel) {
+        if (didCancel) {
             mAdditiveAnimationAccumulators.remove(accumulator);
             removeStateManagerIfAccumulatorSetIsEmpty();
         }
 
-        for(AdditiveAnimation animation : accumulator.getAnimations(mAnimationTarget)) {
-            if(mCurrentState != null && mCurrentState.getAnimationEndAction() != null && mCurrentState.shouldRunEndListener(animation.getAssociatedAnimationState())) {
+        for (AdditiveAnimation animation : accumulator.getAnimations(mAnimationTarget)) {
+            if (mCurrentState != null && mCurrentState.getAnimationEndAction() != null && mCurrentState.shouldRunEndListener(animation.getAssociatedAnimationState())) {
                 mCurrentState.getAnimationEndAction().onEnd(mAnimationTarget, didCancel);
             }
-            if(didCancel) {
-                return;
+            if (didCancel) {
+                continue;
             }
             AnimationInfo info = getAnimationInfo(animation.getTag(), false);
+            if(info == null) {
+                continue;
+            }
             info.numAnimations = Math.max(info.numAnimations - 1, 0);
+            if (info.numAnimations == 0) {
+                mAnimationInfos.remove(animation.getTag());
+            }
         }
     }
 
     void onAnimationAccumulatorStart(AdditiveAnimationAccumulator accumulator) {
         Collection<AdditiveAnimation> animations = accumulator.getAnimations(mAnimationTarget);
-        for(AdditiveAnimation animation : animations) {
+        for (AdditiveAnimation animation : animations) {
             if (animation.getAssociatedAnimationState() == null) {
                 continue;
             }
-            if(animation.getAssociatedAnimationState().shouldRun(mCurrentState)) {
-                if(animation.getAssociatedAnimationState().getAnimationStartAction() != null) {
+            if (animation.getAssociatedAnimationState().shouldRun(mCurrentState)) {
+                if (animation.getAssociatedAnimationState().getAnimationStartAction() != null) {
                     animation.getAssociatedAnimationState().getAnimationStartAction().onStart(mAnimationTarget);
                 }
             } else {
                 accumulator.removeAnimation(animation.getTag(), animation.getTarget());
             }
         }
-        if(accumulator.getAnimations().isEmpty()) {
+        if (accumulator.getAnimations().isEmpty()) {
             mAdditiveAnimationAccumulators.remove(accumulator);
             removeStateManagerIfAccumulatorSetIsEmpty();
         } else {
@@ -150,11 +156,11 @@ class RunningAnimationsManager<T> {
         AccumulatedAnimationValue av = mAccumulator.getAccumulatedAnimationValue(animation);
 
         AnimationInfo info = getAnimationInfo(animation.getTag(), true);
-        if(getLastTargetValue(animation.getTag()) == null || info.numAnimations == 0) {
+        if (getLastTargetValue(animation.getTag()) == null || info.numAnimations == 0) {
             // In case we don't currently have an animation on this property, let's make sure
             // the start value matches the current model value:
             Float currentModelValue = getActualAnimationStartValue(animation);
-            if(currentModelValue != null) {
+            if (currentModelValue != null) {
                 animation.setStartValue(currentModelValue);
             }
             av.tempValue = animation.getStartValue();
@@ -167,22 +173,23 @@ class RunningAnimationsManager<T> {
     }
 
     void cancelAllAnimations() {
-        for(AdditiveAnimationAccumulator additiveAnimationAccumulator : mAdditiveAnimationAccumulators) {
+        Collection<AdditiveAnimationAccumulator> accumulators = new HashSet<>(mAdditiveAnimationAccumulators);
+        for (AdditiveAnimationAccumulator additiveAnimationAccumulator : accumulators) {
             additiveAnimationAccumulator.cancel(mAnimationTarget);
         }
         mAdditiveAnimationAccumulators.clear();
         mAnimationInfos.clear();
         sStateManagers.remove(mAnimationTarget);
         // reset hardware layer
-        if(mUseHardwareLayer && mAnimationTarget instanceof View) {
+        if (mUseHardwareLayer && mAnimationTarget instanceof View) {
             ((View) mAnimationTarget).setLayerType(View.LAYER_TYPE_NONE, null);
         }
     }
 
     void cancelAnimation(String propertyName) {
         List<AdditiveAnimationAccumulator> cancelledAppliers = new ArrayList<>();
-        for(AdditiveAnimationAccumulator applier : mAdditiveAnimationAccumulators) {
-            if(applier.removeAnimation(propertyName, mAnimationTarget)) {
+        for (AdditiveAnimationAccumulator applier : mAdditiveAnimationAccumulators) {
+            if (applier.removeAnimation(propertyName, mAnimationTarget)) {
                 cancelledAppliers.add(applier);
             }
         }
@@ -195,7 +202,7 @@ class RunningAnimationsManager<T> {
         if (mAdditiveAnimationAccumulators.isEmpty()) {
             sStateManagers.remove(mAnimationTarget);
             // reset hardware layer
-            if(mUseHardwareLayer && mAnimationTarget instanceof View) {
+            if (mUseHardwareLayer && mAnimationTarget instanceof View) {
                 ((View) mAnimationTarget).setLayerType(View.LAYER_TYPE_NONE, null);
             }
         }
@@ -203,7 +210,7 @@ class RunningAnimationsManager<T> {
 
     Float getLastTargetValue(String propertyName) {
         AnimationInfo info = getAnimationInfo(propertyName, false);
-        if(info == null) {
+        if (info == null) {
             return null;
         }
         return info.lastTargetValue;
@@ -211,7 +218,7 @@ class RunningAnimationsManager<T> {
 
     Float getActualPropertyValue(Property<T, Float> property) {
         Float lastTarget = getLastTargetValue(property.getName());
-        if(lastTarget == null) {
+        if (lastTarget == null) {
             lastTarget = property.get(mAnimationTarget);
         }
         return lastTarget;
@@ -219,14 +226,14 @@ class RunningAnimationsManager<T> {
 
     Float getQueuedPropertyValue(String propertyName) {
         AnimationInfo info = getAnimationInfo(propertyName, false);
-        if(info == null) {
+        if (info == null) {
             return null;
         }
         return info.queuedTargetValue;
     }
 
     private Float getActualAnimationStartValue(AdditiveAnimation animation) {
-        if(animation.getProperty() != null) {
+        if (animation.getProperty() != null) {
             return getActualPropertyValue(animation.getProperty());
         } else {
             // TODO: there should be a way for subclasses to implement the 'getting' of a custom value.
