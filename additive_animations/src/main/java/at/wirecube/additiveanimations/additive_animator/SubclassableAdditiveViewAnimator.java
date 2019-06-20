@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import at.wirecube.additiveanimations.additive_animator.view_visibility.ViewVisibilityAnimation;
 import at.wirecube.additiveanimations.helper.AnimationUtils;
 import at.wirecube.additiveanimations.helper.evaluators.ColorEvaluator;
 import at.wirecube.additiveanimations.helper.propertywrappers.ColorProperties;
@@ -148,6 +149,22 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
             }
         });
         return self();
+    }
+
+    public T fadeVisibility(int visibility) {
+        switch(visibility) {
+            case View.VISIBLE:
+                return state(ViewVisibilityAnimation.fadeIn());
+            case View.INVISIBLE:
+                return state(ViewVisibilityAnimation.fadeOut(false));
+            case View.GONE:
+                return state(ViewVisibilityAnimation.fadeOut(true));
+        }
+        return self();
+    }
+
+    public T visibility(ViewVisibilityAnimation animation) {
+        return state(animation);
     }
 
     public T backgroundColor(int color) {
@@ -558,159 +575,4 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
         }
         return self();
     }
-
-
-//    public T widthPercent(float widthPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.widthPercent(widthPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T widthPercentBy(float widthPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.widthPercentBy(widthPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T heightPercent(float heightPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.heightPercent(heightPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T heightPercentBy(float heightPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.heightPercentBy(heightPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T sizePercent(float sizePercent) {
-//        if (initPercentListener()){
-//            mPercentListener.sizePercent(sizePercent);
-//        }
-//        return self();
-//    }
-//
-//    public T sizePercentBy(float sizePercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.sizePercentBy(sizePercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T leftMarginPercent(float marginPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.leftMarginPercent(marginPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T leftMarginPercentBy(float marginPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.leftMarginPercentBy(marginPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T topMarginPercent(float marginPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.topMarginPercent(marginPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T topMarginPercentBy(float marginPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.topMarginPercentBy(marginPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T bottomMarginPercent(float marginPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.bottomMarginPercent(marginPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T bottomMarginPercentBy(float marginPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.bottomMarginPercentBy(marginPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T rightMarginPercent(float marginPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.rightMarginPercent(marginPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T rightMarginPercentBy(float marginPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.rightMarginPercentBy(marginPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T horizontalMarginPercent(float marginPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.horizontalMarginPercent(marginPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T horizontalMarginPercentBy(float marginPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.horizontalMarginPercentBy(marginPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T verticalMarginPercent(float marginPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.verticalMarginPercent(marginPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T verticalMarginPercentBy(float marginPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.verticalMarginPercentBy(marginPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T marginPercent(float marginPercent) {
-//        if (initPercentListener()){
-//            mPercentListener.marginPercent(marginPercent);
-//        }
-//        return self();
-//    }
-//
-//    public T marginPercentBy(float marginPercentBy) {
-//        if (initPercentListener()){
-//            mPercentListener.marginPercentBy(marginPercentBy);
-//        }
-//        return self();
-//    }
-//
-//    public T aspectRatio(float aspectRatio) {
-//        if (initPercentListener()){
-//            mPercentListener.aspectRatio(aspectRatio);
-//        }
-//        return self();
-//    }
-//
-//    public T aspectRatioBy(float aspectRatioBy) {
-//        if (initPercentListener()){
-//            mPercentListener.aspectRatioBy(aspectRatioBy);
-//        }
-//        return self();
-//    }
 }

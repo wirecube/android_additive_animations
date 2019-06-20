@@ -17,7 +17,7 @@ The amount code required to produce this animation is trivial:
 
 ```java
 public boolean onTouch(View v, MotionEvent event) {
-    AdditiveAnimator.animate(animatedView).x(event.getX()).y(event.getY()).setDuration(1000).start();
+    AdditiveAnimator.animate(animatedView, 1000).x(event.getX()).y(event.getY()).start();
     return true;
 }
 ```
@@ -62,6 +62,69 @@ The timeline of this animation looks like this:
 `myView2` is translated by -50 pixles at delay 70.
 
 Check out `MultipleViewsAnimationDemoFragment` in the demo app for an example of this!
+
+
+# Visibility animations
+**New in 1.7.2**
+
+View visibility can now be properly animated without adding an animation end block and checking if the visibility should be updated based on some other state variable:
+
+```java
+AdditiveAnimator.animate(view)
+    .fadeVisibility(View.GONE) // fades out the view, then sets visibility to GONE
+    .start();
+```
+
+Since fading the visibiliy is probably the most common usecase, there's a default builder method for it. A few more default animations are provided as well:
+
+```java
+AdditiveAnimator.animate(view)
+    // the first param decides whether the view should be GONE or INVISIBLE,
+    // the second one decides how much to move the view as it fades out
+    .visibility(ViewVisibilityAnimation.fadeOutAndTranslateX(true, 100f)) // only move x
+    .visibility(ViewVisibilityAnimation.fadeOutAndTranslateY(true, 100f)) // only move y
+    .visibility(ViewVisibilityAnimation.fadeOutAndTranslate(true, 100f, 100f)) // move x and y
+    .start();
+```
+
+The new `ViewVisibilityAnimation` class provides a convenient constructor to make your own view state animations - an example can be found in the new demo (`StateDemoFragment`).
+
+# Animation States
+
+`AdditiveAnimator` now supports the concepts of _animation states_.
+A __State__ encapsulates a set of animations to perform and an ID to uniquely identify it.
+
+What's special about this is that `AdditiveAnimator` can now automatically decide whether or not to run animation start/end blocks - if the view is no longer in the appropriate state for the block, it won't run.
+
+This is how the view visibility feature is implemented, and can easily be extended to work with all kinds of custom states via the new `state()` builder method.
+
+For example, we might want to switch the states of some views between __highlighted__ and __normal__ in a `then()`-chained block like this:
+
+```java
+new AdditiveAnimator()
+    .targets(normalViews)
+    .scale(1f) // normal
+    .then()
+    .target(highlightedView)
+    .scale(1.2f) // highlighted
+    .start();
+```
+
+There's a race condition in this piece of code: The `then()`-chaining block is executed whether or not the `highlightedView` is actually still highlighted.
+
+Animation states fix this problem entirely:
+
+```java
+new AdditiveAnimator()
+    .targets(normalViews)
+    .state(MyViewState.NORMAL)
+    .then()
+    .target(highlightedView)
+    .state(MyViewState.HIGHLIGHTED)
+    .start();
+```
+
+With this code, the animations associated with the `NORMAL` and `HIGHLIGHTED` states are only allowed to run if the state of the enqueued animation still matches the current view state!
 
 # Animating all kinds of objects and properties
 In addition to the builder methods for views, there are multiple options for animating custom properties of any object.
@@ -114,15 +177,18 @@ AdditiveObjectAnimator.animate(myPaint)
     .setAnimationApplier(new ViewAnimationApplier(myView)) // tells the generic AdditiveObjectAnimator how to apply the changed values
     .start();
 ```
-
 A more complete example of both of these approaches can be found in the sample app in  `CustomDrawingFragment.java`.
 
+
+Of course you can combine both approaches - custom builder methods which animate properties. This is the recommended approach and is how everything provided by `AdditiveAnimator` was built.
+
 Both versions don't require a lot of code, and the few lines you have to write are almost always trivial.
+
 # Integration
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.6.2'
+    compile 'at.wirecube:additive_animations:1.7.2'
 }
 ...
 repositories {
