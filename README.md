@@ -128,7 +128,25 @@ With this code, the animations associated with the `NORMAL` and `HIGHLIGHTED` st
 
 # Animating all kinds of objects and properties
 In addition to the builder methods for views, there are multiple options for animating custom properties of any object.
-The first option is subclassing `BaseAdditiveAnimator` and providing your own builder methods (which are usually one-liners) such as this:
+The first - highly recommended - option is to simply provide a `Property` for the object you want to animate, plus (if needed) a way to trigger a redraw of your custom object:
+
+```java
+// Declaring an animatable property:
+FloatProperty<Paint> mPaintColorProperty = 
+        FloatProperty.create("PaintColor", paint -> (float) paint.getColor(), (paint, color) -> paint.setColor((int) color));
+...
+
+// Using the property to animate the color of a paint:
+AdditiveObjectAnimator.animate(myPaint)
+    .property(targetColor, // target value
+              new ColorEvaluator(), // custom evaluator for colors
+              mPaintColorProperty) // how to get/set the property value
+    .setAnimationApplier(new ViewAnimationApplier(myView)) // tells the generic AdditiveObjectAnimator how to apply the changed values
+    .start();
+```
+
+The second option is not recommended unless you need very specific control over how properties are applied.
+In works by subclassing `BaseAdditiveAnimator` and providing your own builder methods (which are usually one-liners) such as this:
 
 ```java
 class PaintAdditiveAnimator extends BaseAdditiveAnimator<PaintAdditiveAnimator, Paint> {
@@ -152,31 +170,19 @@ class PaintAdditiveAnimator extends BaseAdditiveAnimator<PaintAdditiveAnimator, 
             target.setColor(tempProperties.get(COLOR_ANIMATION_KEY).intValue());
         }
     }
+    
+    // For animations without a property, your subclass is responsible for providing the current property value.
+    // This is easy to forget when adding new animatable properties, which is one of the reasons this method is discouraged.
+    @Override public Float getCurrentPropertyValue(String propertyName) {
+        switch(propertyName) {
+            case ANIMATION_KEY:
+                return mCurrentTarget.getColor();
+        }
+        return null;
+    }
 }
 ```
 
-The second option is to simply provide a `Property` for the object you want to animate, plus (if needed) a way to trigger a redraw of your custom object:
-
-```java
-// Declaring an animatable property:
-FloatProperty<Paint> mPaintColorProperty = new FloatProperty<Paint>("PaintColor") {
-    @Override
-    public Float get(Paint paint) { return Float.valueOf(paint.getColor()); }
-
-    @Override
-    public void set(Paint object, Float value) { object.setColor(value.intValue()); }
-};
-
-...
-
-// Using the property to animate the color of a paint:
-AdditiveObjectAnimator.animate(myPaint)
-    .property(targetColor, // target value
-              new ColorEvaluator(), // custom evaluator for colors
-              mPaintColorProperty) // how to get/set the property value
-    .setAnimationApplier(new ViewAnimationApplier(myView)) // tells the generic AdditiveObjectAnimator how to apply the changed values
-    .start();
-```
 A more complete example of both of these approaches can be found in the sample app in  `CustomDrawingFragment.java`.
 
 
@@ -188,7 +194,7 @@ Both versions don't require a lot of code, and the few lines you have to write a
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.7.2'
+    compile 'at.wirecube:additive_animations:1.7.3'
 }
 ...
 repositories {
