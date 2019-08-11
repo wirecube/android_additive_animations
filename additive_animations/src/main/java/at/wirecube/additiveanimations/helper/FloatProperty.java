@@ -20,6 +20,29 @@ import android.util.Property;
 import android.view.View;
 
 public abstract class FloatProperty <T> extends Property<T, Float> {
+
+    public interface Get<T> {
+        float get(T object);
+    }
+
+    public interface Set<T> {
+        void set(T object, float value);
+    }
+
+    public static <T> FloatProperty<T> create(String name, Get<T> getter, Set<T> setter) {
+        return new FloatProperty<T>(name) {
+            @Override
+            public void set(T object, Float value) {
+                setter.set(object, value);
+            }
+
+            @Override
+            public Float get(T object) {
+                return getter.get(object);
+            }
+        };
+    }
+
     public FloatProperty(String name) {
         super(Float.class, name);
     }

@@ -36,7 +36,7 @@ public class AdditiveAnimation<T> {
     private Path mPath;
     private PathEvaluator.PathMode mPathMode;
     private PathEvaluator mSharedPathEvaluator;
-    private TypeEvaluator mCustomTypeEvaluator;
+    private TypeEvaluator<Float> mCustomTypeEvaluator;
     private T mTarget;
     private int mHashCode;
     private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
@@ -163,6 +163,9 @@ public class AdditiveAnimation<T> {
         if(this == o) {
             return true;
         }
+        if(!(o instanceof AdditiveAnimation)) {
+            return false;
+        }
         AdditiveAnimation other = (AdditiveAnimation) o;
         return other.mTag.hashCode() == mTag.hashCode() && other.mTarget == mTarget;
     }
@@ -172,18 +175,18 @@ public class AdditiveAnimation<T> {
     }
 
     public AdditiveAnimation<T> cloneWithTarget(T target, Float startValue) {
-        final AdditiveAnimation animation;
+        final AdditiveAnimation<T> animation;
         if(this.getProperty() != null) {
             if (this.getPath() != null) {
-                animation = new AdditiveAnimation(target, mProperty, startValue, getPath(), mPathMode, mSharedPathEvaluator);
+                animation = new AdditiveAnimation<>(target, mProperty, startValue, getPath(), mPathMode, mSharedPathEvaluator);
             } else {
-                animation = new AdditiveAnimation(target, mProperty, startValue, mTargetValue);
+                animation = new AdditiveAnimation<>(target, mProperty, startValue, mTargetValue);
             }
         } else {
             if(this.getPath() != null) {
-                animation = new AdditiveAnimation(target, mTag, startValue, getPath(), mPathMode, mSharedPathEvaluator);
+                animation = new AdditiveAnimation<>(target, mTag, startValue, getPath(), mPathMode, mSharedPathEvaluator);
             } else {
-                animation = new AdditiveAnimation(target, mTag, startValue, mTargetValue);
+                animation = new AdditiveAnimation<>(target, mTag, startValue, mTargetValue);
             }
         }
         if(mCustomInterpolator != null) {

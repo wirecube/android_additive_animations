@@ -55,18 +55,18 @@ public class StateDemoFragment extends Fragment {
         AdditiveAnimator.apply(getVisibleAnim(), view1);
         AdditiveAnimator.apply(getGoneAnim(), view2);
 
-        AdditiveAnimator.setDefaultDuration(300);
-
         rootView.setOnClickListener(view -> {
             mFirstClick = !mFirstClick;
             if (mFirstClick) {
                 AdditiveAnimator.animate(view1)
+                        .setDuration(300)
                         .visibility(getGoneAnim())
                         .thenWithDelay(150).target(view2)
                         .visibility(getVisibleAnim())
                         .start();
             } else {
                 AdditiveAnimator.animate(view2)
+                        .setDuration(300)
                         .visibility(getGoneAnim())
                         .thenWithDelay(150).target(view1)
                         .visibility(getVisibleAnim())
