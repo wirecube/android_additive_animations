@@ -27,7 +27,7 @@ public class PaddingProperties {
     public static Property<View, Float> PADDING_LEFT = new FloatProperty<View>("PADDING_LEFT") {
         @Override
         public Float get(View object) {
-            return Float.valueOf(object.getPaddingLeft());
+            return (float) object.getPaddingLeft();
         }
 
         @Override
@@ -39,7 +39,7 @@ public class PaddingProperties {
     public static Property<View, Float> PADDING_RIGHT = new FloatProperty<View>("PADDING_RIGHT") {
         @Override
         public Float get(View object) {
-            return Float.valueOf(object.getPaddingRight());
+            return (float) object.getPaddingRight();
         }
 
         @Override
@@ -51,7 +51,7 @@ public class PaddingProperties {
     public static Property<View, Float> PADDING_TOP = new FloatProperty<View>("PADDING_TOP") {
         @Override
         public Float get(View object) {
-            return Float.valueOf(object.getPaddingTop());
+            return (float) object.getPaddingTop();
         }
 
         @Override
@@ -63,7 +63,7 @@ public class PaddingProperties {
     public static Property<View, Float> PADDING_BOTTOM = new FloatProperty<View>("PADDING_BOTTOM") {
         @Override
         public Float get(View object) {
-            return Float.valueOf(object.getPaddingBottom());
+            return (float) object.getPaddingBottom();
         }
 
         @Override

@@ -27,7 +27,7 @@ public class ScrollProperties {
     public static Property<View, Float> SCROLL_X = new FloatProperty<View>("SCROLL_X") {
         @Override
         public Float get(View object) {
-            return Float.valueOf(object.getScrollX());
+            return (float) object.getScrollX();
         }
 
         @Override
@@ -39,7 +39,7 @@ public class ScrollProperties {
     public static Property<View, Float> SCROLL_Y = new FloatProperty<View>("SCROLL_Y") {
         @Override
         public Float get(View object) {
-            return Float.valueOf(object.getScrollY());
+            return (float) object.getScrollY();
         }
 
         @Override

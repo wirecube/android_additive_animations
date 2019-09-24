@@ -18,8 +18,8 @@ public class SingleAnimationAction<T> implements AnimationAction<T> {
         mAnimations.add(new AnimationAction.Animation<>(property, target));
     }
 
-    public SingleAnimationAction(Property<T, Float> property, float target, TypeEvaluator evaluator) {
-        mAnimations.add(new AnimationAction.Animation<>(property, target, evaluator));
+    public SingleAnimationAction(Property<T, Float> property, float target, TypeEvaluator<Float> evaluator) {
+        mAnimations.add(new AnimationAction.Animation<T>(property, target, evaluator));
     }
 
 }

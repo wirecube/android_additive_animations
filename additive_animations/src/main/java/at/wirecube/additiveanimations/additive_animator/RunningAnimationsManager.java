@@ -43,14 +43,14 @@ class RunningAnimationsManager<T> {
 
     private static final Map<Object, RunningAnimationsManager> sStateManagers = new HashMap<>();
 
-    static final RunningAnimationsManager from(Object targetView) {
-        if (targetView == null) {
+    static final <T> RunningAnimationsManager<T> from(T target) {
+        if (target == null) {
             return null;
         }
-        RunningAnimationsManager animator = sStateManagers.get(targetView);
+        RunningAnimationsManager<T> animator = sStateManagers.get(target);
         if (animator == null) {
-            animator = new RunningAnimationsManager(targetView);
-            sStateManagers.put(targetView, animator);
+            animator = new RunningAnimationsManager<T>(target);
+            sStateManagers.put(target, animator);
         }
         return animator;
     }
@@ -63,7 +63,7 @@ class RunningAnimationsManager<T> {
 
     private final T mAnimationTarget;
     private boolean mUseHardwareLayer = false;
-    private AnimationState mCurrentState = null;
+    private AnimationState<T> mCurrentState = null;
 
     final Set<AdditiveAnimationAccumulator> mAdditiveAnimationAccumulators = new HashSet<>();
 
@@ -73,7 +73,7 @@ class RunningAnimationsManager<T> {
         mAnimationTarget = animationTarget;
     }
 
-    public void setCurrentState(AnimationState currentState) {
+    public void setCurrentState(AnimationState<T> currentState) {
         this.mCurrentState = currentState;
     }
 
@@ -86,10 +86,10 @@ class RunningAnimationsManager<T> {
         return info;
     }
 
-    void addAnimation(AdditiveAnimationAccumulator animationApplier, AdditiveAnimation animation) {
+    void addAnimation(AdditiveAnimationAccumulator accumulator, AdditiveAnimation animation) {
         // immediately add to our list of pending animators
-        mAdditiveAnimationAccumulators.add(animationApplier);
-        animationApplier.addAnimation(animation);
+        mAdditiveAnimationAccumulators.add(accumulator);
+        accumulator.addAnimation(animation);
         getAnimationInfo(animation.getTag(), true).queuedTargetValue = animation.getTargetValue();
     }
 
@@ -107,7 +107,7 @@ class RunningAnimationsManager<T> {
                 continue;
             }
             AnimationInfo info = getAnimationInfo(animation.getTag(), false);
-            if(info == null) {
+            if (info == null) {
                 continue;
             }
             info.numAnimations = Math.max(info.numAnimations - 1, 0);
@@ -151,7 +151,7 @@ class RunningAnimationsManager<T> {
      * This will also update the accumulator if it doesn't already contain an entry for this animation,
      * using the current property value (if a Property is available)
      */
-    void prepareAnimationStart(AdditiveAnimation animation) {
+    void prepareAnimationStart(AdditiveAnimation<T> animation) {
         // TODO: can we speed up this lookup?
         AccumulatedAnimationValue av = mAccumulator.getAccumulatedAnimationValue(animation);
 
@@ -208,12 +208,32 @@ class RunningAnimationsManager<T> {
         }
     }
 
+    /**
+     * The distinction between this and {@link RunningAnimationsManager#getQueuedPropertyValue(String)} is important when chaining animations:
+     * When an animation has been then-chained, it is not counted as <i>started</i>, but <i>queued</i> until start() is called.
+     *
+     * @return The value of the last <b>started</b> animation target for this property.
+     */
     Float getLastTargetValue(String propertyName) {
         AnimationInfo info = getAnimationInfo(propertyName, false);
         if (info == null) {
             return null;
         }
         return info.lastTargetValue;
+    }
+
+    /**
+     * The distinction between this and {@link RunningAnimationsManager#getLastTargetValue(String)} is important when chaining animations:
+     * When an animation has been then-chained, it is not counted as <i>started</i>, but <i>queued</i> until start() is called.
+     *
+     * @return The last <i>queued</i> animation target for this property during then()-building, even before the animation has been started.
+     */
+    Float getQueuedPropertyValue(String propertyName) {
+        AnimationInfo info = getAnimationInfo(propertyName, false);
+        if (info == null) {
+            return null;
+        }
+        return info.queuedTargetValue;
     }
 
     Float getActualPropertyValue(Property<T, Float> property) {
@@ -224,15 +244,7 @@ class RunningAnimationsManager<T> {
         return lastTarget;
     }
 
-    Float getQueuedPropertyValue(String propertyName) {
-        AnimationInfo info = getAnimationInfo(propertyName, false);
-        if (info == null) {
-            return null;
-        }
-        return info.queuedTargetValue;
-    }
-
-    private Float getActualAnimationStartValue(AdditiveAnimation animation) {
+    private Float getActualAnimationStartValue(AdditiveAnimation<T> animation) {
         if (animation.getProperty() != null) {
             return getActualPropertyValue(animation.getProperty());
         } else {

@@ -40,8 +40,8 @@ public class AdditiveAnimation<T> {
     private T mTarget;
     private int mHashCode;
     private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
-    private AccumulatedAnimationValue mAccumulatedValues;
-    private AnimationState mAssociatedAnimationState;
+    private AccumulatedAnimationValue mAccumulatedValue;
+    private AnimationState<T> mAssociatedAnimationState;
 
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
@@ -91,7 +91,7 @@ public class AdditiveAnimation<T> {
     }
 
     public void setAccumulatedValue(AccumulatedAnimationValue av) {
-        mAccumulatedValues = av;
+        mAccumulatedValue = av;
     }
 
     private void setTag(String tag) {
@@ -146,32 +146,15 @@ public class AdditiveAnimation<T> {
             return mSharedPathEvaluator.evaluate(progress, mPathMode, mPath);
         } else {
             if(mCustomTypeEvaluator != null) {
-                return (float) mCustomTypeEvaluator.evaluate(progress, mStartValue, mTargetValue);
+                return mCustomTypeEvaluator.evaluate(progress, mStartValue, mTargetValue);
             } else {
                 return mStartValue + (mTargetValue - mStartValue) * progress;
             }
         }
     }
 
-    @Override
-    public int hashCode() {
-        return mHashCode;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if(this == o) {
-            return true;
-        }
-        if(!(o instanceof AdditiveAnimation)) {
-            return false;
-        }
-        AdditiveAnimation other = (AdditiveAnimation) o;
-        return other.mTag.hashCode() == mTag.hashCode() && other.mTarget == mTarget;
-    }
-
-    public AccumulatedAnimationValue getAccumulatedValues() {
-        return mAccumulatedValues;
+    public AccumulatedAnimationValue getAccumulatedValue() {
+        return mAccumulatedValue;
     }
 
     public AdditiveAnimation<T> cloneWithTarget(T target, Float startValue) {
@@ -198,11 +181,28 @@ public class AdditiveAnimation<T> {
         return animation;
     }
 
-    public void setAssociatedAnimationState(AnimationState associatedAnimationStateId) {
+    public void setAssociatedAnimationState(AnimationState<T> associatedAnimationStateId) {
         this.mAssociatedAnimationState = associatedAnimationStateId;
     }
 
-    public AnimationState getAssociatedAnimationState() {
+    public AnimationState<T> getAssociatedAnimationState() {
         return mAssociatedAnimationState;
+    }
+
+    @Override
+    public int hashCode() {
+        return mHashCode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) {
+            return true;
+        }
+        if(!(o instanceof AdditiveAnimation)) {
+            return false;
+        }
+        AdditiveAnimation other = (AdditiveAnimation) o;
+        return other.mTag.hashCode() == mTag.hashCode() && other.mTarget == mTarget;
     }
 }

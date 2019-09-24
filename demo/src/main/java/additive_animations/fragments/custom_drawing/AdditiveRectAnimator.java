@@ -1,8 +1,5 @@
 package additive_animations.fragments.custom_drawing;
 
-import java.util.Map;
-
-import at.wirecube.additiveanimations.additive_animator.AdditiveAnimation;
 import at.wirecube.additiveanimations.additive_animator.BaseAdditiveAnimator;
 import at.wirecube.additiveanimations.helper.FloatProperty;
 

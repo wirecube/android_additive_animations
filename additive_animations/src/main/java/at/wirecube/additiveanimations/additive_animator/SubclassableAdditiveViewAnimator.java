@@ -26,17 +26,35 @@ import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
 
 public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdditiveViewAnimator> extends BaseAdditiveAnimator<T, View> {
 
-    protected boolean mSkipRequestLayout = false;
+    protected boolean mSkipRequestLayout = true;
     protected boolean mWithLayer = false;
 
+    /**
+     * The distinction between this and {@link SubclassableAdditiveViewAnimator#getQueuedPropertyValue(String)} is important when chaining animations:
+     * When an animation has been then-chained, it is not counted as <i>started</i>, but <i>queued</i> until start() is called.
+     *
+     * @return The value of the last <b>started</b> animation target for this property.
+     */
     public static float getTargetPropertyValue(Property<View, Float> property, View v) {
         return RunningAnimationsManager.from(v).getActualPropertyValue(property);
     }
 
+    /**
+     * The distinction between this and {@link SubclassableAdditiveViewAnimator#getQueuedPropertyValue(String)} is important when chaining animations:
+     * When an animation has been then-chained, it is not counted as <i>started</i>, but <i>queued</i> until start() is called.
+     *
+     * @return The value of the last <b>started</b> animation target for this property.
+     */
     public static Float getTargetPropertyValue(String propertyName, View v) {
         return RunningAnimationsManager.from(v).getLastTargetValue(propertyName);
     }
 
+    /**
+     * The distinction between this and {@link SubclassableAdditiveViewAnimator#getTargetPropertyValue(String, View)} (String)} is important when chaining animations:
+     * When an animation has been then-chained, it is not counted as <i>started</i>, but <i>queued</i> until start() is called.
+     *
+     * @return The last <i>queued</i> animation target for this property during then()-building, even before the animation has been started.
+     */
     protected static Float getQueuedPropertyValue(String propertyName, View v) {
         return RunningAnimationsManager.from(v).getQueuedPropertyValue(propertyName);
     }
@@ -107,10 +125,25 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
         // don't need to do anything, this is handled by applyChanges() already.
     }
 
+    /**
+     * Turns off requesting layout after each frame.
+     * Since this is the default value, you should never have to call this method.
+     */
+    @Deprecated
     public T skipRequestLayout() {
         mSkipRequestLayout = true;
         return self();
     }
+
+    /**
+     * Manually turns on requesting layout after each frame.
+     * This should only necessary if you are animating layout properties through custom builder methods.
+     */
+    public T requestLayout() {
+        mSkipRequestLayout = false;
+        return self();
+    }
+
 
     /**
      * Activates hardware layers.
@@ -118,18 +151,13 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
      * Note that
      */
     public T withLayer() {
-        if(mCurrentStateManager != null) {
-            mCurrentStateManager.setUseHardwareLayer(true);
+        if(mRunningAnimationsManager != null) {
+            mRunningAnimationsManager.setUseHardwareLayer(true);
         }
         mSkipRequestLayout = true;
         mWithLayer = true;
 
-        runIfParentIsInSameAnimationGroup(new Runnable() {
-            @Override
-            public void run() {
-                mParent.withLayer();
-            }
-        });
+        runIfParentIsInSameAnimationGroup(() -> mParent.withLayer());
 
         return self();
     }
@@ -138,16 +166,11 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
      * Deactivates hardware layers for the current view and all subsequently added ones.
      */
     public T withoutLayer() {
-        if(mCurrentStateManager != null) {
-            mCurrentStateManager.setUseHardwareLayer(false);
+        if(mRunningAnimationsManager != null) {
+            mRunningAnimationsManager.setUseHardwareLayer(false);
         }
         mWithLayer = false;
-        runIfParentIsInSameAnimationGroup(new Runnable() {
-            @Override
-            public void run() {
-                mParent.withoutLayer();
-            }
-        });
+        runIfParentIsInSameAnimationGroup(() -> mParent.withoutLayer());
         return self();
     }
 
@@ -190,7 +213,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     public T scale(float scale) {
         scaleY(scale);
         scaleX(scale);
-        return (T) this;
+        return self();
     }
 
     public T scaleBy(float scalesBy) {
@@ -247,12 +270,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
             currentValue = getQueuedPropertyValue(property.getName());
         }
         float shortestDistance = AnimationUtils.shortestAngleBetween(currentValue, target);
-        runIfParentIsInSameAnimationGroup(new Runnable() {
-            @Override
-            public void run() {
-                ((SubclassableAdditiveViewAnimator) mParent).animateRotationProperty(property, target);
-            }
-        });
+        runIfParentIsInSameAnimationGroup(() -> ((SubclassableAdditiveViewAnimator) mParent).animateRotationProperty(property, target));
         return animatePropertyBy(property, shortestDistance, false);
     }
 
@@ -345,34 +363,42 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     public T leftMargin(int leftMargin) {
+        mSkipRequestLayout = false;
         return animate(MarginProperties.MARGIN_LEFT, leftMargin);
     }
 
     public T leftMarginBy(int leftMarginBy) {
+        mSkipRequestLayout = false;
         return animatePropertyBy(MarginProperties.MARGIN_LEFT, leftMarginBy);
     }
 
     public T topMargin(int topMargin) {
+        mSkipRequestLayout = false;
         return animate(MarginProperties.MARGIN_TOP, topMargin);
     }
 
     public T topMarginBy(int topMarginBy) {
+        mSkipRequestLayout = false;
         return animatePropertyBy(MarginProperties.MARGIN_TOP, topMarginBy);
     }
 
     public T rightMargin(int rightMargin) {
+        mSkipRequestLayout = false;
         return animate(MarginProperties.MARGIN_RIGHT, rightMargin);
     }
 
     public T rightMarginBy(int rightMarginBy) {
+        mSkipRequestLayout = false;
         return animatePropertyBy(MarginProperties.MARGIN_RIGHT, rightMarginBy);
     }
 
     public T bottomMargin(int bottomMargin) {
+        mSkipRequestLayout = false;
         return animate(MarginProperties.MARGIN_BOTTOM, bottomMargin);
     }
 
     public T bottomMarginBy(int bottomMarginBy) {
+        mSkipRequestLayout = false;
         return animatePropertyBy(MarginProperties.MARGIN_BOTTOM, bottomMarginBy);
     }
 
@@ -417,44 +443,54 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     public T topLeftMarginAlongPath(Path path) {
+        mSkipRequestLayout = false;
         return animatePropertiesAlongPath(MarginProperties.MARGIN_LEFT, MarginProperties.MARGIN_TOP, null, path);
     }
 
     public T topRightMarginAlongPath(Path path) {
+        mSkipRequestLayout = false;
         return animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_TOP, null, path);
     }
 
     public T bottomRightMarginAlongPath(Path path) {
+        mSkipRequestLayout = false;
         return animatePropertiesAlongPath(MarginProperties.MARGIN_RIGHT, MarginProperties.MARGIN_BOTTOM, null, path);
     }
 
     public T bottomLeftMarginAlongPath(Path path) {
+        mSkipRequestLayout = false;
         return animatePropertiesAlongPath(MarginProperties.MARGIN_LEFT, MarginProperties.MARGIN_BOTTOM, null, path);
     }
 
     public T width(int width) {
+        mSkipRequestLayout = false;
         return animate(SizeProperties.WIDTH, width);
     }
 
     public T widthBy(int widthBy) {
+        mSkipRequestLayout = false;
         return animatePropertyBy(SizeProperties.WIDTH, widthBy);
     }
 
     public T height(int height) {
+        mSkipRequestLayout = false;
         return animate(SizeProperties.HEIGHT, height);
     }
 
     public T heightBy(int heightBy) {
+        mSkipRequestLayout = false;
         return animatePropertyBy(SizeProperties.HEIGHT, heightBy);
     }
 
     public T size(int size) {
+        mSkipRequestLayout = false;
         animate(SizeProperties.WIDTH, size);
         animate(SizeProperties.HEIGHT, size);
         return self();
     }
 
     public T sizeBy(int sizeBy) {
+        mSkipRequestLayout = false;
         animatePropertyBy(SizeProperties.WIDTH, sizeBy);
         animatePropertyBy(SizeProperties.HEIGHT, sizeBy);
         return self();

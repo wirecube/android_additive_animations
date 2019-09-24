@@ -25,7 +25,10 @@ class AccumulatedAnimationValueManager {
 
     private HashMap<AdditiveAnimation, AccumulatedAnimationValue> accumulatedAnimationValues = new HashMap<>();
 
-    // Returns an accumulator that you should store if possible
+    /**
+     *  Returns an accumulator to use for this animation. All animations with the same tag and target share the same accumulator.
+     *  The lookup is rather slow, so try to store the returned object somewhere you can access it directly.
+     */
     public AccumulatedAnimationValue getAccumulatedAnimationValue(AdditiveAnimation animation) {
         // TODO: is there any way to make this `get()` faster?
         AccumulatedAnimationValue accumulatedAnimationValue = accumulatedAnimationValues.get(animation);

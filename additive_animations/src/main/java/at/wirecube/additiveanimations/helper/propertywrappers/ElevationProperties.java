@@ -27,7 +27,7 @@ public class ElevationProperties {
     public static Property<View, Float> ELEVATION = new FloatProperty<View>("ELEVATION") {
         @Override
         public Float get(View object) {
-            return Float.valueOf(object.getElevation());
+            return object.getElevation();
         }
 
         @Override

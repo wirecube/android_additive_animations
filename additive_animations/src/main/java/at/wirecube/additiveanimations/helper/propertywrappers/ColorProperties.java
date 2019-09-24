@@ -28,7 +28,7 @@ public class ColorProperties {
         @Override
         public Float get(View object) {
             try {
-                return Float.valueOf(((ColorDrawable)object.getBackground()).getColor());
+                return (float) ((ColorDrawable) object.getBackground()).getColor();
             } catch (ClassCastException ex) {
                 ex.printStackTrace();
             } catch (NullPointerException ex) {

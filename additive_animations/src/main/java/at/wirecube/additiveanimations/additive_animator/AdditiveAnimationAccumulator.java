@@ -28,15 +28,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * This is the class that actually runs the ValueAnimator and adds the delta of each animation to its accumulator.
+ */
 class AdditiveAnimationAccumulator {
 
     // Exists only for performance reasons to avoid map lookups
-    private class AdditiveAnimationWrapper<T> {
+    private final class AdditiveAnimationWrapper<T> {
         private final AdditiveAnimation<T> animation;
         private float previousValue;
+
         AdditiveAnimationWrapper(AdditiveAnimation<T> animation) {
             this.animation = animation;
-            previousValue = 0f;
+            this.previousValue = 0f;
         }
 
         @Override
@@ -46,10 +50,10 @@ class AdditiveAnimationAccumulator {
 
         @Override
         public boolean equals(Object obj) {
-            if(this == obj) {
+            if (this == obj) {
                 return true;
             }
-            return animation.equals(((AdditiveAnimationWrapper)obj).animation);
+            return animation.equals(((AdditiveAnimationWrapper) obj).animation);
         }
     }
 
@@ -64,22 +68,28 @@ class AdditiveAnimationAccumulator {
         mAdditiveAnimator = additiveAnimator;
         // it's better not to allocate once every frame:
         final List<AccumulatedAnimationValue> accumulatedAnimationValues = new ArrayList<>();
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                if(!mHasInformedStateManagerAboutAnimationStart) {
-                    notifyStateManagerAboutAnimationStartIfNeeded();
-                }
-                for (AdditiveAnimationWrapper animationWrapper : mAnimationWrappers) {
-                    AdditiveAnimation animation = animationWrapper.animation;
-                    AccumulatedAnimationValue tempProperties = animation.getAccumulatedValues();
-                    tempProperties.addDelta(getDelta(animationWrapper, valueAnimator.getAnimatedFraction()));
-                    accumulatedAnimationValues.add(tempProperties);
-                }
-                // TODO: is there some way to figure out whether or not to apply the changes?
-                mAdditiveAnimator.applyChanges(accumulatedAnimationValues);
-                accumulatedAnimationValues.clear();
+        mAnimator.addUpdateListener(valueAnimator -> {
+            if (!mHasInformedStateManagerAboutAnimationStart) {
+                notifyStateManagerAboutAnimationStartIfNeeded();
             }
+            for (AdditiveAnimationWrapper animationWrapper : mAnimationWrappers) {
+                AdditiveAnimation animation = animationWrapper.animation;
+                AccumulatedAnimationValue tempProperties = animation.getAccumulatedValue();
+                tempProperties.addDelta(getDelta(animationWrapper, valueAnimator.getAnimatedFraction()));
+                accumulatedAnimationValues.add(tempProperties);
+            }
+
+            /*
+             * TODO: is there some way to figure out whether or not to apply the changes?
+             * Only the very last running accumulator would need to apply the changes, since the
+             * accumulation happens inside the accumulatedAnimationValues.
+             * This would bring a big performance gain in that the property setters would not need to
+             * be called for every running animation, but only for the final accumulated value.
+             * Unfortunately, it's really hard to gather a list of all accumulated values that need
+             * setting in each frame and to figure out when the last animator is done.
+             */
+            mAdditiveAnimator.applyChanges(accumulatedAnimationValues);
+            accumulatedAnimationValues.clear();
         });
 
         mAnimator.addListener(new AnimatorListenerAdapter() {
@@ -92,7 +102,6 @@ class AdditiveAnimationAccumulator {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                // now we are actually done
                 for (Object v : mAnimationsPerObject.keySet()) {
                     RunningAnimationsManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, animationDidCancel);
                 }
@@ -106,13 +115,13 @@ class AdditiveAnimationAccumulator {
     }
 
     private void notifyStateManagerAboutAnimationStartIfNeeded() {
-        if(!mHasInformedStateManagerAboutAnimationStart) {
+        if (!mHasInformedStateManagerAboutAnimationStart) {
             mHasInformedStateManagerAboutAnimationStart = true;
             Collection<Object> animationTargets = new ArrayList<>(mAnimationsPerObject.keySet());
             for (Object v : animationTargets) {
                 RunningAnimationsManager manager = RunningAnimationsManager.from(v);
                 manager.onAnimationAccumulatorStart(AdditiveAnimationAccumulator.this);
-                for(AdditiveAnimationWrapper wrapper : getAnimationWrappers(v)) {
+                for (AdditiveAnimationWrapper wrapper : getAnimationWrappers(v)) {
                     manager.prepareAnimationStart(wrapper.animation);
                     wrapper.previousValue = wrapper.animation.getStartValue();
                 }
@@ -140,10 +149,10 @@ class AdditiveAnimationAccumulator {
 
     private void removeTarget(Object v) {
         Set<String> animatedValues = collectAnimatedProperties(v);
-        if(animatedValues == null) {
+        if (animatedValues == null) {
             return;
         }
-        if(animatedValues.size() == mAnimationWrappers.size()) {
+        if (animatedValues.size() == mAnimationWrappers.size()) {
             cancel();
         } else {
             for (String animatedValue : animatedValues) {
@@ -154,11 +163,11 @@ class AdditiveAnimationAccumulator {
 
     private Set<String> collectAnimatedProperties(Object v) {
         Collection<AdditiveAnimationWrapper> wrappers = mAnimationsPerObject.get(v);
-        if(wrappers == null) {
+        if (wrappers == null) {
             return new HashSet<>();
         }
         Set<String> properties = new HashSet<>(2);
-        for(AdditiveAnimationWrapper wrapper : wrappers) {
+        for (AdditiveAnimationWrapper wrapper : wrappers) {
             properties.add(wrapper.animation.getTag());
         }
         return properties;
@@ -169,13 +178,13 @@ class AdditiveAnimationAccumulator {
      */
     private void removeAnimationFromTarget(Object v, String additiveAnimationName) {
         AdditiveAnimationWrapper animationToRemove = null;
-        for(AdditiveAnimationWrapper anim : getAnimationWrappers(v)) {
-            if(anim.animation.getTag().equals(additiveAnimationName)) {
+        for (AdditiveAnimationWrapper anim : getAnimationWrappers(v)) {
+            if (anim.animation.getTag().equals(additiveAnimationName)) {
                 animationToRemove = anim;
                 break;
             }
         }
-        if(animationToRemove != null) {
+        if (animationToRemove != null) {
             mAnimationWrappers.remove(animationToRemove);
             removeFromAnimationMap(animationToRemove);
         }
@@ -183,7 +192,7 @@ class AdditiveAnimationAccumulator {
 
     private void addToAnimationMap(AdditiveAnimationWrapper wrapper) {
         Set<AdditiveAnimationWrapper> animations = mAnimationsPerObject.get(wrapper.animation.getTarget());
-        if(animations == null) {
+        if (animations == null) {
             animations = new HashSet<>(1);
             mAnimationsPerObject.put(wrapper.animation.getTarget(), animations);
         }
@@ -192,11 +201,11 @@ class AdditiveAnimationAccumulator {
 
     private void removeFromAnimationMap(AdditiveAnimationWrapper wrapper) {
         Set<AdditiveAnimationWrapper> animations = mAnimationsPerObject.get(wrapper.animation.getTarget());
-        if(animations == null) {
+        if (animations == null) {
             return;
         }
         animations.remove(wrapper);
-        if(animations.size() == 0) {
+        if (animations.size() == 0) {
             mAnimationsPerObject.remove(wrapper.animation.getTarget());
         }
     }
@@ -204,7 +213,7 @@ class AdditiveAnimationAccumulator {
     Collection<AdditiveAnimation> getAnimations(Object v) {
         Collection<AdditiveAnimationWrapper> wrappers = getAnimationWrappers(v);
         List<AdditiveAnimation> animations = new ArrayList<>(wrappers.size());
-        for(AdditiveAnimationWrapper wrapper : wrappers) {
+        for (AdditiveAnimationWrapper wrapper : wrappers) {
             animations.add(wrapper.animation);
         }
         return animations;
@@ -212,7 +221,7 @@ class AdditiveAnimationAccumulator {
 
     private Collection<AdditiveAnimationWrapper> getAnimationWrappers(Object v) {
         Set<AdditiveAnimationWrapper> wrappers = mAnimationsPerObject.get(v);
-        if(wrappers == null) {
+        if (wrappers == null) {
             return new HashSet<>();
         }
         return wrappers;
@@ -224,7 +233,7 @@ class AdditiveAnimationAccumulator {
 
     Collection<AdditiveAnimation> getAnimations() {
         Set<AdditiveAnimation> allAnimations = new HashSet<>(mAnimationWrappers.size());
-        for(AdditiveAnimationWrapper wrapper : mAnimationWrappers) {
+        for (AdditiveAnimationWrapper wrapper : mAnimationWrappers) {
             allAnimations.add(wrapper.animation);
         }
         return allAnimations;
@@ -257,7 +266,7 @@ class AdditiveAnimationAccumulator {
 
     @Override
     public boolean equals(Object obj) {
-        if(obj == this) {
+        if (obj == this) {
             return true;
         }
         AdditiveAnimationAccumulator other = (AdditiveAnimationAccumulator) obj;

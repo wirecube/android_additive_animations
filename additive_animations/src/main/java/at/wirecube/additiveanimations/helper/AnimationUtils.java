@@ -35,16 +35,16 @@ public class AnimationUtils {
                 diff = 360 + diff;
             }
         }
-        while(diff > 360) {
+        while (diff > 360) {
             diff -= 360;
         }
-        while(diff < -360) {
+        while (diff < -360) {
             diff += 360;
         }
-        if(diff > 180) {
+        if (diff > 180) {
             diff -= 360;
         }
-        if(diff < -180) {
+        if (diff < -180) {
             diff += 360;
         }
         return diff;

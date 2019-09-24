@@ -25,7 +25,7 @@ public class SizeProperties {
     public static Property<View, Float> WIDTH = new FloatProperty<View>("VIEW_WIDTH") {
         @Override
         public Float get(View object) {
-            return Float.valueOf((object.getLayoutParams()).width);
+            return (float) (object.getLayoutParams()).width;
         }
 
         @Override
@@ -37,7 +37,7 @@ public class SizeProperties {
     public static Property<View, Float> HEIGHT = new FloatProperty<View>("VIEW_HEIGHT") {
         @Override
         public Float get(View object) {
-            return Float.valueOf((object.getLayoutParams()).height);
+            return (float) (object.getLayoutParams()).height;
         }
 
         @Override

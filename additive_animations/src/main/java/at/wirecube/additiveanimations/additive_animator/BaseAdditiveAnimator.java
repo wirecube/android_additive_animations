@@ -16,10 +16,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction;
 import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
@@ -31,18 +29,19 @@ import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
  * This is the base class which provides access to all non-specific animation creation methods such as
  * creation, timing and chaining of additive animations.
  * Subclasses should provide builder methods which create specific animations (see {@link SubclassableAdditiveViewAnimator} for examples).
- * @param <T> This generic should be instantiated with a concrete subclass of BaseAdditiveAnimator. It is used to access the builder methods across hierarchies.
- *           Example:<p>
  *
- *           <b><code>public class MyViewAnimator extends BaseAdditiveAnimator{@literal <}MyViewAnimator, View{@literal >}</code></b>
+ * @param <T> This generic should be instantiated with a concrete subclass of BaseAdditiveAnimator. It is used to access the builder methods across hierarchies.
+ *            Example:<p>
+ *            <p>
+ *            <b><code>public class MyViewAnimator extends BaseAdditiveAnimator{@literal <}MyViewAnimator, View{@literal >}</code></b>
  * @param <V> The type of object to be animated.
  */
 public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V extends Object> {
 
     protected T mParent = null; // not null when this animator was queued using `then()` chaining.
     protected V mCurrentTarget = null;
-    protected RunningAnimationsManager<V> mCurrentStateManager = null; // only used for performance reasons
-    protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to.
+    protected RunningAnimationsManager<V> mRunningAnimationsManager = null; // only used for performance reasons to avoid lookups
+    protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to
     protected TimeInterpolator mCurrentCustomInterpolator = null;
 
     // These properties are stored to avoid any allocations during the animations for performance reasons.
@@ -77,15 +76,19 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public static void cancelAnimations(Object... targets) {
-        if(targets == null) { return; }
-        for(Object target : targets) {
+        if (targets == null) {
+            return;
+        }
+        for (Object target : targets) {
             cancelAnimations(target);
         }
     }
 
     public static void cancelAnimations(List<Object> targets) {
-        if(targets == null) { return; }
-        for(Object target : targets) {
+        if (targets == null) {
+            return;
+        }
+        for (Object target : targets) {
             cancelAnimations(target);
         }
     }
@@ -95,8 +98,10 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public static void cancelAnimation(List<Object> targets, String animationTag) {
-        if(targets == null) { return; }
-        for(Object target : targets) {
+        if (targets == null) {
+            return;
+        }
+        for (Object target : targets) {
             RunningAnimationsManager.from(target).cancelAnimation(animationTag);
         }
     }
@@ -106,10 +111,10 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     private void initValueAnimatorIfNeeded() {
-        if(!mIsValid) {
+        if (!mIsValid) {
             throw new RuntimeException("AdditiveAnimator instances cannot be reused.");
         }
-        if(mAnimationAccumulator == null) {
+        if (mAnimationAccumulator == null) {
             mAnimationAccumulator = new AdditiveAnimationAccumulator(this);
             getValueAnimator().setInterpolator(sDefaultInterpolator);
             getValueAnimator().setDuration(sDefaultAnimationDuration);
@@ -120,8 +125,10 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         initValueAnimatorIfNeeded();
         return mAnimationAccumulator.getAnimator();
     }
+
     /**
      * Old API for {@link #target(V)}, which should be used instead.
+     *
      * @deprecated Use {@link #target(V)} instead.
      */
     @Deprecated
@@ -134,7 +141,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * if the property isn't animating at the moment.
      */
     public float getTargetPropertyValue(Property<V, Float> property) {
-        return mCurrentStateManager == null ? 0 : mCurrentStateManager.getActualPropertyValue(property);
+        return mRunningAnimationsManager == null ? 0 : mRunningAnimationsManager.getActualPropertyValue(property);
     }
 
     /**
@@ -142,8 +149,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * This method can return null if the value hasn't been animated or the animation is already done.
      */
     public Float getTargetPropertyValue(String propertyName) {
-        if(mCurrentStateManager != null && mCurrentStateManager.getLastTargetValue(propertyName) != null) {
-            return mCurrentStateManager.getLastTargetValue(propertyName);
+        if (mRunningAnimationsManager != null && mRunningAnimationsManager.getLastTargetValue(propertyName) != null) {
+            return mRunningAnimationsManager.getLastTargetValue(propertyName);
         } else {
             return getCurrentPropertyValue(propertyName);
         }
@@ -151,6 +158,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     /**
      * Returns the actual value of the animation target with the given name.
+     *
      * @apiNote If you use custom tags in your subclass WITHOUT PROPERTIES, you MUST override this method to return
      * the actual model value, otherwise some features will crash.
      */
@@ -161,20 +169,20 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * This method is for internal use only (keeping track of chained `animateBy` calls).
      */
     protected Float getQueuedPropertyValue(String propertyName) {
-        return mCurrentStateManager.getQueuedPropertyValue(propertyName);
+        return mRunningAnimationsManager.getQueuedPropertyValue(propertyName);
     }
 
     void applyChanges(List<AccumulatedAnimationValue<V>> accumulatedAnimations) {
-        for(AccumulatedAnimationValue<V> accumulatedAnimationValue : accumulatedAnimations) {
+        for (AccumulatedAnimationValue<V> accumulatedAnimationValue : accumulatedAnimations) {
             V target = accumulatedAnimationValue.animation.getTarget();
-            if(accumulatedAnimationValue.animation.getProperty() != null) {
+            if (accumulatedAnimationValue.animation.getProperty() != null) {
                 accumulatedAnimationValue.animation.getProperty().set(target, accumulatedAnimationValue.tempValue);
             } else {
-                if(mUnknownProperties == null) {
+                if (mUnknownProperties == null) {
                     mUnknownProperties = new HashMap<>();
                 }
                 List<AccumulatedAnimationValue<V>> accumulatedValues = mUnknownProperties.get(target);
-                if(accumulatedValues == null) {
+                if (accumulatedValues == null) {
                     accumulatedValues = new ArrayList<>(1);
                     mUnknownProperties.put(target, accumulatedValues);
                 }
@@ -182,9 +190,9 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             }
         }
 
-        if(mUnknownProperties != null) {
+        if (mUnknownProperties != null) {
             for (V v : mUnknownProperties.keySet()) {
-                for(AccumulatedAnimationValue value : mUnknownProperties.get(v)) {
+                for (AccumulatedAnimationValue value : mUnknownProperties.get(v)) {
                     mChangedUnknownProperties.put(value.animation.getTag(), value.tempValue);
                 }
                 applyCustomProperties(mChangedUnknownProperties, v);
@@ -192,7 +200,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         }
 
         // reuse the set/map/lists
-        for(Collection<AccumulatedAnimationValue<V>> properties : mUnknownProperties.values()) {
+        for (Collection<AccumulatedAnimationValue<V>> properties : mUnknownProperties.values()) {
             properties.clear();
         }
         mChangedUnknownProperties.clear();
@@ -235,7 +243,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     protected final T animate(final AdditiveAnimation animation) {
         initValueAnimatorIfNeeded();
-        mCurrentStateManager.addAnimation(mAnimationAccumulator, animation);
+        mRunningAnimationsManager.addAnimation(mAnimationAccumulator, animation);
         runIfParentIsInSameAnimationGroup(() -> {
             final Float startValue;
             if (animation.getProperty() != null) {
@@ -269,13 +277,13 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     protected final T animatePropertyBy(final Property<V, Float> property, final float by, final boolean byValueCanBeUsedByParentAnimators) {
         initValueAnimatorIfNeeded();
         float currentTarget = getTargetPropertyValue(property);
-        if(getQueuedPropertyValue(property.getName()) != null) {
+        if (getQueuedPropertyValue(property.getName()) != null) {
             currentTarget = getQueuedPropertyValue(property.getName());
         }
         AdditiveAnimation animation = createAnimation(property, currentTarget + by);
         initValueAnimatorIfNeeded();
-        mCurrentStateManager.addAnimation(mAnimationAccumulator, animation);
-        if(byValueCanBeUsedByParentAnimators) {
+        mRunningAnimationsManager.addAnimation(mAnimationAccumulator, animation);
+        if (byValueCanBeUsedByParentAnimators) {
             runIfParentIsInSameAnimationGroup(() -> mParent.animatePropertyBy(property, by, true));
         }
         return self();
@@ -283,13 +291,13 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     protected final T animatePropertiesAlongPath(Property<V, Float> xProperty, Property<V, Float> yProperty, Property<V, Float> rotationProperty, Path path) {
         PathEvaluator sharedEvaluator = new PathEvaluator();
-        if(xProperty != null) {
+        if (xProperty != null) {
             animate(xProperty, path, PathEvaluator.PathMode.X, sharedEvaluator);
         }
-        if(yProperty != null) {
+        if (yProperty != null) {
             animate(yProperty, path, PathEvaluator.PathMode.Y, sharedEvaluator);
         }
-        if(rotationProperty != null) {
+        if (rotationProperty != null) {
             animate(rotationProperty, path, PathEvaluator.PathMode.ROTATION, sharedEvaluator);
         }
         return self();
@@ -297,6 +305,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     /**
      * Old API for {@link #property(float, TypeEvaluator, FloatProperty)}, which should be used instead.
+     *
      * @deprecated Use {@link #property(float, TypeEvaluator, FloatProperty)} instead.
      */
     public T animateProperty(float target, TypeEvaluator<Float> evaluator, FloatProperty<V> property) {
@@ -311,6 +320,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     /**
      * Old API for {@link #property(float, FloatProperty)}, which should be used instead.
+     *
      * @deprecated Use {@link #property(float, FloatProperty)} instead.
      */
     public T animateProperty(float target, FloatProperty<V> customProperty) {
@@ -322,8 +332,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T state(AnimationState<V> state) {
-        mCurrentStateManager.setCurrentState(state);
-        for(AnimationAction.Animation<V> animation : state.getAnimations()) {
+        mRunningAnimationsManager.setCurrentState(state);
+        for (AnimationAction.Animation<V> animation : state.getAnimations()) {
             AdditiveAnimation anim = createAnimation(animation.getProperty(), animation.getTargetValue(), animation.getTypeEvaluator());
             anim.setAssociatedAnimationState(state);
             animate(anim);
@@ -332,7 +342,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T action(AnimationAction<V> animationAction) {
-        for(AnimationAction.Animation<V> animation : animationAction.getAnimations()) {
+        for (AnimationAction.Animation<V> animation : animationAction.getAnimations()) {
             animate(animation.getProperty(), animation.getTargetValue(), animation.getTypeEvaluator());
         }
         return self();
@@ -346,14 +356,14 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public static <V extends Object> void apply(AnimationAction<V> action, List<V> targets) {
-        for(V target : targets) {
-            if(action instanceof AnimationState) {
+        for (V target : targets) {
+            if (action instanceof AnimationState) {
                 RunningAnimationsManager.from(target).setCurrentState((AnimationState) action);
             }
-            for(AnimationAction.Animation<V> animation : action.getAnimations()) {
+            for (AnimationAction.Animation<V> animation : action.getAnimations()) {
                 animation.getProperty().set(target, animation.getTargetValue());
-                if(action instanceof AnimationState) {
-                    if(((AnimationState) action).getAnimationEndAction() != null) {
+                if (action instanceof AnimationState) {
+                    if (((AnimationState) action).getAnimationEndAction() != null) {
                         ((AnimationState) action).getAnimationEndAction().onEnd(target, false);
                     }
                 }
@@ -389,13 +399,13 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * Sets the current animation target. You can change the animation target multiple times before calling
      * {@link #start()}:<p/>
      * <code>
-     *     new AdditiveAnimator().target(view1).x(100).target(view2).y(200).start()
+     * new AdditiveAnimator().target(view1).x(100).target(view2).y(200).start()
      * </code>
      * <p/>
      * If you want to animate the same property of multiple views, use {@link #targets(Object[])} or {@link #targets(List, long)}
      */
     public T target(V v) {
-        if(mAnimatorGroup != null) {
+        if (mAnimatorGroup != null) {
             // Changes to animation duration, interpolator etc. always affect the whole animation group.
             // After changing target, we don't want to mess with the current animation group, because you would want something like this to be possible:
             // new AdditiveAnimator().targets(v1, v2).setDuration(200).x(50).target(v3).x(100).setDuration(100).start();
@@ -403,7 +413,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             return (T) createChildWithDelayAfterParentStart(0).target(v);
         }
         mCurrentTarget = v;
-        mCurrentStateManager = RunningAnimationsManager.from(v);
+        mRunningAnimationsManager = RunningAnimationsManager.from(v);
         initValueAnimatorIfNeeded();
         return self();
     }
@@ -435,11 +445,11 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * <code>new AdditiveAnimator().targets(Arrays.asList(textView, button), 100).translationYBy(100).alpha(0).start()</code>
      */
     public T targets(@NonNull List<V> vs, long stagger) {
-        if(vs.isEmpty()) {
+        if (vs.isEmpty()) {
             throw new IllegalArgumentException("You passed a list containing 0 views to BaseAdditiveAnimator.targets(). This would cause buggy animations, so it's probably more desirable to crash instead.");
         }
 
-        if(mAnimatorGroup != null) {
+        if (mAnimatorGroup != null) {
             // if we are already part of an animation group, we create a new animator:
             return (T) createChildWithDelayAfterParentStart(0).targets(vs, stagger);
         }
@@ -451,7 +461,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         group.add(this);
 
         T animator = self();
-        for(int i = 1; i < vs.size(); i++) {
+        for (int i = 1; i < vs.size(); i++) {
             animator = (T) animator.createChildWithDelayAfterParentStart(stagger);
             // Same as above: call order (first target(), then adding to animator group) is important.
             animator.target(vs.get(i));
@@ -534,7 +544,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T setInterpolator(final TimeInterpolator interpolator) {
-        if(mCurrentCustomInterpolator != null) {
+        if (mCurrentCustomInterpolator != null) {
             return switchInterpolator(interpolator);
         }
         getValueAnimator().setInterpolator(interpolator);
@@ -587,7 +597,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         initValueAnimatorIfNeeded();
         // set custom interpolator for all animations so far
         Collection<AdditiveAnimation> animations = mAnimationAccumulator.getAnimations();
-        for(AdditiveAnimation animation : animations) {
+        for (AdditiveAnimation animation : animations) {
             animation.setCustomInterpolator(getValueAnimator().getInterpolator());
         }
 
@@ -615,13 +625,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * that was configured with this animator.
      */
     public T then() {
-        if(mAnimatorGroup != null) {
-            return (T)mAnimatorGroup.copyAndChain(new AdditiveAnimatorGroup.StartDelayProvider() {
-                @Override
-                public long getStartDelay(BaseAdditiveAnimator parent) {
-                    return parent.getTotalDuration();
-                }
-            }).outermostChildAnimator();
+        if (mAnimatorGroup != null) {
+            return (T) mAnimatorGroup.copyAndChain(parent -> parent.getTotalDuration()).outermostChildAnimator();
         }
         return createChildWithRawDelay(getTotalDuration());
     }
@@ -631,13 +636,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * with the last used target and interpolator.
      */
     public T thenWithDelay(final long delay) {
-        if(mAnimatorGroup != null) {
-            return (T) mAnimatorGroup.copyAndChain(new AdditiveAnimatorGroup.StartDelayProvider() {
-                @Override
-                public long getStartDelay(BaseAdditiveAnimator parent) {
-                    return parent.getValueAnimator().getStartDelay() + delay;
-                }
-            }).outermostChildAnimator();
+        if (mAnimatorGroup != null) {
+            return (T) mAnimatorGroup.copyAndChain(parent -> parent.getValueAnimator().getStartDelay() + delay).outermostChildAnimator();
         }
         return createChildWithDelayAfterParentStart(delay);
     }
@@ -647,13 +647,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * with the last used target and interpolator.
      */
     public T thenDelayAfterEnd(final long delayAfterEnd) {
-        if(mAnimatorGroup != null) {
-            return (T) mAnimatorGroup.copyAndChain(new AdditiveAnimatorGroup.StartDelayProvider() {
-                @Override
-                public long getStartDelay(BaseAdditiveAnimator parent) {
-                    return parent.getTotalDuration() + delayAfterEnd;
-                }
-            }).outermostChildAnimator();
+        if (mAnimatorGroup != null) {
+            return (T) mAnimatorGroup.copyAndChain(parent -> parent.getTotalDuration() + delayAfterEnd).outermostChildAnimator();
         }
         return createChildWithRawDelay(getTotalDuration() + delayAfterEnd);
     }
@@ -663,13 +658,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * with the last used target and interpolator.
      */
     public T thenBeforeEnd(final long millisBeforeEnd) {
-        if(mAnimatorGroup != null) {
-            return (T)mAnimatorGroup.copyAndChain(new AdditiveAnimatorGroup.StartDelayProvider() {
-                @Override
-                public long getStartDelay(BaseAdditiveAnimator parent) {
-                    return parent.getTotalDuration() - millisBeforeEnd;
-                }
-            }).outermostChildAnimator();
+        if (mAnimatorGroup != null) {
+            return (T) mAnimatorGroup.copyAndChain(parent -> parent.getTotalDuration() - millisBeforeEnd).outermostChildAnimator();
         }
         return createChildWithRawDelay(getTotalDuration() - millisBeforeEnd);
     }
@@ -690,7 +680,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     // package-private on purpose
     long getTotalDuration() {
         if (getValueAnimator().getRepeatCount() == ValueAnimator.INFINITE) {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 return ValueAnimator.DURATION_INFINITE;
             } else {
                 return -1;
@@ -701,7 +691,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public void start() {
-        if(mParent != null) {
+        if (mParent != null) {
             mParent.start();
         }
 
@@ -733,7 +723,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     protected void runIfParentIsInSameAnimationGroup(Runnable r) {
-        if(mAnimatorGroup != null && mParent != null && mParent.mAnimatorGroup == mAnimatorGroup) {
+        if (mAnimatorGroup != null && mParent != null && mParent.mAnimatorGroup == mAnimatorGroup) {
             r.run();
         }
     }

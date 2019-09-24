@@ -5,8 +5,8 @@ import android.util.Property;
 
 import java.util.List;
 
-public interface AnimationAction<T extends Object> {
-    class Animation<T extends Object> {
+public interface AnimationAction<T> {
+    class Animation<T> {
         private final Property<T, Float> mProperty;
         private final float mTargetValue;
         private TypeEvaluator<Float> mTypeEvaluator = null;
