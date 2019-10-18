@@ -4,7 +4,9 @@ import android.view.View;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction;
 import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
@@ -74,11 +76,6 @@ public class ViewVisibilityAnimation extends AnimationState<View> {
     }
 
 
-    private static int GONE_STATE_ID = 100001;
-    private static int VISIBLE_STATE_ID = 200001;
-    private static int INVISIBLE_STATE_ID = 300001;
-
-    private int mStateId;
     private List<AnimationAction.Animation<View>> mAnimations;
     private AnimationState.AnimationEndAction<View> mEndAction;
     private AnimationState.AnimationStartAction<View> mStartAction;
@@ -86,15 +83,12 @@ public class ViewVisibilityAnimation extends AnimationState<View> {
     public ViewVisibilityAnimation(int visibility, List<AnimationAction.Animation<View>> animations) {
         switch (visibility) {
             case View.VISIBLE:
-                mStateId = VISIBLE_STATE_ID;
                 mStartAction = view -> view.setVisibility(View.VISIBLE);
                 break;
             case View.INVISIBLE:
-                mStateId = INVISIBLE_STATE_ID;
                 mEndAction = (view, wasCancelled) -> view.setVisibility(View.INVISIBLE);
                 break;
             case View.GONE:
-                mStateId = GONE_STATE_ID;
                 mEndAction = (view, wasCancelled) -> view.setVisibility(View.GONE);
                 break;
         }
@@ -104,11 +98,6 @@ public class ViewVisibilityAnimation extends AnimationState<View> {
     @Override
     public List<AnimationAction.Animation<View>> getAnimations() {
         return mAnimations;
-    }
-
-    @Override
-    public int getId() {
-        return mStateId;
     }
 
     @Override

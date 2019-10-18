@@ -10,14 +10,12 @@ public abstract class AnimationState<T extends Object> implements AnimationActio
         void onEnd(T target, boolean wasCancelled);
     }
 
-    public abstract int getId();
-
     /**
      * By default, the animations are only allowed to run if the current state of the animated object matches
      * this state.
      */
     public boolean shouldRun(AnimationState currentState) {
-        return currentState == null || currentState.getId() == this.getId();
+        return currentState == null || currentState == this;
     }
 
     /**
@@ -25,7 +23,7 @@ public abstract class AnimationState<T extends Object> implements AnimationActio
      * this state.
      */
     public boolean shouldRunEndListener(AnimationState currentState) {
-        return currentState == null || currentState.getId() == this.getId();
+        return currentState == null || currentState == this;
     }
 
     public AnimationEndAction<T> getAnimationEndAction() {

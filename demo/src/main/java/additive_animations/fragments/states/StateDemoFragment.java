@@ -7,6 +7,7 @@ import android.support.v7.widget.SwitchCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.widget.CompoundButton;
 
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
@@ -25,13 +26,12 @@ public class StateDemoFragment extends Fragment {
     private boolean mUseCustomTransition = false;
 
     private ViewVisibilityAnimation getGoneAnim() {
-        return mUseCustomTransition ? CustomViewStateAnimation.GONE_ROTATE_AND_SCALE : ViewVisibilityAnimation.fadeOutAndTranslateX(true, 100f);
+        return mUseCustomTransition ? CustomViewStateAnimation.getCustomGoneAnimation() : ViewVisibilityAnimation.fadeOutAndTranslateX(true, 100f);
     }
 
     private ViewVisibilityAnimation getVisibleAnim() {
-        return CustomViewStateAnimation.VISIBLE_ROTATE_AND_SCALE_BACK;
+        return CustomViewStateAnimation.getCustomVisibleAnimation();
     }
-
 
     @Nullable
     @Override
@@ -43,12 +43,7 @@ public class StateDemoFragment extends Fragment {
 
         mUseCustomTransitionSwitch = rootView.findViewById(R.id.sdf_custom_transition_switch);
 
-        mUseCustomTransitionSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                mUseCustomTransition = b;
-            }
-        });
+        mUseCustomTransitionSwitch.setOnCheckedChangeListener((compoundButton, b) -> mUseCustomTransition = b);
 
         // A state can be set without any animation by using the `apply()` method - this will
         // cause the animation start/end actions to be called immediately.
@@ -61,14 +56,14 @@ public class StateDemoFragment extends Fragment {
                 AdditiveAnimator.animate(view1)
                         .setDuration(300)
                         .visibility(getGoneAnim())
-                        .thenWithDelay(150).target(view2)
+                        .thenWithDelay(50).target(view2)
                         .visibility(getVisibleAnim())
                         .start();
             } else {
                 AdditiveAnimator.animate(view2)
                         .setDuration(300)
                         .visibility(getGoneAnim())
-                        .thenWithDelay(150).target(view1)
+                        .thenWithDelay(50).target(view1)
                         .visibility(getVisibleAnim())
                         .start();
             }
