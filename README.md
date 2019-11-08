@@ -1,7 +1,7 @@
 # Android Additive Animations
 
 Additive animations for Android!
-An easy way to additively animate a huge number of properties of all kinds of objects, with convenient builder methods for `View`s.
+An easy way to additively animate any property of any object, with convenient builder methods for `View`s.
 
 Get a good overview of this library here: https://medium.com/@david.gansterd/bringing-smooth-animation-transitions-to-android-88786347e512
 
@@ -19,7 +19,7 @@ repositories {
 ```
 
 # Quick start
-Here is a sample of what additive animations can do to the user experience (note: there seem to be a few dropped frames in the gif which aren't present when running on a device):
+Here is a sample of what additive animations can do for the user experience (note: there seem to be a few dropped frames in the gif which aren't present when running on a device):
 
 
 ![Additive animations demo](https://github.com/davidganster/android_additive_animations/blob/master/gif/single_view.gif?raw=true)
@@ -88,7 +88,8 @@ AdditiveAnimator.animate(view)
     .start();
 ```
 
-Since fading the visibiliy is probably the most common usecase, there's a default builder method for it. A few more default animations are provided as well:
+Since fading the visibiliy is probably the most common usecase, there's a default builder method for it. 
+A few more default animations are provided as well:
 
 ```java
 AdditiveAnimator.animate(view)
@@ -104,12 +105,12 @@ The new `ViewVisibilityAnimation` class provides a convenient constructor to mak
 
 # Animation States
 
-`AdditiveAnimator` now supports the concepts of _animation states_.
-A __State__ encapsulates a set of animations to perform and an ID to uniquely identify it.
+`AdditiveAnimator` now supports the concept of _animation states_.
+A __State__ encapsulates a set of animations to perform when an object changes its... state.
 
-What's special about this is that `AdditiveAnimator` can now automatically decide whether or not to run animation start/end blocks - if the view is no longer in the appropriate state for the block, it won't run.
+What's special about this is that `AdditiveAnimator` can now automatically decide whether or not to run animation start and end blocks - if the view is no longer in the appropriate state for the block, it won't run.
 
-This is how the view visibility feature is implemented, and can easily be extended to work with all kinds of custom states via the new `state()` builder method.
+This is how the view visibility feature is implemented, and it can easily be extended to work with all kinds of custom states via the new `state()` builder method.
 
 For example, we might want to switch the states of some views between __highlighted__ and __normal__ in a `then()`-chained block like this:
 
@@ -123,7 +124,7 @@ new AdditiveAnimator()
     .start();
 ```
 
-There's a race condition in this piece of code: The `then()`-chaining block is executed whether or not the `highlightedView` is actually still highlighted.
+There's a race condition in this piece of code: The `then()`-chained animation is executed whether or not the `highlightedView` is actually still highlighted by the time the previous animation finishes.
 
 Animation states fix this problem entirely:
 
@@ -137,11 +138,12 @@ new AdditiveAnimator()
     .start();
 ```
 
-With this code, the animations associated with the `NORMAL` and `HIGHLIGHTED` states are only allowed to run if the state of the enqueued animation still matches the current view state!
+With this code, the animations associated with the `NORMAL` and `HIGHLIGHTED` states are only allowed to run if the state of the enqueued animation still matches the current view state.
+Even when rapidly switching which view is highlighted, this will produce the desired outcome.
 
 # Animating all kinds of objects and properties
 In addition to the builder methods for views, there are multiple options for animating custom properties of any object.
-The first - highly recommended - option is to simply provide a `Property` for the object you want to animate, plus (if needed) a way to trigger a redraw of your custom object:
+The first - *highly recommended* - option is to simply provide a `Property` for the object you want to animate, plus (if needed) a way to trigger a redraw of your custom object:
 
 ```java
 // Declaring an animatable property:
@@ -158,7 +160,7 @@ AdditiveObjectAnimator.animate(myPaint)
     .start();
 ```
 
-The second option is not recommended unless you need very specific control over how properties are applied.
+The second option is not recommended unless you need very specific control over how properties are applied (for example, only applying x/y-scroll changes together instead of one at a time when animating 2-dimensional scrolling).
 In works by subclassing `BaseAdditiveAnimator` and providing your own builder methods (which are usually one-liners) such as this:
 
 ```java
@@ -199,15 +201,17 @@ class PaintAdditiveAnimator extends BaseAdditiveAnimator<PaintAdditiveAnimator, 
 A more complete example of both of these approaches can be found in the sample app in  `CustomDrawingFragment.java`.
 
 
-Of course you can combine both approaches - custom builder methods which animate properties. This is the recommended approach and is how everything provided by `AdditiveAnimator` was built.
+Of course you can combine both approaches - custom builder methods which animate properties. This is the **recommended approach** and is how everything provided by `AdditiveAnimator` was built.
 
-Both versions don't require a lot of code, and the few lines you have to write are almost always trivial.
+Both versions only require very little code, and the few lines you have to write are almost always trivial - mostly getters and setters.
 
-**Note**: There is a  breaking change when migrating from a version <1.5.0 to a version >= 1.5.0:
+### Note: 
+There is a  breaking change when migrating from a version <1.5.0 to a version >= 1.5.0:
 Instead of subclassing `AdditiveAnimator`, you now have to subclass `SubclassableAdditiveViewAnimator` instead.
 Sorry for the change, it was necessary due to Java constraints (nesting of generics across subclasses) and improves interop with Kotlin (no more generic arguments required!).
 
-**Note**: There is another breaking change when migrating from <1.6.0 to >= 1.6.0:
+### Note
+There is another breaking change when migrating from <1.6.0 to >= 1.6.0:
 You have to implement a new abstract method (`getCurrentPropertyValue()`) when subclassing `BaseAdditiveAnimator`.
 This method is only called when using tag-based animations, instead of property-based ones. If your subclass does not use tag-based animations, you can simply  `return null;`.
 
@@ -215,7 +219,7 @@ This method is only called when using tag-based animations, instead of property-
 `AdditiveAnimator` is licensed under the Apache v2 license:
 
 ```
-Copyright 2017 David Ganster
+Copyright 2019 David Ganster
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
