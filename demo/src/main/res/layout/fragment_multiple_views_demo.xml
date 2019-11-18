@@ -9,7 +9,7 @@
     tools:context="additive_animations.AdditiveAnimationsShowcaseActivity">
 
     <View
-        android:id="@+id/animated_view4"
+        android:id="@+id/animated_view3"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_gravity="bottom|left"

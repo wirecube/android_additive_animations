@@ -16,6 +16,7 @@
 
 package at.wirecube.additiveanimations.additive_animator;
 
+import android.support.annotation.NonNull;
 import android.util.Property;
 import android.view.View;
 

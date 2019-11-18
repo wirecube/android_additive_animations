@@ -333,6 +333,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     public T state(AnimationState<V> state) {
         mRunningAnimationsManager.setCurrentState(state);
+        // make sure to also set the state for all animators in our current group:
+        if(mAnimatorGroup != null) {
+            for(BaseAdditiveAnimator animator: mAnimatorGroup.mAnimators) {
+                animator.mRunningAnimationsManager.setCurrentState(state);
+            }
+        }
         for (AnimationAction.Animation<V> animation : state.getAnimations()) {
             AdditiveAnimation anim = createAnimation(animation.getProperty(), animation.getTargetValue(), animation.getTypeEvaluator());
             anim.setAssociatedAnimationState(state);
@@ -358,14 +364,14 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     public static <V extends Object> void apply(AnimationAction<V> action, List<V> targets) {
         for (V target : targets) {
             if (action instanceof AnimationState) {
-                RunningAnimationsManager.from(target).setCurrentState((AnimationState) action);
+                RunningAnimationsManager.from(target).setCurrentState((AnimationState<V>) action);
             }
             for (AnimationAction.Animation<V> animation : action.getAnimations()) {
                 animation.getProperty().set(target, animation.getTargetValue());
-                if (action instanceof AnimationState) {
-                    if (((AnimationState) action).getAnimationEndAction() != null) {
-                        ((AnimationState) action).getAnimationEndAction().onEnd(target, false);
-                    }
+            }
+            if (action instanceof AnimationState) {
+                if (((AnimationState<V>) action).getAnimationEndAction() != null) {
+                    ((AnimationState<V>) action).getAnimationEndAction().onEnd(target, false);
                 }
             }
         }

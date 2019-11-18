@@ -28,6 +28,14 @@
         android:id="@+id/animated_view2"
         android:layout_width="100dp"
         android:layout_height="100dp"
+        android:layout_marginLeft="156dp"
+        android:layout_marginTop="50dp"
+        android:background="@color/nicePink"></View>
+
+    <View
+        android:id="@+id/animated_view3"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:layout_marginLeft="50dp"
         android:layout_marginTop="166dp"
         android:background="@color/niceBlue"></View>

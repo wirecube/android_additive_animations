@@ -1,13 +1,9 @@
 package additive_animations.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.annotation.SuppressLint;
-import android.graphics.Path;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,8 +20,6 @@ import java.util.List;
 import additive_animations.AdditiveAnimationsShowcaseActivity;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
-import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
-import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
 public class MultipleViewsAnimationDemoFragment extends Fragment {
     FrameLayout rootView;
@@ -39,7 +33,7 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = (FrameLayout) inflater.inflate(R.layout.fragment_multiple_views_demo, container, false);
         views = Arrays.asList(
-                rootView.findViewById(R.id.animated_view4), rootView.findViewById(R.id.animated_view5),
+                rootView.findViewById(R.id.animated_view3), rootView.findViewById(R.id.animated_view5),
                 rootView.findViewById(R.id.animated_view6), rootView.findViewById(R.id.animated_view7),
                 rootView.findViewById(R.id.animated_view8), rootView.findViewById(R.id.animated_view9),
                 rootView.findViewById(R.id.animated_view10), rootView.findViewById(R.id.animated_view11),

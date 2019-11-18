@@ -178,6 +178,9 @@ public class AdditiveAnimation<T> {
         if(mCustomTypeEvaluator != null) {
             animation.setCustomTypeEvaluator(mCustomTypeEvaluator);
         }
+        if(mAssociatedAnimationState != null) {
+            animation.setAssociatedAnimationState(mAssociatedAnimationState);
+        }
         return animation;
     }
 

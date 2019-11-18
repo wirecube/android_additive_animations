@@ -9,7 +9,7 @@ import at.wirecube.additiveanimations.additive_animator.view_visibility.ViewVisi
 
 public class CustomViewStateAnimation {
 
-    public static final ViewVisibilityAnimation getCustomGoneAnimation() {
+    public static ViewVisibilityAnimation getCustomGoneAnimation() {
         return new ViewVisibilityAnimation(View.GONE,
                 Arrays.asList(
                         new AnimationAction.Animation<>(View.ALPHA, 0f),
@@ -20,7 +20,7 @@ public class CustomViewStateAnimation {
         );
     }
 
-    public static final ViewVisibilityAnimation getCustomVisibleAnimation() {
+    public static ViewVisibilityAnimation getCustomVisibleAnimation() {
         return new ViewVisibilityAnimation(View.VISIBLE,
                 Arrays.asList(
                         new AnimationAction.Animation<>(View.ALPHA, 1f),
