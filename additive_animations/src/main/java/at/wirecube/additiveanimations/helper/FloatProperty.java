@@ -29,6 +29,20 @@ public abstract class FloatProperty<T> extends Property<T, Float> {
         void set(T object, float value);
     }
 
+    public static <T> FloatProperty<T> create(Property<T, Float> baseProperty) {
+        return new FloatProperty<T>(baseProperty.getName()) {
+            @Override
+            public void set(T object, Float value) {
+                baseProperty.set(object, value);
+            }
+
+            @Override
+            public Float get(T object) {
+                return baseProperty.get(object);
+            }
+        };
+    }
+
     public static <T> FloatProperty<T> create(String name, Get<T> getter, Set<T> setter) {
         return new FloatProperty<T>(name) {
             @Override

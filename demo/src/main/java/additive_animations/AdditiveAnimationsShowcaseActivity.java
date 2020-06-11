@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Switch;
 
 import additive_animations.fragments.AnimationChainingDemoFragment;
+import additive_animations.fragments.AnimationSequenceDemoFragment;
 import additive_animations.fragments.CustomAnimationsWithoutSubclassDemoFragment;
 import additive_animations.fragments.states.StateDemoFragment;
 import additive_animations.fragments.custom_drawing.CustomDrawingFragment;
@@ -62,7 +63,7 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -115,6 +116,8 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CustomDrawingFragment()).commit();
         } else if (id == R.id.nav_state) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new StateDemoFragment()).commit();
+        } else if (id == R.id.nav_sequence) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AnimationSequenceDemoFragment()).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
