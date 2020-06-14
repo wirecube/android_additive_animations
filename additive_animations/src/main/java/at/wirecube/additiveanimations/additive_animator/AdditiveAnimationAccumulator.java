@@ -86,7 +86,7 @@ class AdditiveAnimationAccumulator {
              * This would bring a big performance gain in that the property setters would not need to
              * be called for every running animation, but only for the final accumulated value.
              * Unfortunately, it's really hard to gather a list of all accumulated values that need
-             * setting in each frame and to figure out when the last animator is done.
+             * to be set in each frame and to figure out when the last animator is done.
              */
             mAdditiveAnimator.applyChanges(accumulatedAnimationValues);
             accumulatedAnimationValues.clear();
@@ -115,16 +115,17 @@ class AdditiveAnimationAccumulator {
     }
 
     private void notifyStateManagerAboutAnimationStartIfNeeded() {
-        if (!mHasInformedStateManagerAboutAnimationStart) {
-            mHasInformedStateManagerAboutAnimationStart = true;
-            Collection<Object> animationTargets = new ArrayList<>(mAnimationsPerObject.keySet());
-            for (Object v : animationTargets) {
-                RunningAnimationsManager manager = RunningAnimationsManager.from(v);
-                manager.onAnimationAccumulatorStart(AdditiveAnimationAccumulator.this);
-                for (AdditiveAnimationWrapper wrapper : getAnimationWrappers(v)) {
-                    manager.prepareAnimationStart(wrapper.animation);
-                    wrapper.previousValue = wrapper.animation.getStartValue();
-                }
+        if (mHasInformedStateManagerAboutAnimationStart) {
+            return;
+        }
+        mHasInformedStateManagerAboutAnimationStart = true;
+        Collection<Object> animationTargets = new ArrayList<>(mAnimationsPerObject.keySet());
+        for (Object v : animationTargets) {
+            RunningAnimationsManager manager = RunningAnimationsManager.from(v);
+            manager.onAnimationAccumulatorStart(AdditiveAnimationAccumulator.this);
+            for (AdditiveAnimationWrapper wrapper : getAnimationWrappers(v)) {
+                manager.prepareAnimationStart(wrapper.animation);
+                wrapper.previousValue = wrapper.animation.getStartValue();
             }
         }
     }

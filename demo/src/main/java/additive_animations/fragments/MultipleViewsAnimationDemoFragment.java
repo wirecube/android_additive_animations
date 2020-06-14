@@ -104,9 +104,7 @@ public class MultipleViewsAnimationDemoFragment extends Fragment {
                             ViewPropertyObjectAnimator.animate(views.get(i))
                                     .setStartDelay(animationStagger * i)
                                     .setDuration(1000)
-                                    .x(x)
-                                    .y(y)
-                                    .rotation(rotation)
+                                    .x(x).y(y).rotation(rotation)
                                     .start();
 
                             ViewPropertyObjectAnimator.animate(views.get(i))

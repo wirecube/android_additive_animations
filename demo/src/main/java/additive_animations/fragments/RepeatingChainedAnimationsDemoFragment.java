@@ -55,12 +55,9 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
                 .thenBounceBeforeEnd(800, 300)
                 .thenBeforeEnd(400).x(px(50)).backgroundColor(colors[0]).rotationBy(90).setDuration(1000)
                 .thenBounceBeforeEnd(800, 300)
-                .addEndAction(new AnimationEndListener() {
-                    @Override
-                    public void onAnimationEnd(boolean wasCancelled) {
-                        if (getActivity() != null) {
-                            animate();
-                        }
+                .addEndAction(wasCancelled -> {
+                    if (getActivity() != null) {
+                        animate();
                     }
                 })
                 .start();

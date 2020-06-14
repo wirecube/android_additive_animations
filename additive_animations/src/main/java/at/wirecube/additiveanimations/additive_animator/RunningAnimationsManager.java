@@ -146,7 +146,7 @@ class RunningAnimationsManager<T> {
     }
 
     /**
-     * Updates {@link at.wirecube.additiveanimations.additive_animator.AdditiveAnimation#mStartValue}
+     * Updates {@link AdditiveAnimation#getStartValue()}
      * to the last value that was specified as a target. This is only relevant when chaining or reusing animations,
      * since the state of the object might have changed since the animation was created.
      * This will also update the accumulator if it doesn't already contain an entry for this animation,
@@ -167,6 +167,10 @@ class RunningAnimationsManager<T> {
             av.tempValue = animation.getStartValue();
         } else {
             animation.setStartValue(getLastTargetValue(animation.getTag()));
+        }
+        if (animation.isBy()) {
+            // by-animations have to calculate their target value after the actual start value has been computed.
+            animation.setTargetValue(animation.getStartValue() + animation.getByValue());
         }
         animation.setAccumulatedValue(av);
         info.numAnimations++;

@@ -67,7 +67,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
 
     @Override
     public T target(View view) {
-        if(mWithLayer) {
+        if (mWithLayer) {
             withLayer();
         }
         return super.target(view);
@@ -85,17 +85,17 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     void applyChanges(List<AccumulatedAnimationValue<View>> accumulatedAnimations) {
         Map<View, List<AccumulatedAnimationValue<View>>> unknownProperties = null;
         Set<View> viewsToRequestLayoutFor = new HashSet<>(1);
-        for(AccumulatedAnimationValue<View> accumulatedAnimationValue : accumulatedAnimations) {
+        for (AccumulatedAnimationValue<View> accumulatedAnimationValue : accumulatedAnimations) {
             View targetView = accumulatedAnimationValue.animation.getTarget();
             viewsToRequestLayoutFor.add(targetView);
-            if(accumulatedAnimationValue.animation.getProperty() != null) {
+            if (accumulatedAnimationValue.animation.getProperty() != null) {
                 accumulatedAnimationValue.animation.getProperty().set(targetView, accumulatedAnimationValue.tempValue);
             } else {
-                if(unknownProperties == null) {
+                if (unknownProperties == null) {
                     unknownProperties = new HashMap<>();
                 }
                 List<AccumulatedAnimationValue<View>> accumulatedValues = unknownProperties.get(targetView);
-                if(accumulatedValues == null) {
+                if (accumulatedValues == null) {
                     accumulatedValues = new ArrayList<>();
                     unknownProperties.put(targetView, accumulatedValues);
                 }
@@ -103,18 +103,18 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
             }
         }
 
-        if(unknownProperties != null) {
+        if (unknownProperties != null) {
             for (View v : unknownProperties.keySet()) {
                 HashMap<String, Float> properties = new HashMap<>();
-                for(AccumulatedAnimationValue value : unknownProperties.get(v)) {
+                for (AccumulatedAnimationValue value : unknownProperties.get(v)) {
                     properties.put(value.animation.getTag(), value.tempValue);
                 }
                 applyCustomProperties(properties, v);
             }
         }
 
-        for(View v : viewsToRequestLayoutFor) {
-            if(!ViewCompat.isInLayout(v) && !mSkipRequestLayout) {
+        for (View v : viewsToRequestLayoutFor) {
+            if (!ViewCompat.isInLayout(v) && !mSkipRequestLayout) {
                 v.requestLayout();
             }
         }
@@ -151,7 +151,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
      * Note that
      */
     public T withLayer() {
-        if(mRunningAnimationsManager != null) {
+        if (mRunningAnimationsManager != null) {
             mRunningAnimationsManager.setUseHardwareLayer(true);
         }
         mSkipRequestLayout = true;
@@ -166,7 +166,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
      * Deactivates hardware layers for the current view and all subsequently added ones.
      */
     public T withoutLayer() {
-        if(mRunningAnimationsManager != null) {
+        if (mRunningAnimationsManager != null) {
             mRunningAnimationsManager.setUseHardwareLayer(false);
         }
         mWithLayer = false;
@@ -175,7 +175,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     public T fadeVisibility(int visibility) {
-        switch(visibility) {
+        switch (visibility) {
             case View.VISIBLE:
                 return state(ViewVisibilityAnimation.fadeIn());
             case View.INVISIBLE:
@@ -265,13 +265,14 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     // Because we compute a delta value for the current target, we can't simply let BaseAdditiveAnimator
     // handle the propagation of the update.
     private T animateRotationProperty(final Property<View, Float> property, final float target) {
+        initValueAnimatorIfNeeded();
         float currentValue = getTargetPropertyValue(property);
-        if(getQueuedPropertyValue(property.getName()) != null) {
+        if (getQueuedPropertyValue(property.getName()) != null) {
             currentValue = getQueuedPropertyValue(property.getName());
         }
         float shortestDistance = AnimationUtils.shortestAngleBetween(currentValue, target);
         runIfParentIsInSameAnimationGroup(() -> ((SubclassableAdditiveViewAnimator) mParent).animateRotationProperty(property, target));
-        return animatePropertyBy(property, shortestDistance, false);
+        return animate(createAnimation(property, currentValue + shortestDistance), false);
     }
 
     public T alpha(float alpha) {

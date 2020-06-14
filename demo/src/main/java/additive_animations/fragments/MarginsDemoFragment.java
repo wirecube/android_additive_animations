@@ -24,18 +24,15 @@ public class MarginsDemoFragment extends Fragment {
         rootView = (ViewGroup) inflater.inflate(R.layout.fragment_margins_demo, container, false);
         animatedView = rootView.findViewById(R.id.animated_view_with_margins);
 
-        rootView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(animatedView).leftMargin((int) event.getX()).topMargin((int) event.getY()).start();
-                    } else {
-                        ViewPropertyObjectAnimator.animate(animatedView).leftMargin((int) event.getX()).topMargin((int) event.getY()).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000).start();
-                    }
+        rootView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
+                if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
+                    AdditiveAnimator.animate(animatedView).leftMargin((int) event.getX()).topMargin((int) event.getY()).start();
+                } else {
+                    ViewPropertyObjectAnimator.animate(animatedView).leftMargin((int) event.getX()).topMargin((int) event.getY()).setInterpolator(EaseInOutPathInterpolator.create()).setDuration(1000).start();
                 }
-                return true;
             }
+            return true;
         });
         return rootView;
     }

@@ -1,4 +1,4 @@
-package additive_animations.fragments;
+package additive_animations.fragments.sequence;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,9 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import additive_animations.fragments.sequence.AnimationSequenceJson;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additive_animator.sequence.AnimationSequence;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
@@ -40,6 +38,15 @@ public class AnimationSequenceDemoFragment extends Fragment {
     }
 
     private void doSequenceAnimation() {
+        buildAnimationSequenceDemo();
+    }
+
+    private void buildAnimationSequenceDemo() {
+        // using a json string for illustration purposes for how to dynamically build animations from a string representation.
+        String demoJson = "{\"animationType\":\"Spawn\",\"children\":[{\"animationType\":\"Sequence\",\"children\":[{\"animationType\":\"AtOnce\",\"animations\":[{\"by\":true,\"propertyName\":\"x\",\"value\":100.0},{\"by\":true,\"propertyName\":\"y\",\"value\":0.0}]},{\"animationType\":\"AtOnce\",\"animations\":[{\"by\":true,\"propertyName\":\"x\",\"value\":-100.0},{\"by\":true,\"propertyName\":\"y\",\"value\":0.0}]}]},{\"animationType\":\"Sequence\",\"children\":[{\"animationType\":\"AtOnce\",\"animations\":[{\"by\":true,\"propertyName\":\"x\",\"value\":0.0},{\"by\":true,\"propertyName\":\"y\",\"value\":100.0}]},{\"animationType\":\"AtOnce\",\"animations\":[{\"by\":true,\"propertyName\":\"x\",\"value\":0.0},{\"by\":true,\"propertyName\":\"y\",\"value\":-100.0}]}]}]}";
+        AnimationSequenceJson animationDescription = new Gson().fromJson(demoJson, AnimationSequenceJson.class);
+
+        // the sequence encoded in the json is equivalent to this code:
 //        AnimationSequence.playTogether(
 //            AnimationSequence.playSequentially(
 //                AdditiveAnimator.animate(animatedView).xBy(100),
@@ -51,43 +58,16 @@ public class AnimationSequenceDemoFragment extends Fragment {
 //            )
 //        ).start();
 
-//        AnimationSequence.playTogether(
-//            AnimationSequence.playSequentially(
-//                AdditiveAnimator.animate(animatedView).property(100, FloatProperty.create(View.X), true),
-//                AdditiveAnimator.animate(animatedView).property(-100, FloatProperty.create(View.X), true)
-//            ),
-//            AnimationSequence.playSequentially(
-//                AdditiveAnimator.animate(animatedView).property(100, FloatProperty.create(View.Y), true),
-//                AdditiveAnimator.animate(animatedView).property(-100, FloatProperty.create(View.Y), true)
-//            )
-//        ).start();
-
-        buildAnimationSequenceDemo();
-
-        // equivalent to:
-//        AdditiveAnimator.animate(animatedView)
-//            .xBy(100).yBy(100)
-//            .then()
-//            .xBy(-100).yBy(-100)
-//            .start();
-    }
-
-    private void buildAnimationSequenceDemo() {
-        // using a json string for illustration purposes for how to dynamically build animations from a string representation.
-        String demoJson = "{\"animationType\":\"Spawn\",\"children\":[{\"animationType\":\"Sequence\",\"children\":[{\"animationType\":\"AtOnce\",\"animations\":[{\"by\":true,\"propertyName\":\"x\",\"value\":100.0},{\"by\":true,\"propertyName\":\"y\",\"value\":0.0}]},{\"animationType\":\"AtOnce\",\"animations\":[{\"by\":true,\"propertyName\":\"x\",\"value\":-100.0},{\"by\":true,\"propertyName\":\"y\",\"value\":0.0}]}]},{\"animationType\":\"Sequence\",\"children\":[{\"animationType\":\"AtOnce\",\"animations\":[{\"by\":true,\"propertyName\":\"x\",\"value\":0.0},{\"by\":true,\"propertyName\":\"y\",\"value\":100.0}]},{\"animationType\":\"AtOnce\",\"animations\":[{\"by\":true,\"propertyName\":\"x\",\"value\":0.0},{\"by\":true,\"propertyName\":\"y\",\"value\":-100.0}]}]}]}";
-        AnimationSequenceJson parsedSequence = new Gson().fromJson(demoJson, AnimationSequenceJson.class);
-
-        // build animation recursively from json:
-        AnimationSequence animationSequence = getAnimationSequence(animatedView, parsedSequence);
-
+        // build animation tree recursively from json:
+        AnimationSequence animationSequence = createAnimationSequence(animatedView, animationDescription);
         animationSequence.start();
     }
 
-    private AnimationSequence getAnimationSequence(View target, AnimationSequenceJson json) {
+    private AnimationSequence createAnimationSequence(View target, AnimationSequenceJson json) {
         List<AnimationSequence> children = new ArrayList<>();
         if (json.getChildren() != null) {
             for (AnimationSequenceJson child : json.getChildren()) {
-                children.add(getAnimationSequence(target, child));
+                children.add(createAnimationSequence(target, child));
             }
         }
         switch (json.getAnimationType()) {
@@ -98,17 +78,16 @@ public class AnimationSequenceDemoFragment extends Fragment {
             case AtOnce:
                 AdditiveAnimator animator = AdditiveAnimator.animate(target);
                 for (AnimationSequenceJson.AnimationInstructionJson animation : json.getAnimations()) {
-                    if (animation.getValue() != 0) {
-                        animator.property(animation.getValue(), getProperty(animation.getPropertyName()), animation.isBy());
-                    }
+                    animator.property(animation.getValue(), getProperty(animation.getPropertyName()), animation.isBy());
                 }
                 return animator;
+            default:
+                throw new IllegalArgumentException("Don't know how to handle '" + json.getAnimationType() + "'.");
         }
-        return null;
     }
 
     private FloatProperty<View> getProperty(String propertyName) {
-        // TODO: add more property names
+        // TODO: add more property names here for all the animations you might need to parse
         Map<String, FloatProperty<View>> propertyMap = new HashMap<>();
         propertyMap.put("x", FloatProperty.create(View.X));
         propertyMap.put("y", FloatProperty.create(View.Y));

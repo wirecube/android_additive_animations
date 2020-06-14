@@ -13,7 +13,7 @@ import android.view.View;
 import android.widget.Switch;
 
 import additive_animations.fragments.AnimationChainingDemoFragment;
-import additive_animations.fragments.AnimationSequenceDemoFragment;
+import additive_animations.fragments.sequence.AnimationSequenceDemoFragment;
 import additive_animations.fragments.CustomAnimationsWithoutSubclassDemoFragment;
 import additive_animations.fragments.states.StateDemoFragment;
 import additive_animations.fragments.custom_drawing.CustomDrawingFragment;
