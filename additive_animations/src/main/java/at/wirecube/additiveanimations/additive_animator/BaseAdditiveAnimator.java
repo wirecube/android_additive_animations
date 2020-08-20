@@ -87,25 +87,25 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         }
     }
 
-    public static void cancelAnimations(Object target) {
+    public static void cancelAnimationsForObject(Object target) {
         RunningAnimationsManager.from(target).cancelAllAnimations();
     }
 
-    public static void cancelAnimations(Object... targets) {
+    public static void cancelAnimationsForObjects(Object... targets) {
         if (targets == null) {
             return;
         }
         for (Object target : targets) {
-            cancelAnimations(target);
+            cancelAnimationsForObject(target);
         }
     }
 
-    public static void cancelAnimations(List<Object> targets) {
+    public static <T extends Collection<? extends Object>> void cancelAnimationsInCollection(T targets) {
         if (targets == null) {
             return;
         }
         for (Object target : targets) {
-            cancelAnimations(target);
+            cancelAnimationsForObject(target);
         }
     }
 

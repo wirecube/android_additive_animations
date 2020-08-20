@@ -29,7 +29,7 @@ public class TapToMoveDemoFragment extends Fragment {
 
         rootView.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
-                AdditiveAnimator.cancelAnimations(mTouchView);
+                AdditiveAnimator.cancelAnimationsForObject(mTouchView);
                 mTouchView.setAlpha(1);
                 mTouchView.setX(event.getX() - mTouchView.getWidth()/2);
                 mTouchView.setY(event.getY() - mTouchView.getHeight()/2);

@@ -103,7 +103,7 @@ class AdditiveAnimationAccumulator {
             @Override
             public void onAnimationEnd(Animator animation) {
                 for (Object v : mAnimationsPerObject.keySet()) {
-                    RunningAnimationsManager.from(v).onAnimationApplierEnd(AdditiveAnimationAccumulator.this, animationDidCancel);
+                    RunningAnimationsManager.from(v).onAnimationAccumulatorEnd(AdditiveAnimationAccumulator.this, animationDidCancel);
                 }
             }
 

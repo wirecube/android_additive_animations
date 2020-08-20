@@ -30,46 +30,46 @@ public class MoveAlongPathDemoFragment extends Fragment {
         rootView = (FrameLayout) inflater.inflate(R.layout.fragment_move_along_path_demo, container, false);
         animatedView = rootView.findViewById(R.id.animated_view);
 
-        rootView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                        AdditiveAnimator.animate(animatedView)
-                                .x(event.getX())
-                                .y(event.getY())
-                                .start();
-                    }
+        rootView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
+                if(AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
+                    AdditiveAnimator.animate(animatedView)
+                            .x(event.getX())
+                            .y(event.getY())
+                            .start();
                 }
-                return true;
             }
+            return true;
         });
 
         // wait for rootView to layout itself so we can get its center
-        rootView.post(new Runnable() {
-            @Override
-            public void run() {
-                if (AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
-                    // small circle
-                    final Path path1 = new Path();
-                    path1.addCircle(rootView.getWidth() / 2, rootView.getHeight() / 2, circleRadius, Path.Direction.CW);
-                    AdditiveAnimator.animate(animatedView).setInterpolator(new LinearInterpolator())
-                            .xyAlongPath(path1)
-                            .setRepeatCount(ValueAnimator.INFINITE)
-                            .start();
+        rootView.post(() -> {
+            if (AdditiveAnimationsShowcaseActivity.ADDITIVE_ANIMATIONS_ENABLED) {
+                // small circle
+                final Path path1 = new Path();
+                path1.addCircle(rootView.getWidth() / 2, rootView.getHeight() / 2, circleRadius, Path.Direction.CW);
+                AdditiveAnimator.animate(animatedView).setInterpolator(new LinearInterpolator())
+                        .xyAlongPath(path1)
+                        .setRepeatCount(ValueAnimator.INFINITE)
+                        .start();
 
-                    // another circle which also updates rotation to better show where on the path we are
-                    final Path path2 = new Path();
-                    path2.addCircle(rootView.getWidth() / 2, rootView.getHeight() / 2, rootView.getWidth() / 3, Path.Direction.CW);
-                    AdditiveAnimator.animate(animatedView).setDuration(3200).setInterpolator(new LinearInterpolator())
-                            .xyRotationAlongPath(path2)
-                            .setRepeatCount(ValueAnimator.INFINITE)
-                            .start();
-                } else {
-                    // TODO
-                }
+                // another circle which also updates rotation to better show where on the path we are
+                final Path path2 = new Path();
+                path2.addCircle(rootView.getWidth() / 2, rootView.getHeight() / 2, rootView.getWidth() / 3, Path.Direction.CW);
+                AdditiveAnimator.animate(animatedView).setDuration(3200).setInterpolator(new LinearInterpolator())
+                        .xyRotationAlongPath(path2)
+                        .setRepeatCount(ValueAnimator.INFINITE)
+                        .start();
+            } else {
+                // TODO
             }
         });
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        AdditiveAnimator.cancelAnimationsForObject(animatedView);
     }
 }

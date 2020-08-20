@@ -44,7 +44,7 @@ class RunningAnimationsManager<T> {
 
     private static final Map<Object, RunningAnimationsManager> sStateManagers = new HashMap<>();
 
-    static final <T> RunningAnimationsManager<T> from(T target) {
+    static <T> RunningAnimationsManager<T> from(T target) {
         if (target == null) {
             return null;
         }
@@ -56,7 +56,7 @@ class RunningAnimationsManager<T> {
         return animator;
     }
 
-    static final AccumulatedAnimationValueManager getAccumulatedProperties(View v) {
+    static AccumulatedAnimationValueManager getAccumulatedProperties(View v) {
         return from(v).mAccumulator;
     }
 
@@ -94,11 +94,10 @@ class RunningAnimationsManager<T> {
         getAnimationInfo(animation.getTag(), true).queuedTargetValue = animation.getTargetValue();
     }
 
-    void onAnimationApplierEnd(AdditiveAnimationAccumulator accumulator, boolean didCancel) {
-        if (didCancel) {
-            mAdditiveAnimationAccumulators.remove(accumulator);
-            removeStateManagerIfAccumulatorSetIsEmpty();
-        }
+    void onAnimationAccumulatorEnd(AdditiveAnimationAccumulator accumulator, boolean didCancel) {
+        // make sure to remove the accumulator to avoid memory leaks:
+        mAdditiveAnimationAccumulators.remove(accumulator);
+        removeStateManagerIfAccumulatorSetIsEmpty();
 
         for (AdditiveAnimation animation : accumulator.getAnimations(mAnimationTarget)) {
             if (mCurrentState != null && mCurrentState.getAnimationEndAction() != null && mCurrentState.shouldRunEndListener(animation.getAssociatedAnimationState())) {
@@ -192,14 +191,14 @@ class RunningAnimationsManager<T> {
     }
 
     void cancelAnimation(String propertyName) {
-        List<AdditiveAnimationAccumulator> cancelledAppliers = new ArrayList<>();
-        for (AdditiveAnimationAccumulator applier : mAdditiveAnimationAccumulators) {
-            if (applier.removeAnimation(propertyName, mAnimationTarget)) {
-                cancelledAppliers.add(applier);
+        List<AdditiveAnimationAccumulator> cancelledAccumulators = new ArrayList<>();
+        for (AdditiveAnimationAccumulator accumulator : mAdditiveAnimationAccumulators) {
+            if (accumulator.removeAnimation(propertyName, mAnimationTarget)) {
+                cancelledAccumulators.add(accumulator);
             }
         }
         mAnimationInfos.remove(propertyName);
-        mAdditiveAnimationAccumulators.removeAll(cancelledAppliers);
+        mAdditiveAnimationAccumulators.removeAll(cancelledAccumulators);
         removeStateManagerIfAccumulatorSetIsEmpty();
     }
 

@@ -4,7 +4,6 @@ import at.wirecube.additiveanimations.additive_animator.BaseAdditiveAnimator;
 import at.wirecube.additiveanimations.helper.FloatProperty;
 
 /**
- *
  * Example of an animator subclass that works with a class which doesn't derive from `View`.
  * This example shows off both property- and tag-based animations.
  * Tag-based animations use only a String tag to identify them, but their value must be manually manipulated by the AdditiveAnimator subclass.
@@ -50,7 +49,9 @@ public class AdditiveRectAnimator extends BaseAdditiveAnimator<AdditiveRectAnima
     @Override
     public void onApplyChanges() {
         // force redraw of the parent view:
-        getCurrentTarget().getView().invalidate();
+        if (getCurrentTarget().getView() != null) {
+            getCurrentTarget().getView().invalidate();
+        }
     }
 
     @Override

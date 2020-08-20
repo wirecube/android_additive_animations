@@ -24,14 +24,11 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
         rootView = (ViewGroup) inflater.inflate(R.layout.fragment_tap_to_move_demo, container, false);
         animatedView = rootView.findViewById(R.id.animated_view);
 
-        rootView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_DOWN) {
-                    AdditiveAnimator.cancelAnimation(animatedView, View.ROTATION);
-                }
-                return true;
+        rootView.setOnTouchListener((v, event) -> {
+            if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                AdditiveAnimator.cancelAnimation(animatedView, View.ROTATION);
             }
+            return true;
         });
 
         animate();
@@ -39,7 +36,7 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
     }
 
     private void animate() {
-        int colors[] = new int[] {
+        int[] colors = new int[] {
                 getResources().getColor(R.color.niceOrange),
                 getResources().getColor(R.color.niceBlue),
                 getResources().getColor(R.color.niceGreen),
@@ -67,4 +64,9 @@ public class RepeatingChainedAnimationsDemoFragment extends Fragment {
         return DpConverter.converDpToPx(dp);
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        AdditiveAnimator.cancelAnimationsForObject(animatedView);
+    }
 }

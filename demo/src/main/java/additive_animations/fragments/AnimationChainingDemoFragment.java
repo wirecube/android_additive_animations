@@ -63,4 +63,10 @@ public class AnimationChainingDemoFragment extends Fragment {
         });
         return rootView;
     }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        AdditiveAnimator.cancelAnimationsForObject(animatedView);
+    }
 }

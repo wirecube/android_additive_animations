@@ -7,7 +7,7 @@ import additive_animations.helper.DpConverter;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
 public class Rect {
-    private final View mView;
+    private View mView;
     final Paint mPaint;
     float mRotation = 0;
     float mX = DpConverter.converDpToPx(60);
@@ -24,5 +24,9 @@ public class Rect {
 
     public View getView() {
         return mView;
+    }
+
+    public void clearView() {
+        mView = null;
     }
 }

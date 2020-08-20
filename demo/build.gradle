@@ -31,4 +31,6 @@ dependencies {
     implementation project(':additive_animations')
     implementation 'com.bartoszlipinski:viewpropertyobjectanimator:1.4.5'
     implementation 'com.google.code.gson:gson:2.8.6'
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.4'
 }
