@@ -3,9 +3,10 @@ package at.wirecube.additiveanimations.additive_animator;
 import android.annotation.SuppressLint;
 import android.graphics.Path;
 import android.os.Build;
-import android.support.v4.view.ViewCompat;
 import android.util.Property;
 import android.view.View;
+
+import androidx.core.view.ViewCompat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -137,7 +138,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
 
     /**
      * Manually turns on requesting layout after each frame.
-     * This should only necessary if you are animating layout properties through custom builder methods.
+     * Calling this method is only necessary if you are animating layout properties via custom builder methods.
      */
     public T requestLayout() {
         mSkipRequestLayout = false;

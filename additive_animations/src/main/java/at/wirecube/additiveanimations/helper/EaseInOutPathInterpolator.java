@@ -16,8 +16,9 @@
 
 package at.wirecube.additiveanimations.helper;
 
-import android.support.v4.view.animation.PathInterpolatorCompat;
 import android.view.animation.Interpolator;
+
+import androidx.core.view.animation.PathInterpolatorCompat;
 
 public class EaseInOutPathInterpolator {
     public static Interpolator create() {

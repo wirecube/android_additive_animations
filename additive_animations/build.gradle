@@ -30,7 +30,7 @@ ext {
     siteUrl = 'https://github.com/davidganster/android_additive_animations'
     gitUrl = 'https://github.com/davidganster/android_additive_animations.git'
 
-    libraryVersion = '1.8.0'
+    libraryVersion = '1.9.0'
 
     developerId = 'davidganster'
     developerName = 'David Ganster'
@@ -42,14 +42,14 @@ ext {
 }
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 30
+    buildToolsVersion '30.0.0'
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 27
-        versionCode 24
-        versionName "1.8.0"
+        targetSdkVersion 30
+        versionCode 25
+        versionName "1.9.0"
     }
     buildTypes {
         release {
@@ -65,9 +65,9 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    testImplementation 'junit:junit:4.12'
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support:design:27.1.1'
+    testImplementation 'junit:junit:4.13'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
 }
 
 // apply from: 'aar-release.gradle'

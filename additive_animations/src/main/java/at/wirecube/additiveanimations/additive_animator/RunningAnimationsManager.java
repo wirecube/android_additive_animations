@@ -16,7 +16,6 @@
 
 package at.wirecube.additiveanimations.additive_animator;
 
-import android.support.annotation.NonNull;
 import android.util.Property;
 import android.view.View;
 
@@ -36,7 +35,7 @@ import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationS
  */
 class RunningAnimationsManager<T> {
 
-    private class AnimationInfo {
+    private static class AnimationInfo {
         int numAnimations = 0;
         Float lastTargetValue = null;
         Float queuedTargetValue = null;
