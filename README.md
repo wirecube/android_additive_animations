@@ -10,7 +10,7 @@ Get a good overview of this library here: https://medium.com/@david.gansterd/bri
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.8.0'
+    compile 'at.wirecube:additive_animations:1.9.0'
 }
 ...
 repositories {
@@ -219,7 +219,7 @@ This method is only called when using tag-based animations, instead of property-
 `AdditiveAnimator` is licensed under the Apache v2 license:
 
 ```
-Copyright 2019 David Ganster
+Copyright 2021 David Ganster
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
