@@ -19,6 +19,8 @@ package at.wirecube.additiveanimations.additive_animator;
 import android.util.Property;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,7 +45,7 @@ class RunningAnimationsManager<T> {
 
     private static final Map<Object, RunningAnimationsManager> sStateManagers = new HashMap<>();
 
-    static <T> RunningAnimationsManager<T> from(T target) {
+    static <T> RunningAnimationsManager<T> from(@NonNull T target) {
         if (target == null) {
             return null;
         }

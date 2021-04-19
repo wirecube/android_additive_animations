@@ -8,7 +8,10 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.graphics.Path;
 import android.os.Build;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import android.util.Property;
 import android.view.animation.LinearInterpolator;
 
@@ -41,6 +44,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     protected T mParent = null; // not null when this animator was queued using `then()` chaining.
     protected V mCurrentTarget = null;
+
+    @Nullable
     protected RunningAnimationsManager<V> mRunningAnimationsManager = null; // only used for performance reasons to avoid lookups
     protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to
     protected TimeInterpolator mCurrentCustomInterpolator = null;
@@ -85,6 +90,14 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         } catch (ClassCastException e) {
             throw new RuntimeException("Could not cast to subclass. Did you forget to implement `newInstance()`?");
         }
+    }
+
+    @NonNull
+    protected final RunningAnimationsManager<V> getRunningAnimationsManager() {
+        if (mRunningAnimationsManager == null) {
+            mRunningAnimationsManager = RunningAnimationsManager.from(mCurrentTarget);
+        }
+        return mRunningAnimationsManager;
     }
 
     public static void cancelAnimationsForObject(Object target) {
@@ -175,17 +188,18 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     /**
      * Returns the actual value of the animation target with the given name.
      *
-     * @apiNote If you use custom tags in your subclass WITHOUT PROPERTIES, you MUST override this method to return
-     * the actual model value, otherwise some features will crash.
+     * @apiNote If you use custom tags in your subclass without properties, you <b>must</b> override this method to return
+     * the actual model value, otherwise using some features (like then-chaining) will result in crashes.
+     * If you're only animating Property objects, you can just return null.
      */
     abstract public Float getCurrentPropertyValue(String propertyName);
 
     /**
-     * Returns the last value that was queued for animation, but whose animation has not yet started.
+     * Returns the last value that was queued for animation whose animation has not yet started.
      * This method is for internal use only (keeping track of chained `animateBy` calls).
      */
     protected Float getQueuedPropertyValue(String propertyName) {
-        return mRunningAnimationsManager.getQueuedPropertyValue(propertyName);
+        return mRunningAnimationsManager == null ? 0 : mRunningAnimationsManager.getQueuedPropertyValue(propertyName);
     }
 
     void applyChanges(List<AccumulatedAnimationValue<V>> accumulatedAnimations) {
@@ -268,8 +282,11 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      *                                   (If you don't know what that means, you should probably just pass `true` and have the base implementation take care of it.)
      */
     protected final T animate(final AdditiveAnimation animation, boolean propagateToParentAnimators) {
+        if(mCurrentTarget == null) {
+            throw new IllegalStateException("Cannot enqueue an animation without a valid target. Provide a target using the `target()` method, constructor parameter or animate() builder methods before enqueuing animations.");
+        }
         initValueAnimatorIfNeeded();
-        mRunningAnimationsManager.addAnimation(mAnimationAccumulator, animation);
+        getRunningAnimationsManager().addAnimation(mAnimationAccumulator, animation);
         if (propagateToParentAnimators) {
             runIfParentIsInSameAnimationGroup(() -> {
                 final Float startValue;
@@ -311,7 +328,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         AdditiveAnimation<V> animation = createAnimation(property, by);
         animation.setBy(true);
         initValueAnimatorIfNeeded();
-        mRunningAnimationsManager.addAnimation(mAnimationAccumulator, animation);
+        getRunningAnimationsManager().addAnimation(mAnimationAccumulator, animation);
         if (byValueCanBeUsedByParentAnimators) {
             runIfParentIsInSameAnimationGroup(() -> mParent.animatePropertyBy(property, by, true));
         }
@@ -368,11 +385,11 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T state(AnimationState<V> state) {
-        mRunningAnimationsManager.setCurrentState(state);
+        getRunningAnimationsManager().setCurrentState(state);
         // make sure to also set the state for all animators in our current group:
         if (mAnimatorGroup != null) {
             for (BaseAdditiveAnimator animator : mAnimatorGroup.mAnimators) {
-                animator.mRunningAnimationsManager.setCurrentState(state);
+                animator.getRunningAnimationsManager().setCurrentState(state);
             }
         }
         for (AnimationAction.Animation<V> animation : state.getAnimations()) {

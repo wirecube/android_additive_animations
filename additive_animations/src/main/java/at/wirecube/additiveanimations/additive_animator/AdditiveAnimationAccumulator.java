@@ -34,7 +34,7 @@ import java.util.Set;
 class AdditiveAnimationAccumulator {
 
     // Exists only for performance reasons to avoid map lookups
-    private final class AdditiveAnimationWrapper<T> {
+    private static final class AdditiveAnimationWrapper<T> {
         private final AdditiveAnimation<T> animation;
         private float previousValue;
 
@@ -66,7 +66,7 @@ class AdditiveAnimationAccumulator {
     AdditiveAnimationAccumulator(BaseAdditiveAnimator additiveAnimator) {
         mAnimator = ValueAnimator.ofFloat(0f, 1f);
         mAdditiveAnimator = additiveAnimator;
-        // it's better not to allocate once every frame:
+        // it's better not to allocate once every frame, so we just create the list once and then clear() it.
         final List<AccumulatedAnimationValue> accumulatedAnimationValues = new ArrayList<>();
         mAnimator.addUpdateListener(valueAnimator -> {
             if (!mHasInformedStateManagerAboutAnimationStart) {
@@ -89,6 +89,8 @@ class AdditiveAnimationAccumulator {
              * to be set in each frame and to figure out when the last animator is done.
              */
             mAdditiveAnimator.applyChanges(accumulatedAnimationValues);
+
+            // clear() does not resize the underlying elementData memory, so each subsequent frame will be able to reuse the previously allocated slots.
             accumulatedAnimationValues.clear();
         });
 
