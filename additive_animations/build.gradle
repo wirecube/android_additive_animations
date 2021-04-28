@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017 David Ganster
+ *  Copyright 2021 David Ganster
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: "com.vanniktech.maven.publish"
 
 android {
     compileSdkVersion 30
-    buildToolsVersion '30.0.0'
+    buildToolsVersion '30.0.3'
 
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 30
-        versionCode 25
-        versionName "1.9.0"
+        versionCode 26
+        versionName "1.9.1"
     }
     buildTypes {
         release {
