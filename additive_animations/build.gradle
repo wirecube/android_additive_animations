@@ -14,32 +14,7 @@
  *  limitations under the License.
  */
 
-apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.android.library'
-
-ext {
-    bintrayRepo = 'additive-animations'
-    bintrayName = 'additive_animations'
-
-    publishedGroupId = 'at.wirecube'
-    libraryName = 'Android Additive Animations'
-    artifact = 'additive_animations'
-
-    libraryDescription = 'Easy to use additive animations for Android'
-
-    siteUrl = 'https://github.com/davidganster/android_additive_animations'
-    gitUrl = 'https://github.com/davidganster/android_additive_animations.git'
-
-    libraryVersion = '1.9.0'
-
-    developerId = 'davidganster'
-    developerName = 'David Ganster'
-    developerEmail = 'david.ganster@wirecube.at'
-
-    licenseName = 'The Apache Software License, Version 2.0'
-    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-    allLicenses = ["Apache-2.0"]
-}
 
 android {
     compileSdkVersion 30
@@ -69,8 +44,3 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
 }
-
-// apply from: 'aar-release.gradle'
-
-apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
-apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
