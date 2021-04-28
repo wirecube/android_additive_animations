@@ -201,7 +201,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     protected Float getQueuedPropertyValue(String propertyName) {
         // important: you have to return a boxed Float in both branches of the ternary expression, otherwise the Android java compiler
         // will infer that we want to return a primitive, and auto-unbox the Float - which might result in an NPE!
-        return mRunningAnimationsManager == null ? Float.valueOf(0) : mRunningAnimationsManager.getQueuedPropertyValue(propertyName);
+        return mRunningAnimationsManager == null ? null : mRunningAnimationsManager.getQueuedPropertyValue(propertyName);
     }
 
     void applyChanges(List<AccumulatedAnimationValue<V>> accumulatedAnimations) {
