@@ -12,10 +12,6 @@ To use `AdditiveAnimator` in your project, add the following lines to your `buil
 dependencies {
     compile 'at.wirecube:additive_animations:1.9.1'
 }
-...
-repositories {
-    jcenter()
-}
 ```
 
 # Quick start
