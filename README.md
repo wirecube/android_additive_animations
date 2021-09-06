@@ -10,7 +10,7 @@ Get a good overview of this library here: https://medium.com/@david.gansterd/bri
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.9.1'
+    compile 'at.wirecube:additive_animations:1.9.2'
 }
 ```
 
@@ -98,6 +98,11 @@ AdditiveAnimator.animate(view)
 ```
 
 The new `ViewVisibilityAnimation` class provides a convenient constructor to make your own view state animations - an example can be found in the new demo (`StateDemoFragment`).
+
+**New in 1.9.2**
+The API for building new AnimationStates and view visibility animations has been improved.
+You can now access the `AnimationState.Builder<T>` class to more easily use one-off states.
+There are also more specializations for `View`-specific classes, like the `ViewAnimation`, `ViewAnimationState` and `ViewStateBuilder`.
 
 # Animation States
 

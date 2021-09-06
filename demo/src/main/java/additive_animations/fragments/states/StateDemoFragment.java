@@ -1,14 +1,21 @@
 package additive_animations.fragments.states;
 
 import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.SwitchCompat;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction;
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
+import at.wirecube.additiveanimations.additive_animator.animation_set.view.ViewAnimation;
+import at.wirecube.additiveanimations.additive_animator.animation_set.view.ViewAnimationState;
+import at.wirecube.additiveanimations.additive_animator.animation_set.view.ViewStateBuilder;
 import at.wirecube.additiveanimations.additive_animator.view_visibility.ViewVisibilityAnimation;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
@@ -18,17 +25,16 @@ public class StateDemoFragment extends Fragment {
     View view1;
     View view2;
     View view3;
-    View mTouchView;
     SwitchCompat mUseCustomTransitionSwitch;
 
     private boolean mFirstClick = false;
     private boolean mUseCustomTransition = false;
 
-    private ViewVisibilityAnimation getGoneAnim() {
+    private AnimationState<View> getGoneAnim() {
         return mUseCustomTransition ? CustomViewStateAnimation.getCustomGoneAnimation() : ViewVisibilityAnimation.fadeOutAndTranslateX(true, 100f);
     }
 
-    private ViewVisibilityAnimation getVisibleAnim() {
+    private AnimationState<View> getVisibleAnim() {
         return CustomViewStateAnimation.getCustomVisibleAnimation();
     }
 
@@ -36,7 +42,6 @@ public class StateDemoFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_state_demo, container, false);
-        mTouchView = rootView.findViewById(R.id.touch_view);
         view1 = rootView.findViewById(R.id.animated_view);
         view2 = rootView.findViewById(R.id.animated_view2);
         view3 = rootView.findViewById(R.id.animated_view3);
@@ -54,18 +59,18 @@ public class StateDemoFragment extends Fragment {
             mFirstClick = !mFirstClick;
             if (mFirstClick) {
                 AdditiveAnimator.animate(view1, view2)
-                        .setDuration(300)
-                        .visibility(getGoneAnim())
-                        .thenWithDelay(50).target(view3)
-                        .visibility(getVisibleAnim())
-                        .start();
+                    .setDuration(300)
+                    .visibility(getGoneAnim())
+                    .thenWithDelay(50).target(view3)
+                    .visibility(getVisibleAnim())
+                    .start();
             } else {
                 AdditiveAnimator.animate(view3)
-                        .setDuration(300)
-                        .visibility(getGoneAnim())
-                        .thenWithDelay(50).targets(view1, view2)
-                        .visibility(getVisibleAnim())
-                        .start();
+                    .setDuration(300)
+                    .visibility(getGoneAnim())
+                    .thenWithDelay(50).targets(view1, view2)
+                    .visibility(getVisibleAnim())
+                    .start();
             }
         });
         return rootView;

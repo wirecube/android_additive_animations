@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
 import at.wirecube.additiveanimations.additive_animator.view_visibility.ViewVisibilityAnimation;
 import at.wirecube.additiveanimations.helper.AnimationUtils;
 import at.wirecube.additiveanimations.helper.evaluators.ColorEvaluator;
@@ -187,7 +188,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
         return self();
     }
 
-    public T visibility(ViewVisibilityAnimation animation) {
+    public T visibility(AnimationState<View> animation) {
         return state(animation);
     }
 
