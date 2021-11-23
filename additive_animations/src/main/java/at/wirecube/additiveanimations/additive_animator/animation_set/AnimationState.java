@@ -9,7 +9,7 @@ import java.util.List;
 
 public abstract class AnimationState<T extends Object> implements AnimationAction<T> {
 
-    public static class Builder<T> {
+    public static class Builder<BuilderSubclass extends Builder<?, T>, T> {
 
         @NonNull
         protected final List<Animation<T>> animations = new ArrayList<>();
@@ -23,34 +23,34 @@ public abstract class AnimationState<T extends Object> implements AnimationActio
         public Builder() {}
 
         @NonNull
-        public Builder<T> addAnimation(@NonNull AnimationAction.Animation<T> animation) {
+        public BuilderSubclass addAnimation(@NonNull AnimationAction.Animation<T> animation) {
             animations.add(animation);
-            return this;
+            return (BuilderSubclass) this;
         }
 
         @NonNull
-        public Builder<T> addAnimations(@NonNull List<AnimationAction.Animation<T>> animations) {
+        public BuilderSubclass addAnimations(@NonNull List<AnimationAction.Animation<T>> animations) {
             this.animations.addAll(animations);
-            return this;
+            return (BuilderSubclass) this;
         }
 
         @SafeVarargs
         @NonNull
-        public final Builder<T> addAnimations(@NonNull AnimationAction.Animation<T>... animations) {
+        public final BuilderSubclass addAnimations(@NonNull AnimationAction.Animation<T>... animations) {
             this.animations.addAll(Arrays.asList(animations));
-            return this;
+            return (BuilderSubclass) this;
         }
 
         @NonNull
-        public Builder<T> withEndAction(@Nullable AnimationEndAction<T> endAction) {
+        public BuilderSubclass withEndAction(@Nullable AnimationEndAction<T> endAction) {
             this.endAction = endAction;
-            return this;
+            return (BuilderSubclass) this;
         }
 
         @NonNull
-        public Builder<T> withStartAction(@Nullable AnimationStartAction<T> startAction) {
+        public BuilderSubclass withStartAction(@Nullable AnimationStartAction<T> startAction) {
             this.startAction = startAction;
-            return this;
+            return (BuilderSubclass) this;
         }
 
         public AnimationState<T> build() {

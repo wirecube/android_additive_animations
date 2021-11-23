@@ -99,11 +99,18 @@ class RunningAnimationsManager<T> {
         // make sure to remove the accumulator to avoid memory leaks:
         mAdditiveAnimationAccumulators.remove(accumulator);
         removeStateManagerIfAccumulatorSetIsEmpty();
+        boolean hasRunAnimationStateEndAction = false;
 
-        for (AdditiveAnimation animation : accumulator.getAnimations(mAnimationTarget)) {
-            if (mCurrentState != null && mCurrentState.getAnimationEndAction() != null && mCurrentState.shouldRunEndListener(animation.getAssociatedAnimationState())) {
+        for (AdditiveAnimation<T> animation : accumulator.getAnimations(mAnimationTarget)) {
+            if (mCurrentState != null &&
+                mCurrentState.getAnimationEndAction() != null &&
+                !hasRunAnimationStateEndAction &&
+                mCurrentState.shouldRunEndListener(animation.getAssociatedAnimationState())
+            ) {
+                hasRunAnimationStateEndAction = true;
                 mCurrentState.getAnimationEndAction().onEnd(mAnimationTarget, didCancel);
             }
+
             if (didCancel) {
                 continue;
             }
@@ -120,13 +127,17 @@ class RunningAnimationsManager<T> {
 
     void onAnimationAccumulatorStart(AdditiveAnimationAccumulator accumulator) {
         Collection<AdditiveAnimation> animations = accumulator.getAnimations(mAnimationTarget);
-        for (AdditiveAnimation animation : animations) {
-            if (animation.getAssociatedAnimationState() == null) {
+        Set<AnimationState<T>> animationStatesForWhichStartActionHasBeenRun = new HashSet<>();
+        for (AdditiveAnimation<T> animation : animations) {
+            AnimationState<T> animationState = animation.getAssociatedAnimationState();
+            if (animationState == null) {
                 continue;
             }
-            if (animation.getAssociatedAnimationState().shouldRun(mCurrentState)) {
-                if (animation.getAssociatedAnimationState().getAnimationStartAction() != null) {
-                    animation.getAssociatedAnimationState().getAnimationStartAction().onStart(mAnimationTarget);
+
+            if (animationState.shouldRun(mCurrentState)) {
+                if (animationState.getAnimationStartAction() != null && !animationStatesForWhichStartActionHasBeenRun.contains(animationState)) {
+                    animationStatesForWhichStartActionHasBeenRun.add(animationState);
+                    animationState.getAnimationStartAction().onStart(mAnimationTarget);
                 }
             } else {
                 accumulator.removeAnimation(animation.getTag(), animation.getTarget());
@@ -146,9 +157,9 @@ class RunningAnimationsManager<T> {
     }
 
     /**
-     * Updates {@link AdditiveAnimation#getStartValue()}
-     * to the last value that was specified as a target. This is only relevant when chaining or reusing animations,
-     * since the state of the object might have changed since the animation was created.
+     * Updates {@link AdditiveAnimation#getStartValue()} to the last value that was specified as a target.
+     * This is only relevant when chaining or reusing animations, since the state of the object might have changed
+     * since the animation was created.
      * This will also update the accumulator if it doesn't already contain an entry for this animation,
      * using the current property value (if a Property is available)
      */

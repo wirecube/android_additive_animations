@@ -22,7 +22,7 @@
         android:layout_height="100dp"
         android:layout_marginLeft="50dp"
         android:layout_marginTop="50dp"
-        android:background="@color/niceOrange"></View>
+        android:background="@color/niceOrange" />
 
     <View
         android:id="@+id/animated_view2"
@@ -30,7 +30,7 @@
         android:layout_height="100dp"
         android:layout_marginLeft="156dp"
         android:layout_marginTop="50dp"
-        android:background="@color/nicePink"></View>
+        android:background="@color/nicePink" />
 
     <View
         android:id="@+id/animated_view3"
@@ -38,6 +38,6 @@
         android:layout_height="100dp"
         android:layout_marginLeft="50dp"
         android:layout_marginTop="166dp"
-        android:background="@color/niceBlue"></View>
+        android:background="@color/niceBlue" />
 
 </RelativeLayout>
