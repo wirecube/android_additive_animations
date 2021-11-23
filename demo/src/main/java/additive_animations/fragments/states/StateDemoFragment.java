@@ -1,21 +1,16 @@
 package additive_animations.fragments.states;
 
 import android.os.Bundle;
-
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.widget.SwitchCompat;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.Fragment;
+
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
-import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction;
 import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
-import at.wirecube.additiveanimations.additive_animator.animation_set.view.ViewAnimation;
-import at.wirecube.additiveanimations.additive_animator.animation_set.view.ViewAnimationState;
-import at.wirecube.additiveanimations.additive_animator.animation_set.view.ViewStateBuilder;
 import at.wirecube.additiveanimations.additive_animator.view_visibility.ViewVisibilityAnimation;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
