@@ -48,8 +48,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     @Nullable
     protected RunningAnimationsManager<V> mRunningAnimationsManager = null; // only used for performance reasons to avoid lookups
     protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to
-    protected TimeInterpolator mCurrentCustomInterpolator = null;
-    protected AnimationTiming.Spring mCurrentSpringTiming = null;
+    protected AnimationTiming mCurrentCustomTiming = null;
 
     /**
      * Delay set when using {@link BaseAdditiveAnimator#targets(List, long)} to create animations.
@@ -262,9 +261,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             property.get(mCurrentTarget),
             targetValue
         );
-        animation.setCustomInterpolator(mCurrentCustomInterpolator);
-        if (mCurrentSpringTiming != null) {
-            animation.setTiming(mCurrentSpringTiming);
+        if (mCurrentCustomTiming != null) {
+            animation.setTiming(mCurrentCustomTiming);
         }
         return animation;
     }
@@ -281,9 +279,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             targetValue
         );
         animation.setCustomTypeEvaluator(evaluator);
-        animation.setCustomInterpolator(mCurrentCustomInterpolator);
-        if (mCurrentSpringTiming != null) {
-            animation.setTiming(mCurrentSpringTiming);
+        if (mCurrentCustomTiming != null) {
+            animation.setTiming(mCurrentCustomTiming);
         }
         return animation;
     }
@@ -302,9 +299,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             mode,
             sharedEvaluator
         );
-        animation.setCustomInterpolator(mCurrentCustomInterpolator);
-        if (mCurrentSpringTiming != null) {
-            animation.setTiming(mCurrentSpringTiming);
+        if (mCurrentCustomTiming != null) {
+            animation.setTiming(mCurrentCustomTiming);
         }
         return animation;
     }
@@ -652,9 +648,10 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T setInterpolator(final TimeInterpolator interpolator) {
-        if (mCurrentCustomInterpolator != null) {
+        if (mCurrentCustomTiming instanceof AnimationTiming.Interpolated) {
             return switchInterpolator(interpolator);
         }
+        mCurrentCustomTiming = new AnimationTiming.Interpolated(interpolator);
         getValueAnimator().setInterpolator(interpolator);
         runIfParentIsInSameAnimationGroup(() -> mParent.setInterpolator(interpolator));
         return self();
@@ -663,7 +660,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     /**
      * Configures the animator to use spring-based physics timing for all subsequent animations.
      * This replaces the interpolator-based timing.
-     *
+     * <p>
      * When spring timing is active, the animation duration is automatically computed from the
      * spring parameters (the time it takes for the spring to settle).
      *
@@ -676,7 +673,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     public T setSpring(final float stiffness, final float dampingRatio) {
         final AnimationTiming.Spring spring = new AnimationTiming.Spring(stiffness, dampingRatio);
-        mCurrentSpringTiming = spring;
+        mCurrentCustomTiming = spring;
         // Spring timing uses a linear interpolator so that getAnimatedFraction() returns real elapsed time.
         getValueAnimator().setInterpolator(new LinearInterpolator());
         getValueAnimator().setDuration(spring.settlingDurationMs());
@@ -688,7 +685,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      * Configures the animator to use spring-based physics timing, with the spring parameters
      * derived from the desired animation duration. This is similar to iOS's
      * {@code UIView.animate(withDuration:usingSpringWithDamping:...)}.
-     *
+     * <p>
      * The stiffness is automatically calculated so that the spring settles within approximately
      * the given duration.
      *
@@ -700,7 +697,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     public T setSpringWithDuration(final long durationMs, final float dampingRatio) {
         final AnimationTiming.Spring spring = AnimationTiming.Spring.withDuration(durationMs, dampingRatio);
-        mCurrentSpringTiming = spring;
+        mCurrentCustomTiming = spring;
         getValueAnimator().setInterpolator(new LinearInterpolator());
         getValueAnimator().setDuration(spring.settlingDurationMs());
         runIfParentIsInSameAnimationGroup(() -> mParent.setSpringWithDuration(durationMs, dampingRatio));
@@ -735,18 +732,24 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     public T switchInterpolator(final TimeInterpolator newInterpolator) {
         initValueAnimatorIfNeeded();
-        // set custom interpolator for all animations so far
         Collection<AdditiveAnimation> animations = mAnimationAccumulator.getAnimations();
-        for (AdditiveAnimation animation : animations) {
-            animation.setCustomInterpolator(getValueAnimator().getInterpolator());
+        if (mCurrentCustomTiming instanceof AnimationTiming.Interpolated) {
+            // if we already switched the interpolator before, we want to keep the same timing for all animations, just with a different interpolator
+            for (AdditiveAnimation animation : animations) {
+                animation.setTiming(new AnimationTiming.Interpolated(getValueAnimator().getInterpolator()));
+            }
+
+            mCurrentCustomTiming = new AnimationTiming.Interpolated(newInterpolator);
+            // now we want to animate linearly, all animations are going to map to the current value themselves
+            getValueAnimator().setInterpolator(new LinearInterpolator());
+
+            runIfParentIsInSameAnimationGroup(() -> mParent.switchInterpolator(newInterpolator));
+            return self();
+        } else {
+            T child = thenWithDelay(0);
+            child.setInterpolator(newInterpolator);
+            return child;
         }
-
-        mCurrentCustomInterpolator = newInterpolator;
-        // now we want to animate linearly, all animations are going to map to the current value themselves
-        getValueAnimator().setInterpolator(new LinearInterpolator());
-
-        runIfParentIsInSameAnimationGroup(() -> mParent.switchInterpolator(newInterpolator));
-        return self();
     }
 
     /**
@@ -870,8 +873,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         setInterpolator(other.getValueAnimator().getInterpolator());
         setRepeatCount(other.getValueAnimator().getRepeatCount());
         setRepeatMode(other.getValueAnimator().getRepeatMode());
-        mCurrentCustomInterpolator = other.mCurrentCustomInterpolator;
-        mCurrentSpringTiming = other.mCurrentSpringTiming;
+        mCurrentCustomTiming = other.mCurrentCustomTiming;
         mParent = other;
         return self();
     }

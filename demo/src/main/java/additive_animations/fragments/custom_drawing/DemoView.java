@@ -68,7 +68,10 @@ public class DemoView extends View {
                         rotationTarget -= 10;
                     }
                     // moving the custom-drawn view additively around the canvas just like a normal view:
-                    new AdditiveRectAnimator().targets(mRects, 50).x(event.getX()).y(event.getY()).rotation(rotationTarget).start();
+                    new AdditiveRectAnimator()
+                        .targets(mRects, 50)
+                        .setSpringWithDuration(1300, 0.7f)
+                        .x(event.getX()).y(event.getY()).rotation(rotationTarget).start();
                 }
                 return true;
             }

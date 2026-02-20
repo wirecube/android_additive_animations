@@ -13,58 +13,52 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+package at.wirecube.additiveanimations.additive_animator
 
-package at.wirecube.additiveanimations.additive_animator;
-
-import android.animation.TimeInterpolator;
-import android.animation.TypeEvaluator;
-import android.graphics.Path;
-import android.util.Property;
-
-import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
-import at.wirecube.additiveanimations.helper.SpringSolver;
-import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
+import android.animation.TypeEvaluator
+import android.graphics.Path
+import android.util.Property
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState
+import at.wirecube.additiveanimations.helper.SpringSolver
+import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator
 
 /**
  * This class is public for subclasses of AdditiveAnimator only, and should not be used outside of that.
  */
-public class AdditiveAnimation<T> {
+class AdditiveAnimation<T: Any> private constructor(
+    val target: T,
+    val property: Property<T, Float>?,
+    startValue: Float,
+    targetValue: Float,
+    private val tag: String,
+    val path: Path?,
+    private val pathMode: PathEvaluator.PathMode?,
+    private val sharedPathEvaluator: PathEvaluator?,
+) {
+    var startValue: Float = startValue
+        set(value) {
+            field = value
+        }
 
-    private String mTag;
-    private float mStartValue;
-    private float mTargetValue;
-    private Property<T, Float> mProperty;
-    private Path mPath;
-    private PathEvaluator.PathMode mPathMode;
-    private PathEvaluator mSharedPathEvaluator;
-    private TypeEvaluator<Float> mCustomTypeEvaluator;
-    private final T mTarget;
-    private int mHashCode;
-    private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
-    private AccumulatedAnimationValue<T> mAccumulatedValue;
-    private AnimationState<T> mAssociatedAnimationState;
-    private AnimationTiming mTiming; // null = use legacy interpolator-based timing
-    private SpringSolver mSpringSolver; // lazily created when timing is Spring and start/target are known
-
-    /**
-     * Determines if the `targetValue` is a 'by' value. If it is, the actual target value will be computed when the animation starts
-     * (as opposed to computing just the start value when it is enqueued).
-     */
-    private boolean mBy = false;
-    private float mByValue; // used for storing the by-value when the animation is a "by"-animation so that the animation can be copied correctly.
-
+    var targetValue: Float = targetValue
+        set(value) {
+            field = value
+        }
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
      * don't need to worry about the logic to apply the changes. This is taken care of by using the
      * Setter provided by `property`.
      */
-    public AdditiveAnimation(T target, Property<T, Float> property, float startValue, float targetValue) {
-        mTarget = target;
-        mProperty = property;
-        mTargetValue = targetValue;
-        mStartValue = startValue;
-        setTag(property.getName());
-    }
+    constructor(target: T, property: Property<T, Float>, startValue: Float, targetValue: Float) : this(
+        target = target,
+        property = property,
+        startValue = startValue,
+        targetValue = targetValue,
+        tag = property.name,
+        path = null,
+        pathMode = null,
+        sharedPathEvaluator = null,
+    )
 
     /**
      * Use this constructor for custom properties that have no simple getter or setter.
@@ -73,221 +67,167 @@ public class AdditiveAnimation<T> {
      * @param startValue  Start value of the animated property.
      * @param targetValue Target value of the animated property.
      */
-    public AdditiveAnimation(T target, String tag, float startValue, float targetValue) {
-        mTarget = target;
-        mStartValue = startValue;
-        mTargetValue = targetValue;
-        setTag(tag);
+    constructor(target: T, tag: String, startValue: Float, targetValue: Float) : this(
+        target = target,
+        property = null,
+        startValue = startValue,
+        targetValue = targetValue,
+        tag = tag,
+        path = null,
+        pathMode = null,
+        sharedPathEvaluator = null,
+    )
+
+    constructor(target: T, tag: String, startValue: Float, path: Path, pathMode: PathEvaluator.PathMode, sharedEvaluator: PathEvaluator) : this(
+        target = target,
+        property = null,
+        startValue = startValue,
+        targetValue = 0f, // will be set below
+        tag = tag,
+        path = path,
+        pathMode = pathMode,
+        sharedPathEvaluator = sharedEvaluator,
+    ) {
+        targetValue = evaluateAt(1f)
     }
 
-    public AdditiveAnimation(T target, String tag, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
-        mTarget = target;
-        mStartValue = startValue;
-        mPath = path;
-        mSharedPathEvaluator = sharedEvaluator;
-        mPathMode = pathMode;
-        mTargetValue = evaluateAt(1f);
-        setTag(tag);
+    constructor(target: T, property: Property<T, Float>, startValue: Float, path: Path, pathMode: PathEvaluator.PathMode, sharedEvaluator: PathEvaluator) : this(
+        target = target,
+        property = property,
+        startValue = startValue,
+        targetValue = 0f, // will be set below
+        tag = property.name,
+        path = path,
+        pathMode = pathMode,
+        sharedPathEvaluator = sharedEvaluator,
+    ) {
+        targetValue = evaluateAt(1f)
     }
 
-    public AdditiveAnimation(T target, Property<T, Float> property, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
-        mTarget = target;
-        mProperty = property;
-        mStartValue = startValue;
-        mPath = path;
-        mSharedPathEvaluator = sharedEvaluator;
-        mPathMode = pathMode;
-        mTargetValue = evaluateAt(1f);
-        setTag(property.getName());
-    }
+    private val hashCode: Int = tag.hashCode() * ((2 shl 17) - 1) + target.hashCode()
 
-    public void setAccumulatedValue(AccumulatedAnimationValue<T> av) {
-        mAccumulatedValue = av;
-    }
+    var customTypeEvaluator: TypeEvaluator<Float>? = null
 
-    private void setTag(String tag) {
-        mTag = tag;
-        // TODO: find a good hash code that doesn't collide often
-        mHashCode = mTag.hashCode() * ((2 << 17) - 1) + mTarget.hashCode();
-    }
+    var accumulatedValue: AccumulatedAnimationValue<T>? = null
 
-    public String getTag() {
-        return mTag;
-    }
+    var associatedAnimationState: AnimationState<T>? = null
 
-    public float getStartValue() {
-        return mStartValue;
-    }
+    /**
+     * Controls how the animation progresses over time.
+     *
+     * - `null`: uses the ValueAnimator's default interpolator (no per-animation override).
+     * - [AnimationTiming.Interpolated]: uses a per-animation custom interpolator to remap progress.
+     * - [AnimationTiming.Spring]: uses spring physics to compute the value from elapsed time.
+     *
+     * Setting this replaces any previous timing (interpolated or spring).
+     */
+    var timing: AnimationTiming = AnimationTiming.Interpolated(customInterpolator = null)
+        set(value) {
+            field = value
+            springSolver = null // reset solver so it gets re-created with new timing
+        }
 
-    public float getTargetValue() {
-        return mTargetValue;
-    }
+    private var springSolver: SpringSolver? = null
 
-    public void setStartValue(float startValue) {
-        this.mStartValue = startValue;
-        this.mSpringSolver = null; // reset solver so it picks up the new start value
-    }
+    /**
+     * Determines if the `targetValue` is a 'by' value. If it is, the actual target value will be computed when the animation starts
+     * (as opposed to computing just the start value when it is enqueued).
+     */
+    var isBy: Boolean = false
+        private set
 
-    public void setTargetValue(float targetValue) {
-        mTargetValue = targetValue;
-        this.mSpringSolver = null; // reset solver so it picks up the new target value
-    }
-
-    public void setCustomTypeEvaluator(TypeEvaluator<Float> evaluator) {
-        mCustomTypeEvaluator = evaluator;
-    }
-
-    public TypeEvaluator<Float> getCustomTypeEvaluator() {
-        return mCustomTypeEvaluator;
-    }
-
-    public T getTarget() {
-        return mTarget;
-    }
+    var byValue: Float = 0f
+        private set
 
     /**
      * Set this immediately after creating the animation. Failure to do so will result in incorrect target values.
      */
-    public void setBy(boolean by) {
-        mBy = by;
+    fun setBy(by: Boolean) {
+        isBy = by
         if (by) {
-            mByValue = mTargetValue;
+            byValue = targetValue
         }
-    }
-
-    public boolean isBy() {
-        return mBy;
-    }
-
-    public float getByValue() {
-        return mByValue;
-    }
-
-    public Property<T, Float> getProperty() {
-        return mProperty;
-    }
-
-    public Path getPath() {
-        return mPath;
-    }
-
-    public void setCustomInterpolator(TimeInterpolator customInterpolator) {
-        mCustomInterpolator = customInterpolator;
-    }
-
-    public void setTiming(AnimationTiming timing) {
-        mTiming = timing;
-        mSpringSolver = null; // reset solver so it gets re-created with new timing
-    }
-
-    public AnimationTiming getTiming() {
-        return mTiming;
     }
 
     /**
      * Returns the settling duration in ms if this animation uses spring timing, or -1 otherwise.
      */
-    public long getSpringSettlingDurationMs() {
-        if (mTiming instanceof AnimationTiming.Spring) {
-            return ((AnimationTiming.Spring) mTiming).settlingDurationMs();
-        }
-        return -1;
-    }
+    val springSettlingDurationMs: Long
+        get() = (timing as? AnimationTiming.Spring)?.settlingDurationMs() ?: -1
 
-    private SpringSolver getOrCreateSpringSolver() {
-        if (mSpringSolver == null && mTiming instanceof AnimationTiming.Spring) {
-            mSpringSolver = ((AnimationTiming.Spring) mTiming).createSolver(mStartValue, mTargetValue);
-        }
-        return mSpringSolver;
-    }
-
-    public float evaluateAt(float progress) {
-        // Spring-based timing: progress is a linear time fraction over the settling duration.
-        if (mTiming instanceof AnimationTiming.Spring) {
-            SpringSolver solver = getOrCreateSpringSolver();
-            if (solver != null) {
-                float settlingDurationSeconds = ((AnimationTiming.Spring) mTiming).settlingDurationMs() / 1000f;
-                float elapsedSeconds = progress * settlingDurationSeconds;
-                return solver.solve(elapsedSeconds);
+    fun evaluateAt(progress: Float): Float {
+        return when (val currentTiming = timing) {
+            // Spring-based timing: progress is a linear time fraction over the settling duration.
+            is AnimationTiming.Spring -> {
+                val solver = springSolver ?: currentTiming.createSolver(startValue, targetValue)
+                val settlingDurationSeconds = currentTiming.settlingDurationMs() / 1000f
+                val elapsedSeconds = progress * settlingDurationSeconds
+                solver.solve(elapsedSeconds)
+            }
+            // Per-animation custom interpolator: remap progress, then evaluate.
+            is AnimationTiming.Interpolated -> {
+                val remapped = currentTiming.customInterpolator?.getInterpolation(progress) ?: progress
+                evaluateValue(remapped)
             }
         }
+    }
 
-        // Interpolator-based timing (legacy path)
-        if (mCustomInterpolator != null) {
-            progress = mCustomInterpolator.getInterpolation(progress);
+    private fun evaluateValue(progress: Float): Float {
+        if (path != null && sharedPathEvaluator != null && pathMode != null) {
+            return sharedPathEvaluator.evaluate(progress, pathMode, path)
         }
-        if (mPath != null) {
-            return mSharedPathEvaluator.evaluate(progress, mPathMode, mPath);
+        val evaluator = customTypeEvaluator
+        return if (evaluator != null) {
+            evaluator.evaluate(progress, startValue, targetValue)
         } else {
-            if (mCustomTypeEvaluator != null) {
-                return mCustomTypeEvaluator.evaluate(progress, mStartValue, mTargetValue);
-            } else {
-                return mStartValue + (mTargetValue - mStartValue) * progress;
-            }
+            startValue + (targetValue - startValue) * progress
         }
     }
 
-    public AccumulatedAnimationValue<T> getAccumulatedValue() {
-        return mAccumulatedValue;
-    }
+    fun getTag(): String = tag
 
-    public AdditiveAnimation<T> cloneWithTarget(T target, Float startValue) {
-        final AdditiveAnimation<T> animation;
-        if (this.getProperty() != null) {
-            if (this.getPath() != null) {
-                animation = new AdditiveAnimation<>(target, mProperty, startValue, getPath(), mPathMode, mSharedPathEvaluator);
+    fun cloneWithTarget(target: T, startValue: Float): AdditiveAnimation<T> {
+        val animation = if (property != null) {
+            if (path != null) {
+                AdditiveAnimation(target, property, startValue, path, pathMode!!, sharedPathEvaluator!!)
             } else {
-                animation = new AdditiveAnimation<>(target, mProperty, startValue, mTargetValue);
+                AdditiveAnimation(target, property, startValue, targetValue)
             }
         } else {
-            if (this.getPath() != null) {
-                animation = new AdditiveAnimation<>(target, mTag, startValue, getPath(), mPathMode, mSharedPathEvaluator);
+            if (path != null) {
+                AdditiveAnimation(target, tag, startValue, path, pathMode!!, sharedPathEvaluator!!)
             } else {
-                animation = new AdditiveAnimation<>(target, mTag, startValue, mTargetValue);
+                AdditiveAnimation(target, tag, startValue, targetValue)
             }
         }
-        if (mBy) {
-            animation.mBy = mBy;
-            animation.mByValue = mByValue;
-            animation.mTargetValue = startValue + animation.mByValue;
+        if (isBy) {
+            animation.isBy = true
+            animation.byValue = byValue
+            animation.targetValue = startValue + animation.byValue
         }
-        if (mCustomInterpolator != null) {
-            animation.setCustomInterpolator(mCustomInterpolator);
+        val currentTiming = timing
+        if (currentTiming != null) {
+            animation.timing = currentTiming
         }
-        if (mCustomTypeEvaluator != null) {
-            animation.setCustomTypeEvaluator(mCustomTypeEvaluator);
+        val currentEvaluator = customTypeEvaluator
+        if (currentEvaluator != null) {
+            animation.customTypeEvaluator = currentEvaluator
         }
-        if (mAssociatedAnimationState != null) {
-            animation.setAssociatedAnimationState(mAssociatedAnimationState);
+        val currentState = associatedAnimationState
+        if (currentState != null) {
+            animation.associatedAnimationState = currentState
         }
-        if (mTiming != null) {
-            animation.setTiming(mTiming);
-        }
-        return animation;
+        return animation
     }
 
-    public void setAssociatedAnimationState(AnimationState<T> associatedAnimationStateId) {
-        this.mAssociatedAnimationState = associatedAnimationStateId;
-    }
+    override fun hashCode(): Int = hashCode
 
-    public AnimationState<T> getAssociatedAnimationState() {
-        return mAssociatedAnimationState;
-    }
-
-    @Override
-    public int hashCode() {
-        return mHashCode;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof AdditiveAnimation)) {
-            return false;
-        }
-        AdditiveAnimation<T> other = (AdditiveAnimation<T>) o;
-        return other.mTag.hashCode() == mTag.hashCode() && other.mTarget == mTarget;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AdditiveAnimation<*>) return false
+        return other.tag.hashCode() == tag.hashCode() && other.target === target
     }
 }
+
+
+

@@ -30,10 +30,10 @@ import kotlin.math.sqrt
 sealed class AnimationTiming {
 
     /**
-     * Traditional time-based animation. The progress fraction (0→1) is shaped by the [interpolator].
+     * Traditional time-based animation. The progress fraction (0→1) is shaped by the [customInterpolator].
      * This is the default mode and maps directly to how [android.animation.ValueAnimator] works.
      */
-    data class Interpolated(val interpolator: TimeInterpolator?) : AnimationTiming()
+    data class Interpolated(val customInterpolator: TimeInterpolator?) : AnimationTiming()
 
     /**
      * Physics-based spring animation.

@@ -13,7 +13,7 @@ public class Rect {
     float mX = DpConverter.converDpToPx(60);
     float mY = DpConverter.converDpToPx(120);
     float mSize = DpConverter.converDpToPx(100);
-    float mCornerRadius = 0;
+    float mCornerRadius = 12;
 
     public Rect(View parent) {
         mView = parent;
