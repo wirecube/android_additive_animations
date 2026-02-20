@@ -1,70 +1,54 @@
-package at.wirecube.additiveanimations.additive_animator.view_visibility;
+package at.wirecube.additiveanimations.additive_animator.view_visibility
 
-import android.view.View;
+import android.view.View
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class ViewVisibilityBuilder(visibility: Int) : AnimationState.Builder<ViewVisibilityBuilder, View>() {
 
-import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
+    private val visibilityStartAction: AnimationState.AnimationStartAction<View>?
+    private val visibilityEndAction: AnimationState.AnimationEndAction<View>?
 
-public class ViewVisibilityBuilder extends AnimationState.Builder<ViewVisibilityBuilder, View> {
-
-    private final AnimationState.AnimationStartAction<View> visibilityStartAction;
-    private final AnimationState.AnimationEndAction<View> visibilityEndAction;
-
-    public ViewVisibilityBuilder(int visibility) {
-        switch (visibility) {
-            case View.VISIBLE:
-                visibilityStartAction = view -> view.setVisibility(View.VISIBLE);
-                visibilityEndAction = null;
-                break;
-            case View.INVISIBLE:
-                visibilityStartAction = null;
-                visibilityEndAction = (view, wasCancelled) -> view.setVisibility(View.INVISIBLE);
-                break;
-            case View.GONE:
-                visibilityStartAction = null;
-                visibilityEndAction = (view, wasCancelled) -> view.setVisibility(View.GONE);
-                break;
-            default:
-                throw new IllegalArgumentException("Cannot instantiate a ViewVisibilityAnimation.Builder without a valid visibility (given: " + visibility + ").");
+    init {
+        when (visibility) {
+            View.VISIBLE -> {
+                visibilityStartAction = AnimationState.AnimationStartAction { view -> view.visibility = View.VISIBLE }
+                visibilityEndAction = null
+            }
+            View.INVISIBLE -> {
+                visibilityStartAction = null
+                visibilityEndAction = AnimationState.AnimationEndAction { view, _ -> view.visibility = View.INVISIBLE }
+            }
+            View.GONE -> {
+                visibilityStartAction = null
+                visibilityEndAction = AnimationState.AnimationEndAction { view, _ -> view.visibility = View.GONE }
+            }
+            else -> throw IllegalArgumentException(
+                "Cannot instantiate a ViewVisibilityAnimation.Builder without a valid visibility (given: $visibility)."
+            )
         }
-        startAction = getWrappedStartAction(null);
-        endAction = getWrappedEndAction(null);
+        startAction = getWrappedStartAction(null)
+        endAction = getWrappedEndAction(null)
     }
 
-    private AnimationState.AnimationStartAction<View> getWrappedStartAction(@Nullable AnimationState.AnimationStartAction<View> startAction) {
-        return view -> {
-            if (visibilityStartAction != null) {
-                visibilityStartAction.onStart(view);
-            }
-            if (startAction != null) {
-                startAction.onStart(view);
-            }
-        };
+    private fun getWrappedStartAction(startAction: AnimationState.AnimationStartAction<View>?): AnimationState.AnimationStartAction<View> {
+        return AnimationState.AnimationStartAction { view ->
+            visibilityStartAction?.onStart(view)
+            startAction?.onStart(view)
+        }
     }
 
-    private AnimationState.AnimationEndAction<View> getWrappedEndAction(@Nullable AnimationState.AnimationEndAction<View> endAction) {
-        return (view, wasCancelled) -> {
-            if (visibilityEndAction != null) {
-                visibilityEndAction.onEnd(view, wasCancelled);
-            }
-            if (endAction != null) {
-                endAction.onEnd(view, wasCancelled);
-            }
-        };
+    private fun getWrappedEndAction(endAction: AnimationState.AnimationEndAction<View>?): AnimationState.AnimationEndAction<View> {
+        return AnimationState.AnimationEndAction { view, wasCancelled ->
+            visibilityEndAction?.onEnd(view, wasCancelled)
+            endAction?.onEnd(view, wasCancelled)
+        }
     }
 
-    @Override
-    @NonNull
-    public ViewVisibilityBuilder withStartAction(@Nullable AnimationState.AnimationStartAction<View> startAction) {
-        return super.withStartAction(getWrappedStartAction(startAction));
+    override fun withStartAction(startAction: AnimationState.AnimationStartAction<View>?): ViewVisibilityBuilder {
+        return super.withStartAction(getWrappedStartAction(startAction))
     }
 
-    @Override
-    @NonNull
-    public ViewVisibilityBuilder withEndAction(@Nullable AnimationState.AnimationEndAction<View> endAction) {
-        return super.withEndAction(getWrappedEndAction(endAction));
+    override fun withEndAction(endAction: AnimationState.AnimationEndAction<View>?): ViewVisibilityBuilder {
+        return super.withEndAction(getWrappedEndAction(endAction))
     }
-
 }

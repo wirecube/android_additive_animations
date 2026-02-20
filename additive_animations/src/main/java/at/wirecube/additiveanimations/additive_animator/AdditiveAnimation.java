@@ -37,10 +37,10 @@ public class AdditiveAnimation<T> {
     private PathEvaluator.PathMode mPathMode;
     private PathEvaluator mSharedPathEvaluator;
     private TypeEvaluator<Float> mCustomTypeEvaluator;
-    private T mTarget;
+    private final T mTarget;
     private int mHashCode;
     private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
-    private AccumulatedAnimationValue mAccumulatedValue;
+    private AccumulatedAnimationValue<T> mAccumulatedValue;
     private AnimationState<T> mAssociatedAnimationState;
 
     /**
@@ -98,7 +98,7 @@ public class AdditiveAnimation<T> {
         setTag(property.getName());
     }
 
-    public void setAccumulatedValue(AccumulatedAnimationValue av) {
+    public void setAccumulatedValue(AccumulatedAnimationValue<T> av) {
         mAccumulatedValue = av;
     }
 
@@ -132,7 +132,7 @@ public class AdditiveAnimation<T> {
         mCustomTypeEvaluator = evaluator;
     }
 
-    public TypeEvaluator getCustomTypeEvaluator() {
+    public TypeEvaluator<Float> getCustomTypeEvaluator() {
         return mCustomTypeEvaluator;
     }
 
@@ -185,7 +185,7 @@ public class AdditiveAnimation<T> {
         }
     }
 
-    public AccumulatedAnimationValue getAccumulatedValue() {
+    public AccumulatedAnimationValue<T> getAccumulatedValue() {
         return mAccumulatedValue;
     }
 
@@ -242,7 +242,7 @@ public class AdditiveAnimation<T> {
         if (!(o instanceof AdditiveAnimation)) {
             return false;
         }
-        AdditiveAnimation other = (AdditiveAnimation) o;
+        AdditiveAnimation<T> other = (AdditiveAnimation<T>) o;
         return other.mTag.hashCode() == mTag.hashCode() && other.mTarget == mTarget;
     }
 }

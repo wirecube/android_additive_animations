@@ -1,37 +1,31 @@
-package at.wirecube.additiveanimations.additive_animator.sequence;
+package at.wirecube.additiveanimations.additive_animator.sequence
 
-import java.util.List;
+class PlayTogetherAnimationSequence internal constructor(
+    private val animations: List<AnimationSequence>
+) : AnimationSequence() {
 
-public class PlayTogetherAnimationSequence extends AnimationSequence {
+    private var delayInSequence: Long = 0
 
-    private final List<AnimationSequence> animations;
-    private long delayInSequence;
-
-    PlayTogetherAnimationSequence(List<AnimationSequence> animations) {
-        this.animations = animations;
-    }
-
-    @Override
-    public void start() {
-        for (AnimationSequence sequence : animations) {
-            sequence.setDelayInSequence(delayInSequence);
-            sequence.start();
+    override fun start() {
+        for (sequence in animations) {
+            sequence.setDelayInSequence(delayInSequence)
+            sequence.start()
         }
     }
 
-    @Override
-    public void setDelayInSequence(long delay) {
-        this.delayInSequence = delay;
+    override fun setDelayInSequence(delay: Long) {
+        this.delayInSequence = delay
     }
 
-    @Override
-    public long getTotalDurationInSequence() {
-        long longestDuration = 0;
-        for (AnimationSequence sequence : animations) {
-            if(sequence.getTotalDurationInSequence() > longestDuration) {
-                longestDuration = sequence.getTotalDurationInSequence();
+    override fun getTotalDurationInSequence(): Long {
+        var longestDuration: Long = 0
+        for (sequence in animations) {
+            val duration = sequence.getTotalDurationInSequence()
+            if (duration > longestDuration) {
+                longestDuration = duration
             }
         }
-        return longestDuration + delayInSequence;
+        return longestDuration + delayInSequence
     }
 }
+

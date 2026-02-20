@@ -255,20 +255,46 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     protected final AdditiveAnimation<V> createAnimation(Property<V, Float> property, float targetValue) {
-        AdditiveAnimation<V> animation = new AdditiveAnimation<>(mCurrentTarget, property, property.get(mCurrentTarget), targetValue);
+        AdditiveAnimation<V> animation = new AdditiveAnimation<>(
+            mCurrentTarget,
+            property,
+            property.get(mCurrentTarget),
+            targetValue
+        );
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
         return animation;
     }
 
-    protected final AdditiveAnimation<V> createAnimation(Property<V, Float> property, float targetValue, TypeEvaluator<Float> evaluator) {
-        AdditiveAnimation<V> animation = new AdditiveAnimation<>(mCurrentTarget, property, property.get(mCurrentTarget), targetValue);
+    protected final AdditiveAnimation<V> createAnimation(
+        Property<V, Float> property,
+        float targetValue,
+        TypeEvaluator<Float> evaluator
+    ) {
+        AdditiveAnimation<V> animation = new AdditiveAnimation<>(
+            mCurrentTarget,
+            property,
+            property.get(mCurrentTarget),
+            targetValue
+        );
         animation.setCustomTypeEvaluator(evaluator);
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
         return animation;
     }
 
-    protected final AdditiveAnimation<V> createAnimation(Property<V, Float> property, Path path, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
-        AdditiveAnimation<V> animation = new AdditiveAnimation<>(mCurrentTarget, property, property.get(mCurrentTarget), path, mode, sharedEvaluator);
+    protected final AdditiveAnimation<V> createAnimation(
+        Property<V, Float> property,
+        Path path,
+        PathEvaluator.PathMode mode,
+        PathEvaluator sharedEvaluator
+    ) {
+        AdditiveAnimation<V> animation = new AdditiveAnimation<>(
+            mCurrentTarget,
+            property,
+            property.get(mCurrentTarget),
+            path,
+            mode,
+            sharedEvaluator
+        );
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
         return animation;
     }
@@ -284,8 +310,9 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      *                                   (If you don't know what that means, you should probably just pass `true` and have the base implementation take care of it.)
      */
     protected final T animate(final AdditiveAnimation animation, boolean propagateToParentAnimators) {
-        if(mCurrentTarget == null) {
-            throw new IllegalStateException("Cannot enqueue an animation without a valid target. Provide a target using the `target()` method, constructor parameter or animate() builder methods before enqueuing animations.");
+        if (mCurrentTarget == null) {
+            throw new IllegalStateException(
+                "Cannot enqueue an animation without a valid target. Provide a target using the `target()` method, constructor parameter or animate() builder methods before enqueuing animations.");
         }
         initValueAnimatorIfNeeded();
         getRunningAnimationsManager().addAnimation(mAnimationAccumulator, animation);
@@ -307,7 +334,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return animate(animation, true);
     }
 
-    protected final T animate(Property<V, Float> property, Path p, PathEvaluator.PathMode mode, PathEvaluator sharedEvaluator) {
+    protected final T animate(
+        Property<V, Float> property,
+        Path p,
+        PathEvaluator.PathMode mode,
+        PathEvaluator sharedEvaluator
+    ) {
         initValueAnimatorIfNeeded();
         return animate(createAnimation(property, p, mode, sharedEvaluator));
     }
@@ -325,7 +357,11 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     /**
      * TODO: documentation of byValueCanBeUsedByParentAnimators
      */
-    protected final T animatePropertyBy(final Property<V, Float> property, final float by, final boolean byValueCanBeUsedByParentAnimators) {
+    protected final T animatePropertyBy(
+        final Property<V, Float> property,
+        final float by,
+        final boolean byValueCanBeUsedByParentAnimators
+    ) {
         initValueAnimatorIfNeeded();
         AdditiveAnimation<V> animation = createAnimation(property, by);
         animation.setBy(true);
@@ -337,7 +373,12 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return self();
     }
 
-    protected final T animatePropertiesAlongPath(Property<V, Float> xProperty, Property<V, Float> yProperty, Property<V, Float> rotationProperty, Path path) {
+    protected final T animatePropertiesAlongPath(
+        Property<V, Float> xProperty,
+        Property<V, Float> yProperty,
+        Property<V, Float> rotationProperty,
+        Path path
+    ) {
         PathEvaluator sharedEvaluator = new PathEvaluator();
         if (xProperty != null) {
             animate(xProperty, path, PathEvaluator.PathMode.X, sharedEvaluator);
@@ -395,7 +436,11 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             }
         }
         for (AnimationAction.Animation<V> animation : state.getAnimations()) {
-            AdditiveAnimation anim = createAnimation(animation.getProperty(), animation.getTargetValue(), animation.getTypeEvaluator());
+            AdditiveAnimation anim = createAnimation(
+                animation.getProperty(),
+                animation.getTargetValue(),
+                animation.getTypeEvaluator()
+            );
             anim.setAssociatedAnimationState(state);
             animate(anim);
         }
@@ -507,7 +552,8 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     public T targets(@NonNull List<V> vs, long stagger) {
         if (vs.isEmpty()) {
-            throw new IllegalArgumentException("You passed a list containing 0 views to BaseAdditiveAnimator.targets(). This would cause buggy animations, so it's probably more desirable to crash instead.");
+            throw new IllegalArgumentException(
+                "You passed a list containing 0 views to BaseAdditiveAnimator.targets(). This would cause buggy animations, so it's probably more desirable to crash instead.");
         }
 
         if (mAnimatorGroup != null) {

@@ -1,25 +1,20 @@
-package at.wirecube.additiveanimations.additive_animator.animation_set;
+package at.wirecube.additiveanimations.additive_animator.animation_set
 
-import android.animation.TypeEvaluator;
-import android.util.Property;
+import android.animation.TypeEvaluator
+import android.util.Property
 
-import java.util.ArrayList;
-import java.util.List;
+class SingleAnimationAction<T> : AnimationAction<T> {
 
-public class SingleAnimationAction<T> implements AnimationAction<T> {
-    private List<AnimationAction.Animation<T>> mAnimations = new ArrayList<>();
+    private val animations: MutableList<AnimationAction.Animation<T>> = mutableListOf()
 
-    @Override
-    public List<AnimationAction.Animation<T>> getAnimations() {
-        return mAnimations;
+    constructor(property: Property<T, Float>, target: Float) {
+        animations.add(AnimationAction.Animation(property, target))
     }
 
-    public SingleAnimationAction(Property<T, Float> property, float target) {
-        mAnimations.add(new AnimationAction.Animation<>(property, target));
+    constructor(property: Property<T, Float>, target: Float, evaluator: TypeEvaluator<Float>) {
+        animations.add(AnimationAction.Animation(property, target, evaluator))
     }
 
-    public SingleAnimationAction(Property<T, Float> property, float target, TypeEvaluator<Float> evaluator) {
-        mAnimations.add(new AnimationAction.Animation<T>(property, target, evaluator));
-    }
-
+    override fun getAnimations(): List<AnimationAction.Animation<T>> = animations
 }
+

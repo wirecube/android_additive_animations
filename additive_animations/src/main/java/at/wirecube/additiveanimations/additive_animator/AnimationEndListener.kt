@@ -1,5 +1,4 @@
-package at.wirecube.additiveanimations.additive_animator;
-
-public interface AnimationEndListener {
-    void onAnimationEnd(boolean wasCancelled);
+package at.wirecube.additiveanimations.additive_animator
+fun interface AnimationEndListener {
+    fun onAnimationEnd(wasCancelled: Boolean)
 }

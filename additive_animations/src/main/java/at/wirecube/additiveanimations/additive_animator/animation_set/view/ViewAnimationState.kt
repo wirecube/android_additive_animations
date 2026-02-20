@@ -1,84 +1,49 @@
-package at.wirecube.additiveanimations.additive_animator.animation_set.view;
+package at.wirecube.additiveanimations.additive_animator.animation_set.view
 
-import android.view.View;
+import android.view.View
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class ViewAnimationState : AnimationState<View> {
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+    private val mAnimations: MutableList<AnimationAction.Animation<View>> = mutableListOf()
+    private val mStartAction: AnimationStartAction<View>?
+    private val mEndAction: AnimationEndAction<View>?
 
-import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction;
-import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
+    constructor(animations: List<ViewAnimation>) : this(animations, null, null)
 
-public class ViewAnimationState extends AnimationState<View> {
+    constructor(vararg animations: ViewAnimation) : this(animations.toList(), null, null)
 
-    @NonNull
-    private final List<AnimationAction.Animation<View>> mAnimations = new ArrayList<>();
-    @Nullable
-    private final AnimationStartAction<View> mStartAction;
-    @Nullable
-    private final AnimationEndAction<View> mEndAction;
+    constructor(animations: List<ViewAnimation>, startAction: AnimationStartAction<View>?) : this(animations, startAction, null)
 
-    public ViewAnimationState(@NonNull List<ViewAnimation> animations) {
-        this(animations, null, null);
+    constructor(animation: ViewAnimation, startAction: AnimationStartAction<View>?) : this(listOf(animation), startAction, null)
+
+    constructor(startAction: AnimationStartAction<View>?, vararg animations: ViewAnimation) : this(animations.toList(), startAction, null)
+
+    constructor(animation: ViewAnimation, endAction: AnimationEndAction<View>?) : this(listOf(animation), null, endAction)
+
+    constructor(animations: List<ViewAnimation>, endAction: AnimationEndAction<View>?) : this(animations, null, endAction)
+
+    constructor(endAction: AnimationEndAction<View>?, vararg animations: ViewAnimation) : this(animations.toList(), null, endAction)
+
+    constructor(animation: ViewAnimation, startAction: AnimationStartAction<View>?, endAction: AnimationEndAction<View>?) : this(listOf(animation), startAction, endAction)
+
+    constructor(startAction: AnimationStartAction<View>?, endAction: AnimationEndAction<View>?, vararg animations: ViewAnimation) : this(animations.toList(), startAction, endAction)
+
+    constructor(
+        animations: List<ViewAnimation>,
+        startAction: AnimationStartAction<View>?,
+        endAction: AnimationEndAction<View>?
+    ) {
+        mAnimations.addAll(animations)
+        mStartAction = startAction
+        mEndAction = endAction
     }
 
-    public ViewAnimationState(@NonNull ViewAnimation... animations) {
-        this(Arrays.asList(animations), null, null);
-    }
+    override fun getAnimations(): List<AnimationAction.Animation<View>> = mAnimations
 
-    public ViewAnimationState(@NonNull List<ViewAnimation> animations, @Nullable AnimationStartAction<View> startAction) {
-        this(animations, startAction, null);
-    }
+    override fun getAnimationStartAction(): AnimationStartAction<View>? = mStartAction
 
-    public ViewAnimationState(ViewAnimation animation, @Nullable AnimationStartAction<View> startAction) {
-        this(Arrays.asList(animation), startAction, null);
-    }
-
-    public ViewAnimationState(@Nullable AnimationStartAction<View> startAction, @NonNull ViewAnimation... animations) {
-        this(Arrays.asList(animations), startAction, null);
-    }
-
-    public ViewAnimationState(@NonNull ViewAnimation animation, @Nullable AnimationEndAction<View> endAction) {
-        this(Arrays.asList(animation), null, endAction);
-    }
-
-    public ViewAnimationState(@NonNull List<ViewAnimation> animations, @Nullable AnimationEndAction<View> endAction) {
-        this(animations, null, endAction);
-    }
-
-    public ViewAnimationState(@Nullable AnimationEndAction<View> endAction, @NonNull ViewAnimation... animations) {
-        this(Arrays.asList(animations), null, endAction);
-    }
-
-    public ViewAnimationState(@NonNull ViewAnimation animation, @Nullable AnimationStartAction<View> startAction, @Nullable AnimationEndAction<View> endAction) {
-        this(Arrays.asList(animation), startAction, endAction);
-    }
-
-    public ViewAnimationState(@Nullable AnimationStartAction<View> startAction, @Nullable AnimationEndAction<View> endAction, @NonNull ViewAnimation... animations) {
-        this(Arrays.asList(animations), startAction, endAction);
-    }
-
-    public ViewAnimationState(@NonNull List<ViewAnimation> animations, @Nullable AnimationStartAction<View> startAction, @Nullable AnimationEndAction<View> endAction) {
-        mAnimations.addAll(animations);
-        mStartAction = startAction;
-        mEndAction = endAction;
-    }
-
-    @Override
-    public List<Animation<View>> getAnimations() {
-        return mAnimations;
-    }
-
-    @Override
-    public AnimationStartAction<View> getAnimationStartAction() {
-        return mStartAction;
-    }
-
-    @Override
-    public AnimationEndAction<View> getAnimationEndAction() {
-        return mEndAction;
-    }
+    override fun getAnimationEndAction(): AnimationEndAction<View>? = mEndAction
 }
+

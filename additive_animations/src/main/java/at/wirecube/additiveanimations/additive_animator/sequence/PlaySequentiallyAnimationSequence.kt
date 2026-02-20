@@ -1,36 +1,30 @@
-package at.wirecube.additiveanimations.additive_animator.sequence;
+package at.wirecube.additiveanimations.additive_animator.sequence
 
-import java.util.List;
+internal class PlaySequentiallyAnimationSequence(
+    private val animations: List<AnimationSequence>
+) : AnimationSequence() {
 
-class PlaySequentiallyAnimationSequence extends AnimationSequence {
-    private final List<AnimationSequence> animations;
-    private long delay = 0;
+    private var delay: Long = 0
 
-    public PlaySequentiallyAnimationSequence(List<AnimationSequence> animations) {
-        this.animations = animations;
-    }
-
-    @Override
-    public void start() {
-        long totalDelay = 0;
-        for(AnimationSequence sequence : animations) {
-            sequence.setDelayInSequence(totalDelay + this.delay);
-            totalDelay += sequence.getTotalDurationInSequence();
-            sequence.start();
+    override fun start() {
+        var totalDelay: Long = 0
+        for (sequence in animations) {
+            sequence.setDelayInSequence(totalDelay + delay)
+            totalDelay += sequence.getTotalDurationInSequence()
+            sequence.start()
         }
     }
 
-    @Override
-    public void setDelayInSequence(long delay) {
-        this.delay = delay;
+    override fun setDelayInSequence(delay: Long) {
+        this.delay = delay
     }
 
-    @Override
-    public long getTotalDurationInSequence() {
-        long totalDelay = delay;
-        for(AnimationSequence sequence : animations) {
-            totalDelay += sequence.getTotalDurationInSequence();
+    override fun getTotalDurationInSequence(): Long {
+        var totalDelay = delay
+        for (sequence in animations) {
+            totalDelay += sequence.getTotalDurationInSequence()
         }
-        return totalDelay + this.delay;
+        return totalDelay + delay
     }
 }
+

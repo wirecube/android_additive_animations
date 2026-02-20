@@ -1,46 +1,37 @@
-package at.wirecube.additiveanimations.additive_animator.sequence;
+package at.wirecube.additiveanimations.additive_animator.sequence
 
-import java.util.Arrays;
-import java.util.List;
+class PlayWithStaggerAnimationSequence(
+    private val stagger: Long,
+    vararg animations: AnimationSequence
+) : AnimationSequence() {
 
-public class PlayWithStaggerAnimationSequence extends AnimationSequence {
+    private val animations: List<AnimationSequence> = animations.toList()
+    private var delayInSequence: Long = 0
 
-    private final List<AnimationSequence> animations;
-    private final long stagger;
-    private long delayInSequence;
-
-    public PlayWithStaggerAnimationSequence(long stagger, AnimationSequence... animations) {
-        this.stagger = stagger;
-        this.animations = Arrays.asList(animations);
-    }
-
-
-    @Override
-    public void start() {
-        long totalDelay = 0;
-        for(AnimationSequence sequence : animations) {
-            sequence.setDelayInSequence(totalDelay + this.delayInSequence);
-            totalDelay += this.stagger;
-            sequence.start();
+    override fun start() {
+        var totalDelay: Long = 0
+        for (sequence in animations) {
+            sequence.setDelayInSequence(totalDelay + delayInSequence)
+            totalDelay += stagger
+            sequence.start()
         }
     }
 
-    @Override
-    public void setDelayInSequence(long delay) {
-        this.delayInSequence = delay;
+    override fun setDelayInSequence(delay: Long) {
+        this.delayInSequence = delay
     }
 
-    @Override
-    public long getTotalDurationInSequence() {
-        long longestDuration = 0;
-        long currentStagger = 0;
-        for (AnimationSequence sequence : animations) {
-            long duration = sequence.getTotalDurationInSequence() + currentStagger;
-            if(duration > longestDuration) {
-                longestDuration = duration;
+    override fun getTotalDurationInSequence(): Long {
+        var longestDuration: Long = 0
+        var currentStagger: Long = 0
+        for (sequence in animations) {
+            val duration = sequence.getTotalDurationInSequence() + currentStagger
+            if (duration > longestDuration) {
+                longestDuration = duration
             }
-            currentStagger += stagger;
+            currentStagger += stagger
         }
-        return longestDuration + delayInSequence;
+        return longestDuration + delayInSequence
     }
 }
+

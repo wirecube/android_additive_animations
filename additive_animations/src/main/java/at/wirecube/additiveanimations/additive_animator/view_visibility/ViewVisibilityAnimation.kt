@@ -1,128 +1,120 @@
-package at.wirecube.additiveanimations.additive_animator.view_visibility;
+package at.wirecube.additiveanimations.additive_animator.view_visibility
 
-import android.view.View;
+import android.view.View
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction
+import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState
 
-import java.util.List;
+class ViewVisibilityAnimation(
+    visibility: Int,
+    private val mAnimations: List<AnimationAction.Animation<View>>
+) : AnimationState<View>() {
 
-import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationAction;
-import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
+    private var mEndAction: AnimationEndAction<View>? = null
+    private var mStartAction: AnimationStartAction<View>? = null
 
-public class ViewVisibilityAnimation extends AnimationState<View> {
-
-    public static ViewVisibilityBuilder builder(int visibility) {
-        return new ViewVisibilityBuilder(visibility);
-    }
-
-    public static ViewVisibilityBuilder gone() {
-        return new ViewVisibilityBuilder(View.GONE);
-    }
-
-    public static ViewVisibilityBuilder visible() {
-        return new ViewVisibilityBuilder(View.VISIBLE);
-    }
-
-    public static ViewVisibilityBuilder invisible() {
-        return new ViewVisibilityBuilder(View.INVISIBLE);
-    }
-
-    /**
-     * Sets the visibility of the view to View.VISIBLE and fades it in.
-     */
-    public static AnimationState<View> fadeIn() {
-        return visible()
-            .addAnimation(new AnimationAction.Animation<>(View.ALPHA, 1f))
-            .build();
-    }
-
-    /**
-     * Sets the visibility of the view to View.VISIBLE, fades it in and also set its translationX and translationY back to 0.
-     */
-    public static AnimationState<View> fadeInAndTranslateBack() {
-        return visible()
-            .addAnimations(
-                new AnimationAction.Animation<>(View.ALPHA, 1f),
-                new AnimationAction.Animation<>(View.TRANSLATION_X, 0f),
-                new AnimationAction.Animation<>(View.TRANSLATION_Y, 0f))
-            .build();
-    }
-
-    /**
-     * Fades out the target and then sets its visibility to either View.INVISIBLE or GONE, depending on the gone parameter.
-     */
-    public static AnimationState<View> fadeOut(boolean gone) {
-        return new ViewVisibilityBuilder(gone ? View.GONE : View.INVISIBLE)
-            .addAnimation(new AnimationAction.Animation<>(View.ALPHA, 0f))
-            .build();
-    }
-
-    /**
-     * Fades out the target and then sets its visibility to either View.INVISIBLE or GONE, depending on the gone parameter.
-     * Also moves the view by xTranslation and yTranslation.
-     */
-    public static AnimationState<View> fadeOutAndTranslate(boolean gone, float xTranslation, float yTranslation) {
-        return new ViewVisibilityBuilder(gone ? View.GONE : View.INVISIBLE)
-            .addAnimations(new AnimationAction.Animation<>(View.ALPHA, 0f),
-                new AnimationAction.Animation<>(View.TRANSLATION_X, xTranslation),
-                new AnimationAction.Animation<>(View.TRANSLATION_Y, yTranslation))
-            .build();
-    }
-
-    /**
-     * Fades out the target and then sets its visibility to either View.INVISIBLE or GONE, depending on the gone parameter.
-     * Also moves the view horizontally by xTranslation.
-     */
-    public static AnimationState<View> fadeOutAndTranslateX(boolean gone, float xTranslation) {
-        return new ViewVisibilityBuilder(gone ? View.GONE : View.INVISIBLE)
-            .addAnimations(
-                new AnimationAction.Animation<>(View.ALPHA, 0f),
-                new AnimationAction.Animation<>(View.TRANSLATION_X, xTranslation)
-            )
-            .build();
-    }
-
-    /**
-     * Fades out the target and then sets its visibility to either View.INVISIBLE or GONE, depending on the gone parameter.
-     * Also moves the view vertically by yTranslation.
-     */
-    public static AnimationState<View> fadeOutAndTranslateY(boolean gone, float yTranslation) {
-        return new ViewVisibilityBuilder(gone ? View.GONE : View.INVISIBLE)
-            .addAnimations(
-                new AnimationAction.Animation<>(View.ALPHA, 0f),
-                new AnimationAction.Animation<>(View.TRANSLATION_Y, yTranslation))
-            .build();
-    }
-
-    private List<AnimationAction.Animation<View>> mAnimations;
-    private AnimationState.AnimationEndAction<View> mEndAction;
-    private AnimationState.AnimationStartAction<View> mStartAction;
-
-    public ViewVisibilityAnimation(int visibility, List<Animation<View>> animations) {
-        switch (visibility) {
-            case View.VISIBLE:
-                mStartAction = view -> view.setVisibility(View.VISIBLE);
-                break;
-            case View.INVISIBLE:
-                mEndAction = (view, wasCancelled) -> view.setVisibility(View.INVISIBLE);
-                break;
-            case View.GONE:
-                mEndAction = (view, wasCancelled) -> view.setVisibility(View.GONE);
-                break;
+    init {
+        when (visibility) {
+            View.VISIBLE -> mStartAction = AnimationStartAction { view -> view.visibility = View.VISIBLE }
+            View.INVISIBLE -> mEndAction = AnimationEndAction { view, _ -> view.visibility = View.INVISIBLE }
+            View.GONE -> mEndAction = AnimationEndAction { view, _ -> view.visibility = View.GONE }
         }
-        mAnimations = animations;
     }
 
-    @Override
-    public List<AnimationAction.Animation<View>> getAnimations() {
-        return mAnimations;
-    }
+    override fun getAnimations(): List<AnimationAction.Animation<View>> = mAnimations
 
-    @Override
-    public AnimationEndAction<View> getAnimationEndAction() {
-        return mEndAction;
-    }
+    override fun getAnimationEndAction(): AnimationEndAction<View>? = mEndAction
 
-    @Override
-    public AnimationStartAction<View> getAnimationStartAction() {
-        return mStartAction;
+    override fun getAnimationStartAction(): AnimationStartAction<View>? = mStartAction
+
+    companion object {
+        @JvmStatic
+        fun builder(visibility: Int): ViewVisibilityBuilder = ViewVisibilityBuilder(visibility)
+
+        @JvmStatic
+        fun gone(): ViewVisibilityBuilder = ViewVisibilityBuilder(View.GONE)
+
+        @JvmStatic
+        fun visible(): ViewVisibilityBuilder = ViewVisibilityBuilder(View.VISIBLE)
+
+        @JvmStatic
+        fun invisible(): ViewVisibilityBuilder = ViewVisibilityBuilder(View.INVISIBLE)
+
+        /**
+         * Sets the visibility of the view to View.VISIBLE and fades it in.
+         */
+        @JvmStatic
+        fun fadeIn(): AnimationState<View> {
+            return visible()
+                .addAnimation(AnimationAction.Animation(View.ALPHA, 1f))
+                .build()
+        }
+
+        /**
+         * Sets the visibility of the view to View.VISIBLE, fades it in and also sets its translationX and translationY back to 0.
+         */
+        @JvmStatic
+        fun fadeInAndTranslateBack(): AnimationState<View> {
+            return visible()
+                .addAnimations(
+                    AnimationAction.Animation(View.ALPHA, 1f),
+                    AnimationAction.Animation(View.TRANSLATION_X, 0f),
+                    AnimationAction.Animation(View.TRANSLATION_Y, 0f)
+                )
+                .build()
+        }
+
+        /**
+         * Fades out the target and then sets its visibility to either View.INVISIBLE or GONE, depending on the gone parameter.
+         */
+        @JvmStatic
+        fun fadeOut(gone: Boolean): AnimationState<View> {
+            return ViewVisibilityBuilder(if (gone) View.GONE else View.INVISIBLE)
+                .addAnimation(AnimationAction.Animation(View.ALPHA, 0f))
+                .build()
+        }
+
+        /**
+         * Fades out the target and then sets its visibility to either View.INVISIBLE or GONE, depending on the gone parameter.
+         * Also moves the view by xTranslation and yTranslation.
+         */
+        @JvmStatic
+        fun fadeOutAndTranslate(gone: Boolean, xTranslation: Float, yTranslation: Float): AnimationState<View> {
+            return ViewVisibilityBuilder(if (gone) View.GONE else View.INVISIBLE)
+                .addAnimations(
+                    AnimationAction.Animation(View.ALPHA, 0f),
+                    AnimationAction.Animation(View.TRANSLATION_X, xTranslation),
+                    AnimationAction.Animation(View.TRANSLATION_Y, yTranslation)
+                )
+                .build()
+        }
+
+        /**
+         * Fades out the target and then sets its visibility to either View.INVISIBLE or GONE, depending on the gone parameter.
+         * Also moves the view horizontally by xTranslation.
+         */
+        @JvmStatic
+        fun fadeOutAndTranslateX(gone: Boolean, xTranslation: Float): AnimationState<View> {
+            return ViewVisibilityBuilder(if (gone) View.GONE else View.INVISIBLE)
+                .addAnimations(
+                    AnimationAction.Animation(View.ALPHA, 0f),
+                    AnimationAction.Animation(View.TRANSLATION_X, xTranslation)
+                )
+                .build()
+        }
+
+        /**
+         * Fades out the target and then sets its visibility to either View.INVISIBLE or GONE, depending on the gone parameter.
+         * Also moves the view vertically by yTranslation.
+         */
+        @JvmStatic
+        fun fadeOutAndTranslateY(gone: Boolean, yTranslation: Float): AnimationState<View> {
+            return ViewVisibilityBuilder(if (gone) View.GONE else View.INVISIBLE)
+                .addAnimations(
+                    AnimationAction.Animation(View.ALPHA, 0f),
+                    AnimationAction.Animation(View.TRANSLATION_Y, yTranslation)
+                )
+                .build()
+        }
     }
 }
+

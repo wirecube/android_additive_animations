@@ -13,18 +13,13 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+package at.wirecube.additiveanimations.additive_animator
 
-package at.wirecube.additiveanimations.additive_animator;
+internal class AccumulatedAnimationValue<T>(@JvmField val animation: AdditiveAnimation<T?>?) {
+    @JvmField
+    var tempValue: Float = 0f
 
-class AccumulatedAnimationValue<T> {
-    final AdditiveAnimation<T> animation;
-    float tempValue;
-
-    AccumulatedAnimationValue(AdditiveAnimation<T> animation) {
-        this.animation = animation;
-    }
-
-    void addDelta(float delta) {
-        tempValue += delta;
+    fun addDelta(delta: Float) {
+        tempValue += delta
     }
 }

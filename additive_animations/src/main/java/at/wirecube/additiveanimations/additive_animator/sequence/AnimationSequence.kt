@@ -1,31 +1,38 @@
-package at.wirecube.additiveanimations.additive_animator.sequence;
+package at.wirecube.additiveanimations.additive_animator.sequence
 
-import java.util.Arrays;
-import java.util.List;
+abstract class AnimationSequence {
 
-public abstract class AnimationSequence {
+    abstract fun start()
+    abstract fun setDelayInSequence(delay: Long)
+    abstract fun getTotalDurationInSequence(): Long
 
-    public abstract void start();
-    public abstract void setDelayInSequence(long delay);
-    public abstract long getTotalDurationInSequence();
+    companion object {
+        @JvmStatic
+        fun playTogether(vararg animations: AnimationSequence): AnimationSequence {
+            return PlayTogetherAnimationSequence(animations.toList())
+        }
 
-    public static AnimationSequence playTogether(AnimationSequence... animations) {
-        return new PlayTogetherAnimationSequence(Arrays.asList(animations));
-    }
+        @JvmStatic
+        fun playTogether(animations: List<AnimationSequence>): AnimationSequence {
+            return PlayTogetherAnimationSequence(animations)
+        }
 
-    public static AnimationSequence playTogether(List<AnimationSequence> animations) {
-        return new PlayTogetherAnimationSequence(animations);
-    }
+        @JvmStatic
+        fun playSequentially(vararg animations: AnimationSequence): AnimationSequence {
+            return PlaySequentiallyAnimationSequence(animations.toList())
+        }
 
-    public static AnimationSequence playSequentially(AnimationSequence... animations) {
-        return new PlaySequentiallyAnimationSequence(Arrays.asList(animations));
-    }
+        @JvmStatic
+        fun playSequentially(animations: List<AnimationSequence>): AnimationSequence {
+            return PlaySequentiallyAnimationSequence(animations)
+        }
 
-    public static AnimationSequence playSequentially(List<AnimationSequence> animations) {
-        return new PlaySequentiallyAnimationSequence(animations);
-    }
-
-    public static AnimationSequence playWithDelayBetweenAnimations(long stagger, AnimationSequence... animations) {
-        return new PlayWithStaggerAnimationSequence(stagger, animations);
+        @JvmStatic
+        fun playWithDelayBetweenAnimations(stagger: Long, vararg animations: AnimationSequence): AnimationSequence {
+            return PlayWithStaggerAnimationSequence(stagger, *animations)
+        }
     }
 }
+
+
+

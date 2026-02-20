@@ -1,107 +1,85 @@
-package at.wirecube.additiveanimations.additive_animator.animation_set;
+package at.wirecube.additiveanimations.additive_animator.animation_set
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+abstract class AnimationState<T : Any> : AnimationAction<T> {
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+    fun interface AnimationStartAction<T> {
+        fun onStart(target: T)
+    }
 
-public abstract class AnimationState<T extends Object> implements AnimationAction<T> {
+    fun interface AnimationEndAction<T> {
+        fun onEnd(target: T, wasCancelled: Boolean)
+    }
 
-    public static class Builder<BuilderSubclass extends Builder<?, T>, T> {
+    open class Builder<BuilderSubclass : Builder<BuilderSubclass, T>, T : Any> {
 
-        @NonNull
-        protected final List<Animation<T>> animations = new ArrayList<>();
+        protected val animations: MutableList<AnimationAction.Animation<T>> = mutableListOf()
 
-        @Nullable
-        protected AnimationEndAction<T> endAction;
+        protected var endAction: AnimationEndAction<T>? = null
 
-        @Nullable
-        protected AnimationStartAction<T> startAction;
+        protected var startAction: AnimationStartAction<T>? = null
 
-        public Builder() {}
+        @Suppress("UNCHECKED_CAST")
+        private fun self(): BuilderSubclass = this as BuilderSubclass
 
-        @NonNull
-        public BuilderSubclass addAnimation(@NonNull AnimationAction.Animation<T> animation) {
-            animations.add(animation);
-            return (BuilderSubclass) this;
+        fun addAnimation(animation: AnimationAction.Animation<T>): BuilderSubclass {
+            animations.add(animation)
+            return self()
         }
 
-        @NonNull
-        public BuilderSubclass addAnimations(@NonNull List<AnimationAction.Animation<T>> animations) {
-            this.animations.addAll(animations);
-            return (BuilderSubclass) this;
+        fun addAnimations(animations: List<AnimationAction.Animation<T>>): BuilderSubclass {
+            this.animations.addAll(animations)
+            return self()
         }
 
         @SafeVarargs
-        @NonNull
-        public final BuilderSubclass addAnimations(@NonNull AnimationAction.Animation<T>... animations) {
-            this.animations.addAll(Arrays.asList(animations));
-            return (BuilderSubclass) this;
+        fun addAnimations(vararg animations: AnimationAction.Animation<T>): BuilderSubclass {
+            this.animations.addAll(animations)
+            return self()
         }
 
-        @NonNull
-        public BuilderSubclass withEndAction(@Nullable AnimationEndAction<T> endAction) {
-            this.endAction = endAction;
-            return (BuilderSubclass) this;
+        open fun withEndAction(endAction: AnimationEndAction<T>?): BuilderSubclass {
+            this.endAction = endAction
+            return self()
         }
 
-        @NonNull
-        public BuilderSubclass withStartAction(@Nullable AnimationStartAction<T> startAction) {
-            this.startAction = startAction;
-            return (BuilderSubclass) this;
+        open fun withStartAction(startAction: AnimationStartAction<T>?): BuilderSubclass {
+            this.startAction = startAction
+            return self()
         }
 
-        public AnimationState<T> build() {
-            return new AnimationState<T>() {
-                @Override
-                public List<Animation<T>> getAnimations() {
-                    return animations;
-                }
-
-                @Override
-                public AnimationEndAction<T> getAnimationEndAction() {
-                    return endAction;
-                }
-
-                @Override
-                public AnimationStartAction<T> getAnimationStartAction() {
-                    return startAction;
-                }
-            };
+        open fun build(): AnimationState<T> {
+            val capturedAnimations = animations.toList()
+            val capturedEndAction = endAction
+            val capturedStartAction = startAction
+            return object : AnimationState<T>() {
+                override fun getAnimations(): List<AnimationAction.Animation<T>> = capturedAnimations
+                override fun getAnimationEndAction(): AnimationEndAction<T>? = capturedEndAction
+                override fun getAnimationStartAction(): AnimationStartAction<T>? = capturedStartAction
+            }
         }
-    }
-
-    public interface AnimationStartAction<T> {
-        void onStart(T target);
-    }
-
-    public interface AnimationEndAction<T> {
-        void onEnd(T target, boolean wasCancelled);
     }
 
     /**
      * The animations are only allowed to run if the current state of the animated object matches
      * this state.
      */
-    public final boolean shouldRun(AnimationState<T> currentState) {
-        return currentState == null || currentState == this;
+    fun shouldRun(currentState: AnimationState<T>?): Boolean {
+        return currentState == null || currentState === this
     }
 
     /**
      * The animationEndListener is only allowed to run if the current state of the animated object matches
      * this state.
      */
-    public final boolean shouldRunEndListener(AnimationState<T> currentState) {
-        return currentState == null || currentState == this;
+    fun shouldRunEndListener(currentState: AnimationState<T>?): Boolean {
+        return currentState == null || currentState === this
     }
 
-    public AnimationEndAction<T> getAnimationEndAction() {
-        return null;
-    }
+    open fun getAnimationEndAction(): AnimationEndAction<T>? = null
 
-    public AnimationStartAction<T> getAnimationStartAction() {
-        return null;
-    }
+    open fun getAnimationStartAction(): AnimationStartAction<T>? = null
 }
+
+
+
+
