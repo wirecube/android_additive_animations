@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="additive_animations.AdditiveAnimationsShowcaseActivity">
+
+    <View
+        android:id="@+id/centerView"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/niceBlue" />
+
+    <View
+        android:id="@+id/leftButton"
+        android:layout_width="100dp"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/niceOrange"
+        android:foreground="?attr/selectableItemBackground" />
+
+    <View
+        android:id="@+id/rightButton"
+        android:layout_width="100dp"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/nicePink"
+        android:foreground="?attr/selectableItemBackground" />
+
+</FrameLayout>

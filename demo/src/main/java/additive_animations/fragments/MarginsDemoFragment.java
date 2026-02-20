@@ -1,5 +1,6 @@
 package additive_animations.fragments;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -18,6 +19,7 @@ import at.wirecube.additiveanimations.helper.EaseInOutPathInterpolator;
 public class MarginsDemoFragment extends Fragment {
     ViewGroup rootView;
     View animatedView;
+    @SuppressLint("ClickableViewAccessibility")
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

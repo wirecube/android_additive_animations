@@ -21,21 +21,21 @@ import java.util.HashMap;
 /**
  * Helper class for accumulating the changes made by all of the additive animators.
  */
-class AccumulatedAnimationValueManager {
+class AccumulatedAnimationValueManager<T> {
 
-    private HashMap<AdditiveAnimation, AccumulatedAnimationValue> accumulatedAnimationValues = new HashMap<>();
+    private final HashMap<AdditiveAnimation<T>, AccumulatedAnimationValue<T>> accumulatedAnimationValues = new HashMap<>();
 
     /**
      *  Returns an accumulator to use for this animation. All animations with the same tag and target share the same accumulator.
      *  The lookup is rather slow, so try to store the returned object somewhere you can access it directly.
      */
-    public AccumulatedAnimationValue getAccumulatedAnimationValue(AdditiveAnimation animation) {
+    public AccumulatedAnimationValue getAccumulatedAnimationValue(AdditiveAnimation<T> animation) {
         // TODO: is there any way to make this `get()` faster?
         AccumulatedAnimationValue accumulatedAnimationValue = accumulatedAnimationValues.get(animation);
         if(accumulatedAnimationValue != null) {
             return accumulatedAnimationValue;
         }
-        accumulatedAnimationValue = new AccumulatedAnimationValue(animation);
+        accumulatedAnimationValue = new AccumulatedAnimationValue<>(animation);
         accumulatedAnimationValues.put(animation, accumulatedAnimationValue);
         return accumulatedAnimationValue;
     }

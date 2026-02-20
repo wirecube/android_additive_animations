@@ -92,7 +92,7 @@ public class ViewVisibilityAnimation extends AnimationState<View> {
             .build();
     }
 
-    private List<AnimationAction.Animation<View>> mAnimations;
+    private final List<AnimationAction.Animation<View>> mAnimations;
     private AnimationState.AnimationEndAction<View> mEndAction;
     private AnimationState.AnimationStartAction<View> mStartAction;
 

@@ -1,40 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:fitsSystemWindows="true"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context="additive_animations.AdditiveAnimationsShowcaseActivity">
 
-    <com.google.android.material.appbar.AppBarLayout android:layout_height="wrap_content"
-        android:layout_width="match_parent" android:theme="@style/AppTheme.AppBarOverlay">
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
 
-        <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
-            android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary" app:popupTheme="@style/AppTheme.PopupOverlay" />
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </FrameLayout>
+        android:layout_height="match_parent" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
         android:layout_marginBottom="16dp"
-        android:layout_gravity="bottom|center">
+        android:visibility="gone">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/additive_animations_enabled_toggle_title"
-            android:textSize="16sp"
-            android:layout_marginRight="16dp"
             android:layout_gravity="center_vertical"
-            android:gravity="center_vertical" />
-        <Switch
+            android:layout_marginEnd="16dp"
+            android:gravity="center_vertical"
+            android:text="@string/additive_animations_enabled_toggle_title"
+            android:textSize="16sp" />
+
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/additive_animations_enabled_switch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

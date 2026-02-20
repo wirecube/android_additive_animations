@@ -43,13 +43,13 @@ class RunningAnimationsManager<T> {
         Float queuedTargetValue = null;
     }
 
-    private static final Map<Object, RunningAnimationsManager> sStateManagers = new HashMap<>();
+    private static final Map<Object, RunningAnimationsManager<?>> sStateManagers = new HashMap<>();
 
     static <T> RunningAnimationsManager<T> from(@NonNull T target) {
         if (target == null) {
             return null;
         }
-        RunningAnimationsManager<T> animator = sStateManagers.get(target);
+        RunningAnimationsManager<T> animator = (RunningAnimationsManager<T>) sStateManagers.get(target);
         if (animator == null) {
             animator = new RunningAnimationsManager<T>(target);
             sStateManagers.put(target, animator);
@@ -57,11 +57,11 @@ class RunningAnimationsManager<T> {
         return animator;
     }
 
-    static AccumulatedAnimationValueManager getAccumulatedProperties(View v) {
+    static AccumulatedAnimationValueManager<?> getAccumulatedProperties(View v) {
         return from(v).mAccumulator;
     }
 
-    private final AccumulatedAnimationValueManager mAccumulator = new AccumulatedAnimationValueManager();
+    private final AccumulatedAnimationValueManager<T> mAccumulator = new AccumulatedAnimationValueManager<>();
 
     private final T mAnimationTarget;
     private boolean mUseHardwareLayer = false;
@@ -88,7 +88,7 @@ class RunningAnimationsManager<T> {
         return info;
     }
 
-    void addAnimation(AdditiveAnimationAccumulator accumulator, AdditiveAnimation animation) {
+    void addAnimation(AdditiveAnimationAccumulator accumulator, AdditiveAnimation<?> animation) {
         // immediately add to our list of pending animators
         mAdditiveAnimationAccumulators.add(accumulator);
         accumulator.addAnimation(animation);
@@ -101,11 +101,11 @@ class RunningAnimationsManager<T> {
         removeStateManagerIfAccumulatorSetIsEmpty();
         boolean hasRunAnimationStateEndAction = false;
 
-        for (AdditiveAnimation<T> animation : accumulator.getAnimations(mAnimationTarget)) {
+        for (AdditiveAnimation<?> animation : accumulator.getAnimations(mAnimationTarget)) {
             if (mCurrentState != null &&
-                mCurrentState.getAnimationEndAction() != null &&
-                !hasRunAnimationStateEndAction &&
-                mCurrentState.shouldRunEndListener(animation.getAssociatedAnimationState())
+                    mCurrentState.getAnimationEndAction() != null &&
+                    !hasRunAnimationStateEndAction &&
+                    mCurrentState.shouldRunEndListener((AnimationState<T>) animation.getAssociatedAnimationState())
             ) {
                 hasRunAnimationStateEndAction = true;
                 mCurrentState.getAnimationEndAction().onEnd(mAnimationTarget, didCancel);
@@ -126,10 +126,10 @@ class RunningAnimationsManager<T> {
     }
 
     void onAnimationAccumulatorStart(AdditiveAnimationAccumulator accumulator) {
-        Collection<AdditiveAnimation> animations = accumulator.getAnimations(mAnimationTarget);
+        Collection<AdditiveAnimation<?>> animations = accumulator.getAnimations(mAnimationTarget);
         Set<AnimationState<T>> animationStatesForWhichStartActionHasBeenRun = new HashSet<>();
-        for (AdditiveAnimation<T> animation : animations) {
-            AnimationState<T> animationState = animation.getAssociatedAnimationState();
+        for (AdditiveAnimation<?> animation : animations) {
+            AnimationState<T> animationState = (AnimationState<T>) animation.getAssociatedAnimationState();
             if (animationState == null) {
                 continue;
             }
@@ -165,7 +165,7 @@ class RunningAnimationsManager<T> {
      */
     void prepareAnimationStart(AdditiveAnimation<T> animation) {
         // TODO: can we speed up this lookup?
-        AccumulatedAnimationValue av = mAccumulator.getAccumulatedAnimationValue(animation);
+        AccumulatedAnimationValue<T> av = mAccumulator.getAccumulatedAnimationValue(animation);
 
         AnimationInfo info = getAnimationInfo(animation.getTag(), true);
         if (getLastTargetValue(animation.getTag()) == null || info.numAnimations == 0) {
@@ -179,7 +179,7 @@ class RunningAnimationsManager<T> {
         } else {
             animation.setStartValue(getLastTargetValue(animation.getTag()));
         }
-        if (animation.isBy()) {
+        if (animation.isByAnimation()) {
             // by-animations have to calculate their target value after the actual start value has been computed.
             animation.setTargetValue(animation.getStartValue() + animation.getByValue());
         }

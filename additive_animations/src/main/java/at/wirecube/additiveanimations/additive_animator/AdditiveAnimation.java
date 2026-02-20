@@ -21,6 +21,9 @@ import android.animation.TypeEvaluator;
 import android.graphics.Path;
 import android.util.Property;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
@@ -29,37 +32,54 @@ import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
  */
 public class AdditiveAnimation<T> {
 
-    private String mTag;
-    private float mStartValue;
-    private float mTargetValue;
-    private Property<T, Float> mProperty;
-    private Path mPath;
-    private PathEvaluator.PathMode mPathMode;
-    private PathEvaluator mSharedPathEvaluator;
-    private TypeEvaluator<Float> mCustomTypeEvaluator;
-    private T mTarget;
-    private int mHashCode;
-    private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
-    private AccumulatedAnimationValue mAccumulatedValue;
-    private AnimationState<T> mAssociatedAnimationState;
+    private String tag;
+    private float startValue;
+    private float targetValue;
+    @NonNull
+    private Property<T, Float> property;
+    // The path to animate along.
+    @Nullable
+    private Path path;
+    // Which property of the path animation to use (X, Y, ROTATION).
+    @Nullable
+    private PathEvaluator.PathMode pathMode;
+    // For animations that all use the same path, the path evaluator will be shared for performance reasons.
+    @Nullable
+    private PathEvaluator sharedPathEvaluator;
+    @Nullable
+    private TypeEvaluator<Float> customTypeEvaluator;
+    @NonNull
+    private final T target;
+    private int cachedHashCode;
+    @Nullable
+    private TimeInterpolator customInterpolator; // each animation can have its own interpolator
+    @Nullable
+    private AccumulatedAnimationValue<T> accumulatedValue;
+
+    /**
+     * The "state" that this animation is associated with.
+     * If another animation with a different state is enqueued for the same target, the already enqueued animation will continue running,
+     * but the start/end actions associated with the state won't run.
+     */
+    private AnimationState<T> associatedAnimationState;
 
     /**
      * Determines if the `targetValue` is a 'by' value. If it is, the actual target value will be computed when the animation starts
      * (as opposed to computing just the start value when it is enqueued).
      */
-    private boolean mBy = false;
-    private float mByValue; // used for storing the by-value when the animation is a "by"-animation so that the animation can be copied correctly.
+    private boolean isByAnimation = false;
+    private float byValue; // used for storing the by-value when the animation is a "by"-animation so that the animation can be copied correctly.
 
     /**
      * The preferred constructor to use when animating properties. If you use this constructor, you
      * don't need to worry about the logic to apply the changes. This is taken care of by using the
      * Setter provided by `property`.
      */
-    public AdditiveAnimation(T target, Property<T, Float> property, float startValue, float targetValue) {
-        mTarget = target;
-        mProperty = property;
-        mTargetValue = targetValue;
-        mStartValue = startValue;
+    public AdditiveAnimation(@NonNull T target, @NonNull Property<T, Float> property, float startValue, float targetValue) {
+        this.target = target;
+        this.property = property;
+        this.targetValue = targetValue;
+        this.startValue = startValue;
         setTag(property.getName());
     }
 
@@ -70,168 +90,173 @@ public class AdditiveAnimation<T> {
      * @param startValue  Start value of the animated property.
      * @param targetValue Target value of the animated property.
      */
-    public AdditiveAnimation(T target, String tag, float startValue, float targetValue) {
-        mTarget = target;
-        mStartValue = startValue;
-        mTargetValue = targetValue;
+    public AdditiveAnimation(@NonNull T target, @NonNull String tag, float startValue, float targetValue) {
+        this.target = target;
+        this.startValue = startValue;
+        this.targetValue = targetValue;
         setTag(tag);
     }
 
-    public AdditiveAnimation(T target, String tag, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
-        mTarget = target;
-        mStartValue = startValue;
-        mPath = path;
-        mSharedPathEvaluator = sharedEvaluator;
-        mPathMode = pathMode;
-        mTargetValue = evaluateAt(1f);
+    public AdditiveAnimation(@NonNull T target, @NonNull String tag, float startValue, @NonNull Path path, @NonNull PathEvaluator.PathMode pathMode, @NonNull PathEvaluator sharedEvaluator) {
+        this.target = target;
+        this.startValue = startValue;
+        this.path = path;
+        sharedPathEvaluator = sharedEvaluator;
+        this.pathMode = pathMode;
+        targetValue = evaluateAt(1f);
         setTag(tag);
     }
 
-    public AdditiveAnimation(T target, Property<T, Float> property, float startValue, Path path, PathEvaluator.PathMode pathMode, PathEvaluator sharedEvaluator) {
-        mTarget = target;
-        mProperty = property;
-        mStartValue = startValue;
-        mPath = path;
-        mSharedPathEvaluator = sharedEvaluator;
-        mPathMode = pathMode;
-        mTargetValue = evaluateAt(1f);
+    public AdditiveAnimation(@NonNull T target, @NonNull Property<T, Float> property, float startValue, @NonNull Path path, @NonNull PathEvaluator.PathMode pathMode, @NonNull PathEvaluator sharedEvaluator) {
+        this.target = target;
+        this.property = property;
+        this.startValue = startValue;
+        this.path = path;
+        sharedPathEvaluator = sharedEvaluator;
+        this.pathMode = pathMode;
+        targetValue = evaluateAt(1f);
         setTag(property.getName());
     }
 
-    public void setAccumulatedValue(AccumulatedAnimationValue av) {
-        mAccumulatedValue = av;
+    void setAccumulatedValue(@NonNull AccumulatedAnimationValue<T> av) {
+        accumulatedValue = av;
     }
 
-    private void setTag(String tag) {
-        mTag = tag;
+    private void setTag(@NonNull String tag) {
+        this.tag = tag;
         // TODO: find a good hash code that doesn't collide often
-        mHashCode = mTag.hashCode() * ((2 << 17) - 1) + mTarget.hashCode();
+        cachedHashCode = this.tag.hashCode() * ((2 << 17) - 1) + target.hashCode();
     }
 
     public String getTag() {
-        return mTag;
+        return tag;
     }
 
     public float getStartValue() {
-        return mStartValue;
+        return startValue;
     }
 
     public float getTargetValue() {
-        return mTargetValue;
+        return targetValue;
     }
 
     public void setStartValue(float startValue) {
-        this.mStartValue = startValue;
+        this.startValue = startValue;
     }
 
     public void setTargetValue(float targetValue) {
-        mTargetValue = targetValue;
+        this.targetValue = targetValue;
     }
 
-    public void setCustomTypeEvaluator(TypeEvaluator<Float> evaluator) {
-        mCustomTypeEvaluator = evaluator;
+    public void setCustomTypeEvaluator(@Nullable TypeEvaluator<Float> evaluator) {
+        customTypeEvaluator = evaluator;
     }
 
-    public TypeEvaluator getCustomTypeEvaluator() {
-        return mCustomTypeEvaluator;
+    @Nullable
+    public TypeEvaluator<Float> getCustomTypeEvaluator() {
+        return customTypeEvaluator;
     }
 
+    @NonNull
     public T getTarget() {
-        return mTarget;
+        return target;
     }
 
     /**
      * Set this immediately after creating the animation. Failure to do so will result in incorrect target values.
      */
-    public void setBy(boolean by) {
-        mBy = by;
-        if (by) {
-            mByValue = mTargetValue;
+    public void setByAnimation(boolean byAnimation) {
+        this.isByAnimation = byAnimation;
+        if (byAnimation) {
+            byValue = targetValue;
         }
     }
 
-    public boolean isBy() {
-        return mBy;
+    public boolean isByAnimation() {
+        return isByAnimation;
     }
 
     public float getByValue() {
-        return mByValue;
+        return byValue;
     }
 
+    @NonNull
     public Property<T, Float> getProperty() {
-        return mProperty;
+        return property;
     }
 
+    @Nullable
     public Path getPath() {
-        return mPath;
+        return path;
     }
 
-    public void setCustomInterpolator(TimeInterpolator customInterpolator) {
-        mCustomInterpolator = customInterpolator;
+    public void setCustomInterpolator(@Nullable TimeInterpolator customInterpolator) {
+        this.customInterpolator = customInterpolator;
     }
 
     public float evaluateAt(float progress) {
-        if (mCustomInterpolator != null) {
-            progress = mCustomInterpolator.getInterpolation(progress);
+        if (customInterpolator != null) {
+            progress = customInterpolator.getInterpolation(progress);
         }
-        if (mPath != null) {
-            return mSharedPathEvaluator.evaluate(progress, mPathMode, mPath);
+        if (path != null) {
+            return sharedPathEvaluator.evaluate(progress, pathMode, path);
         } else {
-            if (mCustomTypeEvaluator != null) {
-                return mCustomTypeEvaluator.evaluate(progress, mStartValue, mTargetValue);
+            if (customTypeEvaluator != null) {
+                return customTypeEvaluator.evaluate(progress, startValue, targetValue);
             } else {
-                return mStartValue + (mTargetValue - mStartValue) * progress;
+                return startValue + (targetValue - startValue) * progress;
             }
         }
     }
 
-    public AccumulatedAnimationValue getAccumulatedValue() {
-        return mAccumulatedValue;
+    @Nullable
+    AccumulatedAnimationValue<T> getAccumulatedValue() {
+        return accumulatedValue;
     }
 
     public AdditiveAnimation<T> cloneWithTarget(T target, Float startValue) {
         final AdditiveAnimation<T> animation;
         if (this.getProperty() != null) {
             if (this.getPath() != null) {
-                animation = new AdditiveAnimation<>(target, mProperty, startValue, getPath(), mPathMode, mSharedPathEvaluator);
+                animation = new AdditiveAnimation<>(target, property, startValue, getPath(), pathMode, sharedPathEvaluator);
             } else {
-                animation = new AdditiveAnimation<>(target, mProperty, startValue, mTargetValue);
+                animation = new AdditiveAnimation<>(target, property, startValue, targetValue);
             }
         } else {
             if (this.getPath() != null) {
-                animation = new AdditiveAnimation<>(target, mTag, startValue, getPath(), mPathMode, mSharedPathEvaluator);
+                animation = new AdditiveAnimation<>(target, tag, startValue, getPath(), pathMode, sharedPathEvaluator);
             } else {
-                animation = new AdditiveAnimation<>(target, mTag, startValue, mTargetValue);
+                animation = new AdditiveAnimation<>(target, tag, startValue, targetValue);
             }
         }
-        if (mBy) {
-            animation.mBy = mBy;
-            animation.mByValue = mByValue;
-            animation.mTargetValue = startValue + animation.mByValue;
+        if (isByAnimation) {
+            animation.isByAnimation = isByAnimation;
+            animation.byValue = byValue;
+            animation.targetValue = startValue + animation.byValue;
         }
-        if (mCustomInterpolator != null) {
-            animation.setCustomInterpolator(mCustomInterpolator);
+        if (customInterpolator != null) {
+            animation.setCustomInterpolator(customInterpolator);
         }
-        if (mCustomTypeEvaluator != null) {
-            animation.setCustomTypeEvaluator(mCustomTypeEvaluator);
+        if (customTypeEvaluator != null) {
+            animation.setCustomTypeEvaluator(customTypeEvaluator);
         }
-        if (mAssociatedAnimationState != null) {
-            animation.setAssociatedAnimationState(mAssociatedAnimationState);
+        if (associatedAnimationState != null) {
+            animation.setAssociatedAnimationState(associatedAnimationState);
         }
         return animation;
     }
 
     public void setAssociatedAnimationState(AnimationState<T> associatedAnimationStateId) {
-        this.mAssociatedAnimationState = associatedAnimationStateId;
+        this.associatedAnimationState = associatedAnimationStateId;
     }
 
     public AnimationState<T> getAssociatedAnimationState() {
-        return mAssociatedAnimationState;
+        return associatedAnimationState;
     }
 
     @Override
     public int hashCode() {
-        return mHashCode;
+        return cachedHashCode;
     }
 
     @Override
@@ -242,7 +267,7 @@ public class AdditiveAnimation<T> {
         if (!(o instanceof AdditiveAnimation)) {
             return false;
         }
-        AdditiveAnimation other = (AdditiveAnimation) o;
-        return other.mTag.hashCode() == mTag.hashCode() && other.mTarget == mTarget;
+        AdditiveAnimation<?> other = (AdditiveAnimation<?>) o;
+        return other.tag.hashCode() == tag.hashCode() && other.target == target;
     }
 }

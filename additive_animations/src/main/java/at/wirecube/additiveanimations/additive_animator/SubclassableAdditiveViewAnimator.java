@@ -26,7 +26,7 @@ import at.wirecube.additiveanimations.helper.propertywrappers.PaddingProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.ScrollProperties;
 import at.wirecube.additiveanimations.helper.propertywrappers.SizeProperties;
 
-public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdditiveViewAnimator> extends BaseAdditiveAnimator<T, View> {
+public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdditiveViewAnimator<T>> extends BaseAdditiveAnimator<T, View> {
 
     protected boolean mSkipRequestLayout = true;
     protected boolean mWithLayer = false;
@@ -84,7 +84,7 @@ public abstract class SubclassableAdditiveViewAnimator<T extends SubclassableAdd
     }
 
     @Override
-    void applyChanges(List<AccumulatedAnimationValue<View>> accumulatedAnimations) {
+    void applyChanges(List<AccumulatedAnimationValue> accumulatedAnimations) {
         Map<View, List<AccumulatedAnimationValue<View>>> unknownProperties = null;
         Set<View> viewsToRequestLayoutFor = new HashSet<>(1);
         for (AccumulatedAnimationValue<View> accumulatedAnimationValue : accumulatedAnimations) {

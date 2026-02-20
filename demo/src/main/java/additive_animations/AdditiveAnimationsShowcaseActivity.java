@@ -1,27 +1,29 @@
 package additive_animations;
 
 import android.os.Bundle;
-import com.google.android.material.navigation.NavigationView;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Switch;
+
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Switch;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.google.android.material.navigation.NavigationView;
 
 import additive_animations.fragments.AnimationChainingDemoFragment;
 import additive_animations.fragments.CustomAnimationsWithoutSubclassDemoFragment;
-import additive_animations.fragments.states.StateDemoFragment;
-import additive_animations.fragments.custom_drawing.CustomDrawingFragment;
+import additive_animations.fragments.ExpandingButtons2DemoFragment;
 import additive_animations.fragments.MarginsDemoFragment;
 import additive_animations.fragments.MoveAlongPathDemoFragment;
 import additive_animations.fragments.MultipleViewsAnimationDemoFragment;
 import additive_animations.fragments.RepeatingChainedAnimationsDemoFragment;
 import additive_animations.fragments.TapToChangeColorDemoFragment;
 import additive_animations.fragments.TapToMoveDemoFragment;
+import additive_animations.fragments.custom_drawing.CustomDrawingFragment;
+import additive_animations.fragments.states.StateDemoFragment;
 import at.wirecube.additiveanimations.additive_animator.AdditiveAnimator;
 import at.wirecube.additiveanimations.additiveanimationsdemo.R;
 
@@ -49,12 +51,7 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
         // load default fragment = tap to move
         getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, new TapToMoveDemoFragment()).commit();
         Switch additiveEnabledSwitch = (Switch) findViewById(R.id.additive_animations_enabled_switch);
-        additiveEnabledSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ADDITIVE_ANIMATIONS_ENABLED = ((Switch)v).isChecked();
-            }
-        });
+        additiveEnabledSwitch.setOnClickListener(v -> ADDITIVE_ANIMATIONS_ENABLED = ((Switch) v).isChecked());
 
         // set the default duration for all animations:
         AdditiveAnimator.setDefaultDuration(1000);
@@ -97,27 +94,29 @@ public class AdditiveAnimationsShowcaseActivity extends AppCompatActivity
 
         if (id == R.id.nav_tap_to_move) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TapToMoveDemoFragment()).commit();
-        } else if(id == R.id.nav_multiple_views) {
+        } else if (id == R.id.nav_multiple_views) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MultipleViewsAnimationDemoFragment()).commit();
-        } else if(id == R.id.nav_margins) {
+        } else if (id == R.id.nav_margins) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MarginsDemoFragment()).commit();
-        } else if(id == R.id.nav_color) {
+        } else if (id == R.id.nav_color) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TapToChangeColorDemoFragment()).commit();
-        } else if(id == R.id.nav_path) {
+        } else if (id == R.id.nav_path) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MoveAlongPathDemoFragment()).commit();
-        } else if(id == R.id.nav_chaining) {
+        } else if (id == R.id.nav_chaining) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AnimationChainingDemoFragment()).commit();
-        } else if(id == R.id.nav_chaining_repeated) {
+        } else if (id == R.id.nav_chaining_repeated) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new RepeatingChainedAnimationsDemoFragment()).commit();
-        } else if(id == R.id.nav_change_text_color) {
+        } else if (id == R.id.nav_change_text_color) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CustomAnimationsWithoutSubclassDemoFragment()).commit();
-        } else if(id == R.id.nav_custom_drawing) {
+        } else if (id == R.id.nav_custom_drawing) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CustomDrawingFragment()).commit();
         } else if (id == R.id.nav_state) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new StateDemoFragment()).commit();
+        } else if (id == R.id.nav_expanding_buttons) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ExpandingButtons2DemoFragment()).commit();
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

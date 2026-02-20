@@ -1,5 +1,6 @@
 package additive_animations.fragments;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -7,6 +8,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
 import additive_animations.AdditiveAnimationsShowcaseActivity;
@@ -19,6 +22,7 @@ public class TapToMoveDemoFragment extends Fragment {
     private View animatedView;
     private View mTouchView;
 
+    @SuppressLint("ClickableViewAccessibility")
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -36,7 +40,7 @@ public class TapToMoveDemoFragment extends Fragment {
                     AdditiveAnimator.animate(animatedView)
                             .centerX(event.getX())
                             // uncomment the next line to see how you can use a different interpolator for each property!
-//                                .switchInterpolator(new BounceInterpolator())
+//                            .switchInterpolator(new BounceInterpolator())
                             .centerY(event.getY())
                             .start();
 

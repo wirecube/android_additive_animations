@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SingleAnimationAction<T> implements AnimationAction<T> {
-    private List<AnimationAction.Animation<T>> mAnimations = new ArrayList<>();
+    private final List<AnimationAction.Animation<T>> mAnimations = new ArrayList<>();
 
     @Override
     public List<AnimationAction.Animation<T>> getAnimations() {

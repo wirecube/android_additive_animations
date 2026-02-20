@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class AnimationState<T extends Object> implements AnimationAction<T> {
+public abstract class AnimationState<T> implements AnimationAction<T> {
 
     public static class Builder<BuilderSubclass extends Builder<?, T>, T> {
 

@@ -5,6 +5,8 @@ import android.util.Property;
 
 import java.util.List;
 
+import at.wirecube.additiveanimations.helper.FloatProperty;
+
 public interface AnimationAction<T> {
     class Animation<T> {
         private final Property<T, Float> mProperty;

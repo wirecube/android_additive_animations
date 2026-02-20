@@ -15,7 +15,8 @@
  */
 
 apply plugin: 'com.android.library'
-apply plugin: "com.vanniktech.maven.publish"
+//apply plugin: "com.vanniktech.maven.publish"
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
     compileSdkVersion 30
@@ -34,14 +35,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.core:core-ktx:1.15.0'
     testImplementation 'junit:junit:4.13'
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
 }
