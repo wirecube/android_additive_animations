@@ -22,6 +22,7 @@ import android.graphics.Path;
 import android.util.Property;
 
 import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationState;
+import at.wirecube.additiveanimations.helper.SpringSolver;
 import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
 
 /**
@@ -42,6 +43,8 @@ public class AdditiveAnimation<T> {
     private TimeInterpolator mCustomInterpolator; // each animation can have its own interpolator
     private AccumulatedAnimationValue<T> mAccumulatedValue;
     private AnimationState<T> mAssociatedAnimationState;
+    private AnimationTiming mTiming; // null = use legacy interpolator-based timing
+    private SpringSolver mSpringSolver; // lazily created when timing is Spring and start/target are known
 
     /**
      * Determines if the `targetValue` is a 'by' value. If it is, the actual target value will be computed when the animation starts
@@ -122,10 +125,12 @@ public class AdditiveAnimation<T> {
 
     public void setStartValue(float startValue) {
         this.mStartValue = startValue;
+        this.mSpringSolver = null; // reset solver so it picks up the new start value
     }
 
     public void setTargetValue(float targetValue) {
         mTargetValue = targetValue;
+        this.mSpringSolver = null; // reset solver so it picks up the new target value
     }
 
     public void setCustomTypeEvaluator(TypeEvaluator<Float> evaluator) {
@@ -170,7 +175,44 @@ public class AdditiveAnimation<T> {
         mCustomInterpolator = customInterpolator;
     }
 
+    public void setTiming(AnimationTiming timing) {
+        mTiming = timing;
+        mSpringSolver = null; // reset solver so it gets re-created with new timing
+    }
+
+    public AnimationTiming getTiming() {
+        return mTiming;
+    }
+
+    /**
+     * Returns the settling duration in ms if this animation uses spring timing, or -1 otherwise.
+     */
+    public long getSpringSettlingDurationMs() {
+        if (mTiming instanceof AnimationTiming.Spring) {
+            return ((AnimationTiming.Spring) mTiming).settlingDurationMs();
+        }
+        return -1;
+    }
+
+    private SpringSolver getOrCreateSpringSolver() {
+        if (mSpringSolver == null && mTiming instanceof AnimationTiming.Spring) {
+            mSpringSolver = ((AnimationTiming.Spring) mTiming).createSolver(mStartValue, mTargetValue);
+        }
+        return mSpringSolver;
+    }
+
     public float evaluateAt(float progress) {
+        // Spring-based timing: progress is a linear time fraction over the settling duration.
+        if (mTiming instanceof AnimationTiming.Spring) {
+            SpringSolver solver = getOrCreateSpringSolver();
+            if (solver != null) {
+                float settlingDurationSeconds = ((AnimationTiming.Spring) mTiming).settlingDurationMs() / 1000f;
+                float elapsedSeconds = progress * settlingDurationSeconds;
+                return solver.solve(elapsedSeconds);
+            }
+        }
+
+        // Interpolator-based timing (legacy path)
         if (mCustomInterpolator != null) {
             progress = mCustomInterpolator.getInterpolation(progress);
         }
@@ -217,6 +259,9 @@ public class AdditiveAnimation<T> {
         }
         if (mAssociatedAnimationState != null) {
             animation.setAssociatedAnimationState(mAssociatedAnimationState);
+        }
+        if (mTiming != null) {
+            animation.setTiming(mTiming);
         }
         return animation;
     }

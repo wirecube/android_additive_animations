@@ -19,6 +19,7 @@ package at.wirecube.additiveanimations.additive_animator;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
+import android.view.animation.LinearInterpolator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -121,6 +122,11 @@ class AdditiveAnimationAccumulator {
             return;
         }
         mHasInformedStateManagerAboutAnimationStart = true;
+
+        // If any animation uses spring timing, configure the ValueAnimator accordingly.
+        // Since all animations in one accumulator share the same timing, we just check the first one.
+        configureForSpringTimingIfNeeded();
+
         Collection<Object> animationTargets = new ArrayList<>(mAnimationsPerObject.keySet());
         for (Object v : animationTargets) {
             RunningAnimationsManager manager = RunningAnimationsManager.from(v);
@@ -139,6 +145,25 @@ class AdditiveAnimationAccumulator {
 
         // TODO: speed this up
         addToAnimationMap(wrapper);
+    }
+
+    /**
+     * If any animation in this accumulator uses spring timing, configure the ValueAnimator
+     * to use a linear interpolator and the spring's settling duration.
+     * This ensures that getAnimatedFraction() returns a linear time fraction that
+     * the spring solver can convert to elapsed seconds.
+     */
+    private void configureForSpringTimingIfNeeded() {
+        if (mAnimationWrappers.isEmpty()) return;
+
+        // All animations share the same timing, so check the first one.
+        AdditiveAnimation firstAnimation = mAnimationWrappers.get(0).animation;
+        long settlingDuration = firstAnimation.getSpringSettlingDurationMs();
+
+        if (settlingDuration > 0) {
+            mAnimator.setInterpolator(new LinearInterpolator());
+            mAnimator.setDuration(settlingDuration);
+        }
     }
 
     /*

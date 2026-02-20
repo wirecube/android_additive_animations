@@ -49,6 +49,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     protected RunningAnimationsManager<V> mRunningAnimationsManager = null; // only used for performance reasons to avoid lookups
     protected AdditiveAnimationAccumulator mAnimationAccumulator; // holds temporary values that all animators add to
     protected TimeInterpolator mCurrentCustomInterpolator = null;
+    protected AnimationTiming.Spring mCurrentSpringTiming = null;
 
     /**
      * Delay set when using {@link BaseAdditiveAnimator#targets(List, long)} to create animations.
@@ -262,6 +263,9 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             targetValue
         );
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
+        if (mCurrentSpringTiming != null) {
+            animation.setTiming(mCurrentSpringTiming);
+        }
         return animation;
     }
 
@@ -278,6 +282,9 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         );
         animation.setCustomTypeEvaluator(evaluator);
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
+        if (mCurrentSpringTiming != null) {
+            animation.setTiming(mCurrentSpringTiming);
+        }
         return animation;
     }
 
@@ -296,6 +303,9 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
             sharedEvaluator
         );
         animation.setCustomInterpolator(mCurrentCustomInterpolator);
+        if (mCurrentSpringTiming != null) {
+            animation.setTiming(mCurrentSpringTiming);
+        }
         return animation;
     }
 
@@ -650,6 +660,53 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         return self();
     }
 
+    /**
+     * Configures the animator to use spring-based physics timing for all subsequent animations.
+     * This replaces the interpolator-based timing.
+     *
+     * When spring timing is active, the animation duration is automatically computed from the
+     * spring parameters (the time it takes for the spring to settle).
+     *
+     * @param stiffness    The spring stiffness constant. Higher values produce faster, snappier motion.
+     *                     Typical values: 100 (gentle), 300 (medium), 1000 (stiff).
+     * @param dampingRatio The damping ratio. Controls oscillation:
+     *                     {@literal <} 1.0 = bouncy (underdamped),
+     *                     1.0 = smooth (critically damped),
+     *                     {@literal >} 1.0 = sluggish (overdamped).
+     */
+    public T setSpring(final float stiffness, final float dampingRatio) {
+        final AnimationTiming.Spring spring = new AnimationTiming.Spring(stiffness, dampingRatio);
+        mCurrentSpringTiming = spring;
+        // Spring timing uses a linear interpolator so that getAnimatedFraction() returns real elapsed time.
+        getValueAnimator().setInterpolator(new LinearInterpolator());
+        getValueAnimator().setDuration(spring.settlingDurationMs());
+        runIfParentIsInSameAnimationGroup(() -> mParent.setSpring(stiffness, dampingRatio));
+        return self();
+    }
+
+    /**
+     * Configures the animator to use spring-based physics timing, with the spring parameters
+     * derived from the desired animation duration. This is similar to iOS's
+     * {@code UIView.animate(withDuration:usingSpringWithDamping:...)}.
+     *
+     * The stiffness is automatically calculated so that the spring settles within approximately
+     * the given duration.
+     *
+     * @param durationMs   Desired animation duration in milliseconds.
+     * @param dampingRatio The damping ratio. Controls oscillation:
+     *                     {@literal <} 1.0 = bouncy (underdamped),
+     *                     1.0 = smooth (critically damped),
+     *                     {@literal >} 1.0 = sluggish (overdamped).
+     */
+    public T setSpringWithDuration(final long durationMs, final float dampingRatio) {
+        final AnimationTiming.Spring spring = AnimationTiming.Spring.withDuration(durationMs, dampingRatio);
+        mCurrentSpringTiming = spring;
+        getValueAnimator().setInterpolator(new LinearInterpolator());
+        getValueAnimator().setDuration(spring.settlingDurationMs());
+        runIfParentIsInSameAnimationGroup(() -> mParent.setSpringWithDuration(durationMs, dampingRatio));
+        return self();
+    }
+
     public T switchToDefaultInterpolator() {
         return switchInterpolator(sDefaultInterpolator);
     }
@@ -814,6 +871,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
         setRepeatCount(other.getValueAnimator().getRepeatCount());
         setRepeatMode(other.getValueAnimator().getRepeatMode());
         mCurrentCustomInterpolator = other.mCurrentCustomInterpolator;
+        mCurrentSpringTiming = other.mCurrentSpringTiming;
         mParent = other;
         return self();
     }

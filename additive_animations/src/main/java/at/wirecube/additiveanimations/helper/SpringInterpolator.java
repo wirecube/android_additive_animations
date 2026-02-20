@@ -2,6 +2,17 @@ package at.wirecube.additiveanimations.helper;
 
 import android.view.animation.Interpolator;
 
+/**
+ * A time-based spring interpolator that approximates spring-like motion using a damped cosine curve.
+ * <p>
+ * <b>Note:</b> This is a simple curve approximation, not real spring physics. It always runs for
+ * a fixed duration and doesn't model true stiffness/damping behavior.
+ *
+ * @deprecated Use {@link at.wirecube.additiveanimations.additive_animator.BaseAdditiveAnimator#setSpring(float, float)}
+ * or {@link at.wirecube.additiveanimations.additive_animator.BaseAdditiveAnimator#setSpringWithDuration(long, float)}
+ * instead, which use real spring physics with proper stiffness and damping ratio parameters.
+ */
+@Deprecated
 public class SpringInterpolator implements Interpolator {
     // curve parameters generated with https://www.desmos.com/calculator/6gbvrm5i0s
     private static final double BOUNCY_AMPLITUDE = 0.13;
