@@ -40,7 +40,7 @@ import at.wirecube.additiveanimations.helper.evaluators.PathEvaluator;
  *            <b><code>public class MyViewAnimator extends BaseAdditiveAnimator{@literal <}MyViewAnimator, View{@literal >}</code></b>
  * @param <V> The type of object to be animated.
  */
-public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V extends Object> extends AnimationSequence {
+public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V> extends AnimationSequence {
 
     protected T mParent = null; // not null when this animator was queued using `then()` chaining.
     protected V mCurrentTarget = null;
@@ -67,7 +67,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
     // These properties are stored to avoid any allocations during the animations for performance reasons.
     private Map<V, List<AccumulatedAnimationValue<V>>> mUnknownProperties = new HashMap<>();
-    private HashMap<String, Float> mChangedUnknownProperties = new HashMap<>();
+    private final HashMap<String, Float> mChangedUnknownProperties = new HashMap<>();
 
     /**
      * Indicates which animation group this animator belongs to.
@@ -156,16 +156,6 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     /**
-     * Old API for {@link #target(V)}, which should be used instead.
-     *
-     * @deprecated Use {@link #target(V)} instead.
-     */
-    @Deprecated
-    public T addTarget(V v) {
-        return target(v);
-    }
-
-    /**
      * Finds the last target value of the property with the given name, or returns `property.get()`
      * if the property isn't animating at the moment.
      */
@@ -224,7 +214,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
 
         if (mUnknownProperties != null) {
             for (V v : mUnknownProperties.keySet()) {
-                for (AccumulatedAnimationValue value : mUnknownProperties.get(v)) {
+                for (AccumulatedAnimationValue<V> value : mUnknownProperties.get(v)) {
                     mChangedUnknownProperties.put(value.animation.getTag(), value.tempValue);
                 }
                 applyCustomProperties(mChangedUnknownProperties, v);
@@ -408,7 +398,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
     }
 
     public T property(float target, TypeEvaluator<Float> evaluator, FloatProperty<V> property) {
-        AdditiveAnimation animation = createAnimation(property, target);
+        AdditiveAnimation<V> animation = createAnimation(property, target);
         animation.setCustomTypeEvaluator(evaluator);
         return animate(animation);
     }
@@ -764,7 +754,7 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V ext
      */
     public T then() {
         if (mAnimatorGroup != null) {
-            return (T) mAnimatorGroup.copyAndChain(parent -> parent.getTotalDuration()).outermostChildAnimator();
+            return (T) mAnimatorGroup.copyAndChain(BaseAdditiveAnimator::getTotalDuration).outermostChildAnimator();
         }
         return createChildWithRawDelay(getTotalDuration());
     }

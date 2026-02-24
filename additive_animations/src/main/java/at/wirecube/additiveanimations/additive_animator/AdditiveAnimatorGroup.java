@@ -11,7 +11,7 @@ import java.util.List;
  * Calling then() on the result has to create n animator again, each targeting the same child as before but with a different delay.
  * The animation group is used to figure out which animators have been then-chained and which ones have been staggered.
  */
-class AdditiveAnimatorGroup {
+public class AdditiveAnimatorGroup {
 
     interface StartDelayProvider {
         long getStartDelay(BaseAdditiveAnimator parent);

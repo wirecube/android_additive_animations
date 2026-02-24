@@ -32,7 +32,7 @@ import java.util.Set;
 /**
  * This is the class that actually runs the ValueAnimator and adds the delta of each animation to its accumulator.
  */
-class AdditiveAnimationAccumulator {
+public class AdditiveAnimationAccumulator {
 
     // Exists only for performance reasons to avoid map lookups
     private static final class AdditiveAnimationWrapper<T> {

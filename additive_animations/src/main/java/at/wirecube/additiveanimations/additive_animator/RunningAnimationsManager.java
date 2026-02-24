@@ -35,7 +35,7 @@ import at.wirecube.additiveanimations.additive_animator.animation_set.AnimationS
 /**
  * A class that manages internal values about the state of all running additive animations for a single view.
  */
-class RunningAnimationsManager<T> {
+public class RunningAnimationsManager<T> {
 
     private static class AnimationInfo {
         int numAnimations = 0;

@@ -10,7 +10,7 @@ Get a good overview of this library here: https://medium.com/@david.gansterd/bri
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.9.3'
+    compile 'at.wirecube:additive_animations:1.10.0'
 }
 ```
 
