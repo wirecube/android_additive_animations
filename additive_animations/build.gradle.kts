@@ -74,7 +74,7 @@ afterEvaluate {
 
                 groupId = "at.wirecube"
                 artifactId = "additive_animations"
-                version = "1.10.0"
+                version = "1.10.1"
 
                 pom {
                     name.set("Android Additive Animations")
@@ -107,7 +107,7 @@ afterEvaluate {
         repositories {
             maven {
                 name = "WirecubeNexus"
-                url = uri("https://nexus.wirecube.at/repository/android-additive-animations/")
+                url = uri("https://nexus.wirecube.at/repository/shopreme-core-android/")
                 // load credentials from local.properties, which is not committed to version control, to avoid exposing credentials:
                 val localProperties = project.rootProject.file("local.properties")
                 // if local properties file doesn't exist, fail. otherise, use the nexus.username and nexus.password properties:

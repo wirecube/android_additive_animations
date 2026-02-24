@@ -15,7 +15,8 @@
  */
 package at.wirecube.additiveanimations.additive_animator
 
-class AccumulatedAnimationValue<T: Any>(@JvmField val animation: AdditiveAnimation<T>?) {
+class AccumulatedAnimationValue<T: Any>(@JvmField val animation: AdditiveAnimation<T>) {
+
     @JvmField
     var tempValue: Float = 0f
 
