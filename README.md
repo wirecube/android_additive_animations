@@ -5,12 +5,17 @@ An easy way to additively animate any property of any object, with convenient bu
 
 Get a good overview of this library here: https://medium.com/@david.gansterd/bringing-smooth-animation-transitions-to-android-88786347e512
 
+# NOTE:
+The latest public version of `AdditiveAnimator` is 1.9.3. I don't have time to keep the releases on maven central up-to-date, but the code still reflects the latest version.
+Feel free to fork/use the source directly.
+
+The newest versions of the library support physics-based spring animations, like Figma's "gentle" animation curve (similar to `spring()` in Compose), and introduce kotlin to improve ergonomics.
 
 # Integration
 To use `AdditiveAnimator` in your project, add the following lines to your `build.gradle`:
 ```
 dependencies {
-    compile 'at.wirecube:additive_animations:1.10.0'
+    compile 'at.wirecube:additive_animations:1.9.3'
 }
 ```
 
