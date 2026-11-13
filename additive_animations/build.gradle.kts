@@ -74,7 +74,7 @@ afterEvaluate {
 
                 groupId = "at.wirecube"
                 artifactId = "additive_animations"
-                version = "1.10.1"
+                version = "1.10.2"
 
                 pom {
                     name.set("Android Additive Animations")

@@ -641,7 +641,9 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V> ex
         if (mCurrentCustomTiming instanceof AnimationTiming.Interpolated) {
             return switchInterpolator(interpolator);
         }
-        mCurrentCustomTiming = new AnimationTiming.Interpolated(interpolator);
+        // The ValueAnimator's interpolator shapes the fraction all animations without a custom timing receive,
+        // so it must not become their custom timing as well: that would apply it twice.
+        mCurrentCustomTiming = null;
         getValueAnimator().setInterpolator(interpolator);
         runIfParentIsInSameAnimationGroup(() -> mParent.setInterpolator(interpolator));
         return self();
@@ -721,25 +723,30 @@ public abstract class BaseAdditiveAnimator<T extends BaseAdditiveAnimator, V> ex
      * to prevent accidentally overriding the effects of `switchInterpolator`.
      */
     public T switchInterpolator(final TimeInterpolator newInterpolator) {
-        initValueAnimatorIfNeeded();
-        Collection<AdditiveAnimation> animations = mAnimationAccumulator.getAnimations();
-        if (mCurrentCustomTiming instanceof AnimationTiming.Interpolated) {
-            // if we already switched the interpolator before, we want to keep the same timing for all animations, just with a different interpolator
-            for (AdditiveAnimation animation : animations) {
-                animation.setTiming(new AnimationTiming.Interpolated(getValueAnimator().getInterpolator()));
-            }
-
-            mCurrentCustomTiming = new AnimationTiming.Interpolated(newInterpolator);
-            // now we want to animate linearly, all animations are going to map to the current value themselves
-            getValueAnimator().setInterpolator(new LinearInterpolator());
-
-            runIfParentIsInSameAnimationGroup(() -> mParent.switchInterpolator(newInterpolator));
-            return self();
-        } else {
+        if (mCurrentCustomTiming instanceof AnimationTiming.Spring) {
+            // spring animations need the linear fraction of their own duration, so the interpolated ones get their own animator
             T child = thenWithDelay(0);
             child.setInterpolator(newInterpolator);
             return child;
         }
+        initValueAnimatorIfNeeded();
+        // The animations so far keep their timing: those that follow the ValueAnimator's interpolator take it over themselves,
+        // those that already have their own keep it.
+        TimeInterpolator previousInterpolator = getValueAnimator().getInterpolator();
+        Collection<AdditiveAnimation> animations = mAnimationAccumulator.getAnimations();
+        for (AdditiveAnimation animation : animations) {
+            AnimationTiming timing = animation.getTiming();
+            if (timing instanceof AnimationTiming.Interpolated && ((AnimationTiming.Interpolated) timing).getCustomInterpolator() == null) {
+                animation.setTiming(new AnimationTiming.Interpolated(previousInterpolator));
+            }
+        }
+
+        mCurrentCustomTiming = new AnimationTiming.Interpolated(newInterpolator);
+        // now we want to animate linearly, all animations are going to map to the current value themselves
+        getValueAnimator().setInterpolator(new LinearInterpolator());
+
+        runIfParentIsInSameAnimationGroup(() -> mParent.switchInterpolator(newInterpolator));
+        return self();
     }
 
     /**
